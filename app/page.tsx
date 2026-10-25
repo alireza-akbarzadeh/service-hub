@@ -1,14 +1,20 @@
-import { getServices } from "@/app/actions/services";
-import { ServicesDashboard } from "@/components/services-dashboard";
-import { TeamLoginView } from "@/components/team-login-view";
+import { getServices } from "@/app/actions/services"
+import { ServicesDashboard } from "@/components/services-dashboard"
+import { TeamLoginView } from "@/components/team-login-view"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function Page() {
-  const { isAuthenticated, teamName, data: initialServices, isLiveNeon, branch } = await getServices();
+  const {
+    isAuthenticated,
+    teamName,
+    data: initialServices,
+    isLiveNeon,
+    branch,
+  } = await getServices()
 
   if (!isAuthenticated) {
-    return <TeamLoginView />;
+    return <TeamLoginView />
   }
 
   return (
@@ -18,5 +24,5 @@ export default async function Page() {
       branchName={branch}
       teamName={teamName}
     />
-  );
+  )
 }

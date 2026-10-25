@@ -1,26 +1,26 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useTheme } from "next-themes";
-import { Moon, Sun, Monitor } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { useTheme } from "next-themes"
+import { Moon, Sun, Monitor } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
     return (
       <div className="flex h-8 w-24 items-center justify-center rounded-lg border border-border bg-card/50" />
-    );
+    )
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1 backdrop-blur-sm shadow-xs">
+    <div className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1 shadow-xs backdrop-blur-sm">
       <Button
         variant={theme === "light" ? "secondary" : "ghost"}
         size="xs"
@@ -55,5 +55,5 @@ export function ThemeToggle() {
         <span className="hidden sm:inline">System</span>
       </Button>
     </div>
-  );
+  )
 }

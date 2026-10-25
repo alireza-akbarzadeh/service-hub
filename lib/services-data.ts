@@ -1,18 +1,27 @@
 export interface RawServiceItem {
-  name: string;
-  description: string;
-  category: "Web Apps" | "API & Swagger" | "Observability" | "Messaging" | "Background Jobs" | "Config & Data" | "DevOps & CI/CD" | "Enterprise & Portals";
-  environment: "Develop" | "Test" | "Stage" | "DevOps & Tools" | "Portals & HR";
-  status: "operational" | "degraded" | "maintenance";
-  url: string;
-  owner: string;
+  name: string
+  description: string
+  category:
+    | "Web Apps"
+    | "API & Swagger"
+    | "Observability"
+    | "Messaging"
+    | "Background Jobs"
+    | "Config & Data"
+    | "DevOps & CI/CD"
+    | "Enterprise & Portals"
+  environment: "Develop" | "Test" | "Stage" | "DevOps & Tools" | "Portals & HR"
+  status: "operational" | "degraded" | "maintenance"
+  url: string
+  owner: string
 }
 
 export const initialServicesCatalog: RawServiceItem[] = [
   // --- DEVELOP ENVIRONMENT ---
   {
     name: "Commerce Web (Dev)",
-    description: "Customer-facing commerce storefront in development environment.",
+    description:
+      "Customer-facing commerce storefront in development environment.",
     category: "Web Apps",
     environment: "Develop",
     status: "operational",
@@ -111,7 +120,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "ConfigViewer - GeneralData (Dev)",
-    description: "Runtime application configuration inspection for GeneralData.",
+    description:
+      "Runtime application configuration inspection for GeneralData.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -120,7 +130,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "ConfigViewer - IDR (Dev)",
-    description: "Runtime application configuration inspection for IDR identity domain.",
+    description:
+      "Runtime application configuration inspection for IDR identity domain.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -129,7 +140,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "ConfigViewer - Catalog (Dev)",
-    description: "Runtime application configuration inspection for Catalog domain.",
+    description:
+      "Runtime application configuration inspection for Catalog domain.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -138,7 +150,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "ConfigViewer - Sale (Dev)",
-    description: "Runtime application configuration inspection for Sale domain.",
+    description:
+      "Runtime application configuration inspection for Sale domain.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -147,7 +160,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "ConfigViewer - Wallet (Dev)",
-    description: "Runtime application configuration inspection for Financial Wallet.",
+    description:
+      "Runtime application configuration inspection for Financial Wallet.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -165,7 +179,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Consul Service Mesh (Dev)",
-    description: "Service discovery, health-checking, and KV configuration registry.",
+    description:
+      "Service discovery, health-checking, and KV configuration registry.",
     category: "Config & Data",
     environment: "Develop",
     status: "operational",
@@ -266,7 +281,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Hangfire - GeneralData (Test)",
-    description: "Background job scheduler and executor for GeneralData domain.",
+    description:
+      "Background job scheduler and executor for GeneralData domain.",
     category: "Background Jobs",
     environment: "Test",
     status: "operational",
@@ -284,7 +300,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Hangfire - Catalog (Test)",
-    description: "Background job scheduler for catalog indexing and price syncing.",
+    description:
+      "Background job scheduler for catalog indexing and price syncing.",
     category: "Background Jobs",
     environment: "Test",
     status: "operational",
@@ -302,7 +319,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Hangfire - Wallet (Test)",
-    description: "Background job scheduler for reconciliation and payout settlement.",
+    description:
+      "Background job scheduler for reconciliation and payout settlement.",
     category: "Background Jobs",
     environment: "Test",
     status: "operational",
@@ -457,7 +475,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Grafana K8s Monitoring (Stage)",
-    description: "Kubernetes cluster metrics, CPU/memory gauges and SLO charts.",
+    description:
+      "Kubernetes cluster metrics, CPU/memory gauges and SLO charts.",
     category: "Observability",
     environment: "Stage",
     status: "operational",
@@ -475,7 +494,8 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Rancher Container Management",
-    description: "Enterprise Kubernetes multi-cluster management control plane.",
+    description:
+      "Enterprise Kubernetes multi-cluster management control plane.",
     category: "DevOps & CI/CD",
     environment: "Stage",
     status: "operational",
@@ -596,11 +616,12 @@ export const initialServicesCatalog: RawServiceItem[] = [
   },
   {
     name: "Local Gateway HTTPS Portal",
-    description: "Internal secured gateway access endpoint (corrected from netbios HIT001P4116).",
+    description:
+      "Internal secured gateway access endpoint (corrected from netbios HIT001P4116).",
     category: "Enterprise & Portals",
     environment: "Portals & HR",
     status: "operational",
     url: "https://portal.gig.services/",
     owner: "IT Support",
   },
-];
+]

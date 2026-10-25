@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Globe,
   Wifi,
@@ -22,31 +22,31 @@ import {
   ExternalLink,
   X,
   Info,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface NetworkLocationInfo {
-  ip: string;
-  city: string;
-  country: string;
-  countryCode: string;
-  flag: string;
-  isIran: boolean;
-  latencyMs: number;
-  isOnline: boolean;
-  loaded: boolean;
+  ip: string
+  city: string
+  country: string
+  countryCode: string
+  flag: string
+  isIran: boolean
+  latencyMs: number
+  isOnline: boolean
+  loaded: boolean
 }
 
 function getFlagEmoji(countryCode: string) {
-  if (!countryCode || countryCode.length !== 2) return "🌐";
+  if (!countryCode || countryCode.length !== 2) return "🌐"
   try {
     const codePoints = countryCode
       .toUpperCase()
       .split("")
-      .map((char) => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
+      .map((char) => 127397 + char.charCodeAt(0))
+    return String.fromCodePoint(...codePoints)
   } catch {
-    return "🌐";
+    return "🌐"
   }
 }
 
@@ -61,22 +61,22 @@ export function useNetworkLocation() {
     latencyMs: 0,
     isOnline: true,
     loaded: false,
-  });
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  })
+  const [isRefreshing, setIsRefreshing] = React.useState(false)
 
   const checkLocation = React.useCallback(async () => {
-    setIsRefreshing(true);
-    const start = performance.now();
+    setIsRefreshing(true)
+    const start = performance.now()
 
     try {
       const res = await fetch("https://ipwho.is/", {
         signal: AbortSignal.timeout(4000),
-      });
-      const data = await res.json();
-      const latencyMs = Math.round(performance.now() - start);
+      })
+      const data = await res.json()
+      const latencyMs = Math.round(performance.now() - start)
 
-      const code = data.country_code || (data.country === "Iran" ? "IR" : "");
-      const isIran = code === "IR";
+      const code = data.country_code || (data.country === "Iran" ? "IR" : "")
+      const isIran = code === "IR"
 
       setInfo({
         ip: data.ip || "Unknown IP",
@@ -88,17 +88,17 @@ export function useNetworkLocation() {
         latencyMs,
         isOnline: navigator.onLine,
         loaded: true,
-      });
+      })
     } catch {
       // Fallback check
       try {
         const res2 = await fetch("https://api.country.is/", {
           signal: AbortSignal.timeout(3000),
-        });
-        const data2 = await res2.json();
-        const latencyMs = Math.round(performance.now() - start);
-        const code = data2.country || "";
-        const isIran = code === "IR";
+        })
+        const data2 = await res2.json()
+        const latencyMs = Math.round(performance.now() - start)
+        const code = data2.country || ""
+        const isIran = code === "IR"
 
         setInfo({
           ip: data2.ip || "",
@@ -110,41 +110,42 @@ export function useNetworkLocation() {
           latencyMs,
           isOnline: navigator.onLine,
           loaded: true,
-        });
+        })
       } catch {
         setInfo((prev) => ({
           ...prev,
           isOnline: navigator.onLine,
           loaded: true,
-        }));
+        }))
       }
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshing(false)
     }
-  }, []);
+  }, [])
 
   React.useEffect(() => {
-    checkLocation();
+    checkLocation()
 
-    const handleOnline = () => setInfo((prev) => ({ ...prev, isOnline: true }));
-    const handleOffline = () => setInfo((prev) => ({ ...prev, isOnline: false }));
+    const handleOnline = () => setInfo((prev) => ({ ...prev, isOnline: true }))
+    const handleOffline = () =>
+      setInfo((prev) => ({ ...prev, isOnline: false }))
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [checkLocation]);
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
+    }
+  }, [checkLocation])
 
-  return { info, isRefreshing, refresh: checkLocation };
+  return { info, isRefreshing, refresh: checkLocation }
 }
 
 interface NetworkStatusProps {
-  locationInfo: NetworkLocationInfo;
-  isRefreshing: boolean;
-  onRefresh: () => void;
+  locationInfo: NetworkLocationInfo
+  isRefreshing: boolean
+  onRefresh: () => void
 }
 
 export function NetworkStatusPill({
@@ -152,18 +153,18 @@ export function NetworkStatusPill({
   isRefreshing,
   onRefresh,
 }: NetworkStatusProps) {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
 
   if (!locationInfo.loaded) {
     return (
-      <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground animate-pulse">
+      <div className="hidden animate-pulse items-center gap-1.5 rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground lg:flex">
         <Globe className="size-3 text-muted-foreground" />
         <span>Detecting network...</span>
       </div>
-    );
+    )
   }
 
-  const isForeign = !locationInfo.isIran && locationInfo.countryCode;
+  const isForeign = !locationInfo.isIran && locationInfo.countryCode
 
   return (
     <>
@@ -171,34 +172,34 @@ export function NetworkStatusPill({
         type="button"
         onClick={() => setIsDialogOpen(true)}
         className={cn(
-          "hidden sm:flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer shadow-2xs",
+          "hidden cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-2xs transition-all sm:flex",
           isForeign
-            ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
-            : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+            ? "border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+            : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
         )}
         title="View Network & VPN Diagnostics"
       >
         <span>{locationInfo.flag}</span>
-        <span className="font-semibold truncate max-w-[130px]">
+        <span className="max-w-[130px] truncate font-semibold">
           {locationInfo.city ? `${locationInfo.city}, ` : ""}
           {locationInfo.countryCode || locationInfo.country}
         </span>
         {isForeign ? (
           <Badge
             variant="outline"
-            className="border-amber-500/50 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] px-1 py-0 h-4 font-mono font-bold"
+            className="h-4 border-amber-500/50 bg-amber-500/20 px-1 py-0 font-mono text-[9px] font-bold text-amber-600 dark:text-amber-400"
           >
             VPN ⚠️
           </Badge>
         ) : (
-          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
         )}
       </button>
 
       {/* Network Diagnostics Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md p-5 border border-border bg-card shadow-2xl rounded-2xl">
-          <DialogHeader className="pb-3 border-b border-border">
+        <DialogContent className="max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl">
+          <DialogHeader className="border-b border-border pb-3">
             <div className="flex items-center gap-2.5">
               <div
                 className={cn(
@@ -218,7 +219,7 @@ export function NetworkStatusPill({
                 <DialogTitle className="text-base font-bold text-foreground">
                   Network & VPN Diagnostics
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                <DialogDescription className="mt-0.5 text-xs text-muted-foreground">
                   Internal company infrastructure routing & firewall status
                 </DialogDescription>
               </div>
@@ -229,24 +230,25 @@ export function NetworkStatusPill({
             {/* Status Card */}
             <div
               className={cn(
-                "rounded-xl border p-3.5 space-y-2 text-xs",
+                "space-y-2 rounded-xl border p-3.5 text-xs",
                 isForeign
                   ? "border-amber-500/30 bg-amber-500/10 text-foreground"
                   : "border-emerald-500/30 bg-emerald-500/10 text-foreground"
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-semibold">
                   <span>{locationInfo.flag}</span>
                   <span>
-                    Detected Location: {locationInfo.city ? `${locationInfo.city}, ` : ""}
+                    Detected Location:{" "}
+                    {locationInfo.city ? `${locationInfo.city}, ` : ""}
                     {locationInfo.country}
                   </span>
                 </span>
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] font-mono",
+                    "font-mono text-[10px]",
                     isForeign
                       ? "border-amber-500/40 text-amber-600 dark:text-amber-400"
                       : "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
@@ -257,12 +259,21 @@ export function NetworkStatusPill({
               </div>
 
               {isForeign ? (
-                <p className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
-                  ⚠️ <strong>Foreign VPN Detected</strong>: You are connecting through an exit node in <strong>{locationInfo.country}</strong>. Internal services (<code>*.hasti.co</code>, <code>*.tapsi.shop</code>, internal Hangfire, CAP, and Swagger portals) are protected by company firewalls and <strong>will not load</strong> on international IPs.
+                <p className="text-[11px] leading-relaxed text-amber-700 dark:text-amber-300">
+                  ⚠️ <strong>Foreign VPN Detected</strong>: You are connecting
+                  through an exit node in{" "}
+                  <strong>{locationInfo.country}</strong>. Internal services (
+                  <code>*.hasti.co</code>, <code>*.tapsi.shop</code>, internal
+                  Hangfire, CAP, and Swagger portals) are protected by company
+                  firewalls and <strong>will not load</strong> on international
+                  IPs.
                 </p>
               ) : (
-                <p className="text-[11px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                  🟢 <strong>Domestic / Agency VPN Active</strong>: You are connecting from an Iranian domestic IP or Agency VPN. All internal company endpoints and portals are directly accessible.
+                <p className="text-[11px] leading-relaxed text-emerald-700 dark:text-emerald-300">
+                  🟢 <strong>Domestic / Agency VPN Active</strong>: You are
+                  connecting from an Iranian domestic IP or Agency VPN. All
+                  internal company endpoints and portals are directly
+                  accessible.
                 </p>
               )}
             </div>
@@ -270,47 +281,60 @@ export function NetworkStatusPill({
             {/* Diagnostics Stats */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-xl border border-border bg-background p-3">
-                <span className="text-[10px] text-muted-foreground uppercase font-mono block">
+                <span className="block font-mono text-[10px] text-muted-foreground uppercase">
                   Public IP
                 </span>
-                <span className="font-mono font-semibold text-foreground mt-0.5 block truncate">
+                <span className="mt-0.5 block truncate font-mono font-semibold text-foreground">
                   {locationInfo.ip || "Detecting..."}
                 </span>
               </div>
               <div className="rounded-xl border border-border bg-background p-3">
-                <span className="text-[10px] text-muted-foreground uppercase font-mono block">
+                <span className="block font-mono text-[10px] text-muted-foreground uppercase">
                   Network Latency
                 </span>
-                <span className="font-mono font-semibold text-foreground mt-0.5 block">
-                  {locationInfo.latencyMs}ms ({locationInfo.isOnline ? "Stable" : "Offline"})
+                <span className="mt-0.5 block font-mono font-semibold text-foreground">
+                  {locationInfo.latencyMs}ms (
+                  {locationInfo.isOnline ? "Stable" : "Offline"})
                 </span>
               </div>
             </div>
 
             {/* Instruction Advice */}
-            <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs space-y-1.5 text-muted-foreground">
-              <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
+            <div className="space-y-1.5 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <Info className="size-3.5 text-primary" />
                 Team Connection Guidelines:
               </span>
-              <ul className="list-disc pl-4 space-y-1 text-[11px] leading-relaxed">
-                <li>Internal Web Apps & Swagger Gateways require an <strong>Iran IP</strong> or <strong>Agency VPN</strong>.</li>
-                <li>Commercial VPNs (e.g. Proton, v2ray, Nord routed through Europe/US/Canada) will cause <code>Connection Timed Out</code> on internal URLs.</li>
-                <li>Public tools (SonarQube, GitLab, Rancher) may be accessible regardless of VPN.</li>
+              <ul className="list-disc space-y-1 pl-4 text-[11px] leading-relaxed">
+                <li>
+                  Internal Web Apps & Swagger Gateways require an{" "}
+                  <strong>Iran IP</strong> or <strong>Agency VPN</strong>.
+                </li>
+                <li>
+                  Commercial VPNs (e.g. Proton, v2ray, Nord routed through
+                  Europe/US/Canada) will cause <code>Connection Timed Out</code>{" "}
+                  on internal URLs.
+                </li>
+                <li>
+                  Public tools (SonarQube, GitLab, Rancher) may be accessible
+                  regardless of VPN.
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-t border-border pt-3 mt-1">
+          <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="gap-1.5 text-xs cursor-pointer"
+              className="cursor-pointer gap-1.5 text-xs"
             >
-              <RefreshCw className={cn("size-3", isRefreshing && "animate-spin")} />
+              <RefreshCw
+                className={cn("size-3", isRefreshing && "animate-spin")}
+              />
               <span>{isRefreshing ? "Testing..." : "Re-test Network"}</span>
             </Button>
 
@@ -318,7 +342,7 @@ export function NetworkStatusPill({
               type="button"
               size="sm"
               onClick={() => setIsDialogOpen(false)}
-              className="text-xs cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Got it
             </Button>
@@ -326,41 +350,51 @@ export function NetworkStatusPill({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 export function ForeignVpnWarningBanner({
   locationInfo,
 }: {
-  locationInfo: NetworkLocationInfo;
+  locationInfo: NetworkLocationInfo
 }) {
-  const [dismissed, setDismissed] = React.useState(false);
+  const [dismissed, setDismissed] = React.useState(false)
 
-  if (dismissed || !locationInfo.loaded || locationInfo.isIran || !locationInfo.countryCode) {
-    return null;
+  if (
+    dismissed ||
+    !locationInfo.loaded ||
+    locationInfo.isIran ||
+    !locationInfo.countryCode
+  ) {
+    return null
   }
 
   return (
-    <div className="rounded-xl border border-amber-500/40 bg-linear-to-r from-amber-500/15 via-amber-500/5 to-transparent p-3 sm:p-3.5 shadow-xs">
+    <div className="rounded-xl border border-amber-500/40 bg-linear-to-r from-amber-500/15 via-amber-500/5 to-transparent p-3 shadow-xs sm:p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 mt-0.5">
+          <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
             <AlertTriangle className="size-4" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-xs text-foreground">
-                Foreign VPN Active: Visiting from {locationInfo.flag} {locationInfo.city ? `${locationInfo.city}, ` : ""}{locationInfo.country}
+              <span className="text-xs font-bold text-foreground">
+                Foreign VPN Active: Visiting from {locationInfo.flag}{" "}
+                {locationInfo.city ? `${locationInfo.city}, ` : ""}
+                {locationInfo.country}
               </span>
               <Badge
                 variant="outline"
-                className="border-amber-500/50 bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] py-0 px-1.5 font-semibold"
+                className="border-amber-500/50 bg-amber-500/20 px-1.5 py-0 text-[10px] font-semibold text-amber-700 dark:text-amber-300"
               >
                 Internal Links Require Iran Net
               </Badge>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-              Most microservices (<code>*.hasti.co</code>, <code>*.tapsi.shop</code>, internal Hangfire & CAP) are blocked on foreign IP addresses. If endpoints fail to open, please pause your international VPN or connect via the <strong>Agency VPN</strong>.
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+              Most microservices (<code>*.hasti.co</code>,{" "}
+              <code>*.tapsi.shop</code>, internal Hangfire & CAP) are blocked on
+              foreign IP addresses. If endpoints fail to open, please pause your
+              international VPN or connect via the <strong>Agency VPN</strong>.
             </p>
           </div>
         </div>
@@ -368,12 +402,12 @@ export function ForeignVpnWarningBanner({
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="text-muted-foreground hover:text-foreground p-1 rounded-md transition-colors cursor-pointer shrink-0"
+          className="shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
           title="Dismiss notice"
         >
           <X className="size-4" />
         </button>
       </div>
     </div>
-  );
+  )
 }

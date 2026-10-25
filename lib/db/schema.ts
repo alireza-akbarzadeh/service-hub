@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core"
 
 export const services = pgTable("services", {
   id: serial("id").primaryKey(),
@@ -10,7 +10,7 @@ export const services = pgTable("services", {
   url: text("url").notNull(),
   owner: text("owner").default("Platform Team"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+})
 
-export type Service = typeof services.$inferSelect;
-export type NewService = typeof services.$inferInsert;
+export type Service = typeof services.$inferSelect
+export type NewService = typeof services.$inferInsert
