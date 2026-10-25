@@ -199,3 +199,116 @@ export async function deleteService(id: number) {
     return { success: true, localOnly: true };
   }
 }
+
+export interface HealthCheckResult {
+  url: string;
+  status: "online" | "warning" | "error" | "offline";
+  httpStatus?: number;
+  latencyMs: number;
+  message?: string;
+}
+
+export async function checkEndpointHealth(url: string): Promise<HealthCheckResult> {
+  const session = await verifySession();
+  if (!session.isAuthenticated) {
+    return {
+      url,
+      status: "offline",
+      latencyMs: 0,
+      message: "Unauthorized",
+    };
+  }
+
+  const start = Date.now();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "HEAD",
+        signal: controller.signal,
+        headers: { "User-Agent": "ServiceHub-HealthCheck/1.0" },
+      });
+      if (res.status === 405) {
+        res = await fetch(url, {
+          method: "GET",
+          signal: controller.signal,
+          headers: { "User-Agent": "ServiceHub-HealthCheck/1.0" },
+        });
+      }
+    } catch {
+      res = await fetch(url, {
+        method: "GET",
+        signal: controller.signal,
+        headers: { "User-Agent": "ServiceHub-HealthCheck/1.0" },
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    const latencyMs = Date.now() - start;
+
+    if (res.status >= 200 && res.status < 400) {
+      return {
+        url,
+        status: "online",
+        httpStatus: res.status,
+        latencyMs,
+      };
+    } else if (res.status === 401 || res.status === 403 || res.status === 404) {
+      return {
+        url,
+        status: "warning",
+        httpStatus: res.status,
+        latencyMs,
+        message: res.status === 401 ? "Auth Req." : `HTTP ${res.status}`,
+      };
+    } else {
+      return {
+        url,
+        status: "error",
+        httpStatus: res.status,
+        latencyMs,
+        message: `HTTP ${res.status}`,
+      };
+    }
+  } catch (err) {
+    const latencyMs = Date.now() - start;
+    const isTimeout =
+      (err as Error).name === "AbortError" ||
+      (err as Error).message?.includes("aborted");
+    return {
+      url,
+      status: "offline",
+      latencyMs,
+      message: isTimeout ? "Timeout (3.5s)" : "Unreachable",
+    };
+  }
+}
+
+export async function batchCheckEndpointsHealth(
+  urls: string[]
+): Promise<Record<string, HealthCheckResult>> {
+  const results = await Promise.allSettled(
+    urls.map((url) => checkEndpointHealth(url))
+  );
+  const map: Record<string, HealthCheckResult> = {};
+
+  results.forEach((res, i) => {
+    if (res.status === "fulfilled") {
+      map[urls[i]] = res.value;
+    } else {
+      map[urls[i]] = {
+        url: urls[i],
+        status: "offline",
+        latencyMs: 3500,
+        message: "Failed",
+      };
+    }
+  });
+
+  return map;
+}
+

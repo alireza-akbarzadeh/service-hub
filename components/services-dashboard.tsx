@@ -5,10 +5,15 @@ import {
   deleteService,
   updateService,
   logoutAction,
+  checkEndpointHealth,
+  batchCheckEndpointsHealth,
+  type HealthCheckResult,
 } from "@/app/actions/services"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { EnvGeneratorModal } from "@/components/env-generator-modal"
+import { ServiceDetailSheet } from "@/components/service-detail-sheet"
 import {
   Dialog,
   DialogContent,
@@ -95,6 +100,9 @@ import {
   Users,
   Compass,
   BookOpen,
+  Eye,
+  FileCode,
+  RefreshCw,
 } from "lucide-react"
 import * as React from "react"
 
@@ -158,6 +166,11 @@ export function ServicesDashboard({
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false)
+  const [isEnvModalOpen, setIsEnvModalOpen] = React.useState(false)
+  const [inspectingService, setInspectingService] = React.useState<Service | null>(null)
+  const [healthMap, setHealthMap] = React.useState<Record<number, HealthCheckResult>>({})
+  const [isCheckingAllHealth, setIsCheckingAllHealth] = React.useState(false)
+
   const [editingService, setEditingService] = React.useState<Service | null>(
     null
   )
@@ -300,6 +313,43 @@ export function ServicesDashboard({
     setSelectedEnv(envId)
     setCurrentPage(1)
   }
+
+  const handlePingSingle = React.useCallback(async (svc: Service, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setHealthMap((prev) => ({
+      ...prev,
+      [svc.id]: { url: svc.url, status: "checking" as any, latencyMs: 0 },
+    }))
+    try {
+      const res = await checkEndpointHealth(svc.url)
+      setHealthMap((prev) => ({ ...prev, [svc.id]: res }))
+    } catch {
+      setHealthMap((prev) => ({
+        ...prev,
+        [svc.id]: { url: svc.url, status: "offline", latencyMs: 3500, message: "Error" },
+      }))
+    }
+  }, [])
+
+  const handleCheckAllVisibleHealth = React.useCallback(async () => {
+    if (paginatedServices.length === 0) return
+    setIsCheckingAllHealth(true)
+    const urls = paginatedServices.map((s) => s.url)
+    try {
+      const results = await batchCheckEndpointsHealth(urls)
+      setHealthMap((prev) => {
+        const next = { ...prev }
+        paginatedServices.forEach((s) => {
+          if (results[s.url]) {
+            next[s.id] = results[s.url]
+          }
+        })
+        return next
+      })
+    } finally {
+      setIsCheckingAllHealth(false)
+    }
+  }, [paginatedServices])
 
   function openAddModal() {
     setFormName("")
@@ -606,6 +656,17 @@ export function ServicesDashboard({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setIsEnvModalOpen(true)}
+                className="hidden sm:inline-flex h-8 gap-1.5 text-xs font-medium cursor-pointer"
+                title="Generate .env.local file for frontend development"
+              >
+                <FileCode className="size-3.5 text-emerald-500" />
+                <span>.env Export</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsOnboardingOpen(true)}
                 className="hidden sm:inline-flex h-8 gap-1.5 text-xs font-medium cursor-pointer"
               >
@@ -897,6 +958,26 @@ export function ServicesDashboard({
                 </div>
 
                 <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isCheckingAllHealth || paginatedServices.length === 0}
+                  onClick={handleCheckAllVisibleHealth}
+                  className="h-9 cursor-pointer gap-1.5 text-xs shadow-2xs"
+                  title="Ping all visible services to check real-time latency and status"
+                >
+                  <Activity
+                    className={cn(
+                      "size-3.5 text-primary",
+                      isCheckingAllHealth && "animate-spin"
+                    )}
+                  />
+                  <span>
+                    {isCheckingAllHealth ? "Pinging..." : "Ping Visible"}
+                  </span>
+                </Button>
+
+                <Button
                   size="sm"
                   onClick={openAddModal}
                   className="h-9 cursor-pointer gap-1.5 shadow-xs"
@@ -973,7 +1054,14 @@ export function ServicesDashboard({
                                 )}
                               />
                             </button>
-                            <span>{svc.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setInspectingService(svc)}
+                              className="text-left font-semibold text-foreground hover:text-primary transition-colors cursor-pointer truncate"
+                              title="Click to inspect details & snippets"
+                            >
+                              {svc.name}
+                            </button>
                           </div>
                           <div className="mt-0.5 line-clamp-1 max-w-[340px] pl-6 text-xs text-muted-foreground">
                             {svc.description}
@@ -1027,7 +1115,38 @@ export function ServicesDashboard({
                             {svc.category}
                           </span>
                         </TableCell>
-                        <TableCell>{renderStatusBadge(svc.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 items-start">
+                            {renderStatusBadge(svc.status)}
+                            {healthMap[svc.id] ? (
+                              <div
+                                onClick={(e) => handlePingSingle(svc, e)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-mono border cursor-pointer transition-all",
+                                  healthMap[svc.id].status === "online"
+                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                                    : healthMap[svc.id].status === "warning"
+                                    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium"
+                                    : "border-destructive/30 bg-destructive/10 text-destructive font-medium"
+                                )}
+                                title={`Ping again: ${healthMap[svc.id].message || healthMap[svc.id].status} (${healthMap[svc.id].latencyMs}ms)`}
+                              >
+                                <span className="size-1.5 rounded-full bg-current" />
+                                <span>{healthMap[svc.id].latencyMs}ms</span>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => handlePingSingle(svc, e)}
+                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                                title="Run live ping check"
+                              >
+                                <Activity className="size-2.5 opacity-60" />
+                                <span>Ping</span>
+                              </button>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground">
                           {svc.owner || "Platform"}
                         </TableCell>
@@ -1059,6 +1178,15 @@ export function ServicesDashboard({
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => setInspectingService(svc)}
+                              title="Inspect service details & snippets"
+                              className="cursor-pointer text-muted-foreground hover:text-foreground"
+                            >
+                              <Eye className="size-3.5" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon-xs"
@@ -1480,6 +1608,25 @@ export function ServicesDashboard({
           services={services}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+        />
+
+        {/* Frontend .env Configuration Generator Modal */}
+        <EnvGeneratorModal
+          open={isEnvModalOpen}
+          onOpenChange={setIsEnvModalOpen}
+          services={services}
+        />
+
+        {/* Service Quick-Inspect Slide-over Drawer */}
+        <ServiceDetailSheet
+          service={inspectingService}
+          open={!!inspectingService}
+          onOpenChange={(open) => !open && setInspectingService(null)}
+          mirrors={
+            inspectingService
+              ? mirrorMap.get(inspectingService.id) || []
+              : []
+          }
         />
       </div>
     </SidebarProvider>
