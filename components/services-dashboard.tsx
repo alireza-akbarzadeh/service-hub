@@ -260,6 +260,42 @@ export function ServicesDashboard({
     return map
   }, [services])
 
+  // Memoized mirror map: maps service.id -> list of counterpart services in other environments
+  const mirrorMap = React.useMemo(() => {
+    const clean = (name: string) => {
+      return name
+        .replace(/\s*\((Dev|Test|Stage|QA|Production|Prod|172\.[^\)]+)\)\s*/gi, "")
+        .replace(/\bapi gateway\b/gi, "gateway")
+        .replace(/\btapsi shop web\b/gi, "commerce web")
+        .replace(/\btapsi shop\b/gi, "commerce")
+        .replace(/[-_:]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    };
+
+    const map = new Map<number, Service[]>();
+    const grouped = new Map<string, Service[]>();
+
+    for (const s of services) {
+      const k = clean(s.name);
+      if (!grouped.has(k)) {
+        grouped.set(k, []);
+      }
+      grouped.get(k)!.push(s);
+    }
+
+    for (const s of services) {
+      const k = clean(s.name);
+      const siblings = (grouped.get(k) || []).filter(
+        (sibling) => sibling.id !== s.id && sibling.environment !== s.environment
+      );
+      map.set(s.id, siblings);
+    }
+
+    return map;
+  }, [services]);
+
   function handleEnvSelect(envId: string) {
     setSelectedEnv(envId)
     setCurrentPage(1)
@@ -853,10 +889,10 @@ export function ServicesDashboard({
                     }}
                     className="h-9 cursor-pointer rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
-                    <option value={10}>10</option>
-                    <option value={15}>15</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
+                    <option value={10} className="bg-background text-foreground">10</option>
+                    <option value={15} className="bg-background text-foreground">15</option>
+                    <option value={25} className="bg-background text-foreground">25</option>
+                    <option value={50} className="bg-background text-foreground">50</option>
                   </select>
                 </div>
 
@@ -944,12 +980,47 @@ export function ServicesDashboard({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className="text-[11px] font-normal"
-                          >
-                            {svc.environment}
-                          </Badge>
+                          <div className="flex flex-col gap-1 items-start">
+                            <Badge
+                              variant="secondary"
+                              className="text-[11px] font-normal"
+                            >
+                              {svc.environment}
+                            </Badge>
+
+                            {/* Mirror Hops: Jump to Dev / Test / Stage */}
+                            {(mirrorMap.get(svc.id) || []).length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                <span className="text-[10px] text-muted-foreground font-mono">
+                                  Hop:
+                                </span>
+                                {(mirrorMap.get(svc.id) || []).map((m) => {
+                                  const shortEnv =
+                                    m.environment === "Develop"
+                                      ? "Dev"
+                                      : m.environment === "Test"
+                                      ? "Test"
+                                      : m.environment === "Stage"
+                                      ? "Stage"
+                                      : m.environment;
+
+                                  return (
+                                    <a
+                                      key={m.id}
+                                      href={m.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title={`Jump to ${m.environment}: ${m.name}`}
+                                      className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border border-border/80 bg-muted/60 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all cursor-pointer shadow-2xs"
+                                    >
+                                      <span>{shortEnv}</span>
+                                      <ExternalLink className="size-2.5 opacity-60" />
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <span className="text-xs font-medium text-muted-foreground">
@@ -1017,8 +1088,9 @@ export function ServicesDashboard({
               </Table>
             </div>
 
-            {/* Pagination Controls */}
-            <div className="flex flex-col items-center justify-between gap-3 px-1 py-2 sm:flex-row">
+            {/* Pagination Controls with Page Select and Rows Select */}
+            <div className="flex flex-col items-center justify-between gap-3 px-1 py-3 border-t border-border/80 bg-card/40 rounded-b-xl sm:flex-row">
+              {/* Left: Summary */}
               <div className="text-xs text-muted-foreground">
                 Showing{" "}
                 <span className="font-semibold text-foreground">
@@ -1035,6 +1107,55 @@ export function ServicesDashboard({
                 services
               </div>
 
+              {/* Middle: Select dropdowns for Page Jump and Rows Per Page */}
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Rows per page select */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>Rows:</span>
+                  <div className="relative">
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value))
+                        setCurrentPage(1)
+                      }}
+                      className="h-8 cursor-pointer rounded-lg border border-border bg-background py-1 pr-7 pl-2.5 text-xs font-medium text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none shadow-2xs"
+                    >
+                      <option value={10} className="bg-background text-foreground">10</option>
+                      <option value={15} className="bg-background text-foreground">15</option>
+                      <option value={25} className="bg-background text-foreground">25</option>
+                      <option value={50} className="bg-background text-foreground">50</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute top-2.5 right-2 size-3 text-muted-foreground opacity-70" />
+                  </div>
+                </div>
+
+                {/* Direct Page Select Dropdown */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span>Page:</span>
+                    <div className="relative">
+                      <select
+                        value={currentPage}
+                        onChange={(e) => setCurrentPage(Number(e.target.value))}
+                        className="h-8 cursor-pointer rounded-lg border border-border bg-background py-1 pr-7 pl-2.5 text-xs font-semibold text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none shadow-2xs"
+                      >
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                          <option key={p} value={p} className="bg-background text-foreground">
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute top-2.5 right-2 size-3 text-muted-foreground opacity-70" />
+                    </div>
+                    <span>
+                      of <span className="font-semibold text-foreground">{totalPages}</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Page Navigation Buttons */}
               {totalPages > 1 && (
                 <Pagination className="mx-0 w-auto justify-end">
                   <PaginationContent>

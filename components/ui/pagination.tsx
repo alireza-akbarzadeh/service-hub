@@ -41,6 +41,7 @@ function PaginationLink({
 }: PaginationLinkProps & { size?: "default" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" }) {
   return (
     <button
+      type="button"
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
       data-active={isActive}
