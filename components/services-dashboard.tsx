@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils"
 import { EnvGeneratorModal } from "@/components/env-generator-modal"
 import { ServiceDetailSheet } from "@/components/service-detail-sheet"
 import {
+  useNetworkLocation,
+  NetworkStatusPill,
+  ForeignVpnWarningBanner,
+} from "@/components/network-status-indicator"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -170,6 +175,13 @@ export function ServicesDashboard({
   const [inspectingService, setInspectingService] = React.useState<Service | null>(null)
   const [healthMap, setHealthMap] = React.useState<Record<number, HealthCheckResult>>({})
   const [isCheckingAllHealth, setIsCheckingAllHealth] = React.useState(false)
+
+  // Network / Location & VPN detection hook
+  const {
+    info: networkInfo,
+    isRefreshing: isRefreshingNetwork,
+    refresh: refreshNetwork,
+  } = useNetworkLocation()
 
   const [editingService, setEditingService] = React.useState<Service | null>(
     null
@@ -535,12 +547,12 @@ export function ServicesDashboard({
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Neon Connection Info in Sidebar */}
-            <SidebarGroup className="mt-auto">
-              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+            {/* Neon Connection Info in Sidebar (with proper padding to prevent text clipping) */}
+            <SidebarGroup className="mt-auto px-2">
+              <SidebarGroupLabel className="px-2 font-semibold text-sidebar-foreground/80 group-data-[collapsible=icon]:hidden">
                 Neon Infrastructure
               </SidebarGroupLabel>
-              <SidebarGroupContent className="space-y-2 px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+              <SidebarGroupContent className="space-y-2 px-2 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Database className="size-3 text-emerald-500" />
@@ -687,6 +699,13 @@ export function ServicesDashboard({
 
               <Separator orientation="vertical" className="h-5 hidden sm:block" />
 
+              {/* Real-time Network & VPN Location Indicator */}
+              <NetworkStatusPill
+                locationInfo={networkInfo}
+                isRefreshing={isRefreshingNetwork}
+                onRefresh={refreshNetwork}
+              />
+
               {/* Branch indicator */}
               <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[11px] font-mono text-muted-foreground">
                 <Database className="size-3 text-emerald-500" />
@@ -721,6 +740,9 @@ export function ServicesDashboard({
 
           {/* Main Dashboard Body */}
           <main className="w-full max-w-7xl flex-1 space-y-6 p-4 sm:p-6">
+            {/* Foreign Network / VPN Alert Notice Banner */}
+            <ForeignVpnWarningBanner locationInfo={networkInfo} />
+
             {/* Overview Stats Bar */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
@@ -1161,6 +1183,18 @@ export function ServicesDashboard({
                               Open
                               <ExternalLink className="size-3" />
                             </a>
+                            {!networkInfo.isIran &&
+                              networkInfo.countryCode &&
+                              (svc.url.includes("hasti.co") ||
+                                svc.url.includes("tapsi.shop") ||
+                                svc.url.includes("172.")) && (
+                                <span
+                                  className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold cursor-help"
+                                  title="This endpoint is firewalled to Iran IP or Agency VPN. It may fail to open while connected to a foreign VPN."
+                                >
+                                  ⚠️ Iran Net
+                                </span>
+                              )}
                             <Button
                               variant="ghost"
                               size="icon-xs"
