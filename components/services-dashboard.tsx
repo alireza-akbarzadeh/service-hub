@@ -54,6 +54,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { OnboardingModal } from "@/components/onboarding-modal"
+import { CommandPalette } from "@/components/command-palette"
 import Link from "next/link"
 import {
   Table,
@@ -89,6 +90,7 @@ import {
   Server,
   ShieldCheck,
   Sparkles,
+  Star,
   Trash2,
   Users,
   Compass,
@@ -155,11 +157,42 @@ export function ServicesDashboard({
   // Dialog states
   const [isAddOpen, setIsAddOpen] = React.useState(false)
   const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false)
   const [editingService, setEditingService] = React.useState<Service | null>(
     null
   )
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [copiedId, setCopiedId] = React.useState<number | null>(null)
+
+  // Favorites / Pinned states
+  const [favorites, setFavorites] = React.useState<number[]>([])
+  const [showOnlyFavorites, setShowOnlyFavorites] = React.useState(false)
+
+  // Load favorites from localStorage
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("service_hub_favorites")
+      if (saved) {
+        setFavorites(JSON.parse(saved))
+      }
+    } catch {}
+  }, [])
+
+  const toggleFavorite = React.useCallback((id: number) => {
+    setFavorites((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id]
+      try {
+        localStorage.setItem("service_hub_favorites", JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }, [])
+
+  const favoriteServices = React.useMemo(() => {
+    return services.filter((svc) => favorites.includes(svc.id))
+  }, [services, favorites])
 
   // Form states
   const [formName, setFormName] = React.useState("")
@@ -173,6 +206,9 @@ export function ServicesDashboard({
   // Filtered services
   const filteredServices = React.useMemo(() => {
     return services.filter((svc) => {
+      if (showOnlyFavorites && !favorites.includes(svc.id)) {
+        return false
+      }
       const matchesEnv =
         selectedEnv === "All" || svc.environment === selectedEnv
       const matchesCategory =
@@ -185,7 +221,7 @@ export function ServicesDashboard({
         svc.url.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesEnv && matchesCategory && matchesSearch
     })
-  }, [services, selectedEnv, selectedCategory, searchQuery])
+  }, [services, selectedEnv, selectedCategory, searchQuery, showOnlyFavorites, favorites])
 
   // Total pages and paginated slice
   const totalItems = filteredServices.length
@@ -517,6 +553,20 @@ export function ServicesDashboard({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Command Palette Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer shadow-2xs"
+                title="Quick Search & Launcher (Ctrl + K)"
+              >
+                <Search className="size-3.5 text-primary" />
+                <span>Quick search...</span>
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-2xs">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -627,9 +677,134 @@ export function ServicesDashboard({
               </div>
             </div>
 
-            {/* Filter and Search Controls (Replaced Chips with clean Select Box) */}
+            {/* Pinned / Favorites Quick Launch Strip */}
+            {favoriteServices.length > 0 && (
+              <div className="rounded-xl border border-amber-500/20 bg-linear-to-r from-amber-500/10 via-background to-background p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-6 items-center justify-center rounded-md bg-amber-500/20 text-amber-500">
+                      <Star className="size-3.5 fill-amber-400 text-amber-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-semibold tracking-tight text-foreground">
+                        Pinned Quick Launch ({favoriteServices.length})
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        Your personal daily tools for immediate access
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowOnlyFavorites(!showOnlyFavorites)
+                      setCurrentPage(1)
+                    }}
+                    className="text-[11px] h-7 gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    {showOnlyFavorites ? "Show All Services" : "Filter Table to Pinned"}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                  {favoriteServices.map((svc) => (
+                    <div
+                      key={svc.id}
+                      className="group flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2.5 shadow-2xs hover:border-primary/50 hover:shadow-xs transition-all"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <a
+                          href={svc.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 font-medium text-xs text-foreground hover:text-primary transition-colors"
+                        >
+                          <span className="truncate">{svc.name}</span>
+                          <ExternalLink className="size-3 shrink-0 opacity-60 group-hover:opacity-100 group-hover:text-primary" />
+                        </a>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 font-mono">
+                            {svc.environment}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {svc.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => copyUrl(svc.url, svc.id)}
+                          className="p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                          title="Copy URL"
+                        >
+                          {copiedId === svc.id ? (
+                            <Check className="size-3 text-emerald-500" />
+                          ) : (
+                            <Copy className="size-3" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleFavorite(svc.id)}
+                          className="p-1 rounded-md text-amber-500 hover:bg-muted cursor-pointer transition-colors"
+                          title="Unpin"
+                        >
+                          <Star className="size-3 fill-amber-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Filter and Search Controls */}
             <div className="flex flex-col items-stretch justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-center">
               <div className="flex flex-1 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center">
+                {/* Pinned Filter Toggle Button */}
+                <Button
+                  type="button"
+                  variant={showOnlyFavorites ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setShowOnlyFavorites(!showOnlyFavorites)
+                    setCurrentPage(1)
+                  }}
+                  className={cn(
+                    "h-9 gap-1.5 text-xs cursor-pointer shrink-0",
+                    showOnlyFavorites
+                      ? "bg-amber-500 hover:bg-amber-600 text-white"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Show only pinned favorite services"
+                >
+                  <Star
+                    className={cn(
+                      "size-3.5",
+                      showOnlyFavorites
+                        ? "fill-white text-white"
+                        : favorites.length > 0
+                        ? "fill-amber-400 text-amber-500"
+                        : "text-muted-foreground"
+                    )}
+                  />
+                  <span>Pinned</span>
+                  {favorites.length > 0 && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.2 text-[10px] font-mono",
+                        showOnlyFavorites ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {favorites.length}
+                    </span>
+                  )}
+                </Button>
                 {/* Category Select Box */}
                 <div className="relative w-full shrink-0 sm:w-56">
                   <Filter className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
@@ -746,10 +921,25 @@ export function ServicesDashboard({
                         className="group transition-colors"
                       >
                         <TableCell>
-                          <div className="flex items-center gap-2 font-semibold text-foreground">
+                          <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => toggleFavorite(svc.id)}
+                              className="rounded p-1 text-muted-foreground hover:text-amber-500 transition-colors cursor-pointer"
+                              title={favorites.includes(svc.id) ? "Unpin service" : "Pin service"}
+                            >
+                              <Star
+                                className={cn(
+                                  "size-3.5",
+                                  favorites.includes(svc.id)
+                                    ? "fill-amber-400 text-amber-500"
+                                    : "text-muted-foreground/30 hover:text-amber-500"
+                                )}
+                              />
+                            </button>
                             <span>{svc.name}</span>
                           </div>
-                          <div className="mt-0.5 line-clamp-1 max-w-[340px] text-xs text-muted-foreground">
+                          <div className="mt-0.5 line-clamp-1 max-w-[340px] pl-6 text-xs text-muted-foreground">
                             {svc.description}
                           </div>
                         </TableCell>
@@ -1160,6 +1350,15 @@ export function ServicesDashboard({
         <OnboardingModal
           open={isOnboardingOpen}
           onOpenChange={setIsOnboardingOpen}
+        />
+
+        {/* Global Command Palette (Ctrl+K) */}
+        <CommandPalette
+          open={isCommandPaletteOpen}
+          onOpenChange={setIsCommandPaletteOpen}
+          services={services}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
         />
       </div>
     </SidebarProvider>
