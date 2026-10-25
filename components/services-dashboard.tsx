@@ -1,12 +1,14 @@
-"use client"
+"use client";
 
 import {
   addService,
   deleteService,
   updateService,
+  logoutAction,
 } from "@/app/actions/services"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -39,7 +41,20 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { OnboardingModal } from "@/components/onboarding-modal"
+import Link from "next/link"
 import {
   Table,
   TableBody,
@@ -64,7 +79,9 @@ import {
   Edit2,
   ExternalLink,
   Filter,
+  FolderGit2,
   Layers,
+  LogOut,
   MonitorCheck,
   Network,
   Plus,
@@ -73,6 +90,9 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  Users,
+  Compass,
+  BookOpen,
 } from "lucide-react"
 import * as React from "react"
 
@@ -134,6 +154,7 @@ export function ServicesDashboard({
 
   // Dialog states
   const [isAddOpen, setIsAddOpen] = React.useState(false)
+  const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
   const [editingService, setEditingService] = React.useState<Service | null>(
     null
   )
@@ -455,6 +476,102 @@ export function ServicesDashboard({
 
         {/* Main Content Area */}
         <SidebarInset className="flex min-w-0 flex-1 flex-col">
+          {/* Top Sticky Navigation Header */}
+          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 sm:px-6 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="cursor-pointer shrink-0" />
+              <Separator orientation="vertical" className="h-5 shrink-0" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setSelectedEnv("All")
+                        setSelectedCategory("All")
+                      }}
+                      className="cursor-pointer text-xs"
+                    >
+                      Service Hub
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="text-xs font-semibold">
+                      {selectedEnv}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                  {selectedCategory !== "All" && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage className="text-xs font-medium text-muted-foreground">
+                          {selectedCategory}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsOnboardingOpen(true)}
+                className="hidden sm:inline-flex h-8 gap-1.5 text-xs font-medium cursor-pointer"
+              >
+                <Compass className="size-3.5 text-primary" />
+                <span>Tour</span>
+              </Button>
+
+              <Link
+                href="/onboarding"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "hidden md:inline-flex h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                )}
+              >
+                <BookOpen className="size-3.5 text-sky-500" />
+                <span>Docs</span>
+              </Link>
+
+              <Separator orientation="vertical" className="h-5 hidden sm:block" />
+
+              {/* Branch indicator */}
+              <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[11px] font-mono text-muted-foreground">
+                <Database className="size-3 text-emerald-500" />
+                <span>{branchName}</span>
+              </div>
+
+              {/* Team badge & logout */}
+              {teamName && (
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="secondary" className="gap-1 px-2 py-0.5 text-xs font-medium">
+                    <Users className="size-3 text-primary" />
+                    <span>{teamName}</span>
+                  </Badge>
+                  <form action={logoutAction}>
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
+                      title="Log out"
+                    >
+                      <LogOut className="size-4" />
+                    </Button>
+                  </form>
+                </div>
+              )}
+
+              <Separator orientation="vertical" className="h-5" />
+              <ThemeToggle />
+            </div>
+          </header>
+
           {/* Main Dashboard Body */}
           <main className="w-full max-w-7xl flex-1 space-y-6 p-4 sm:p-6">
             {/* Overview Stats Bar */}
@@ -1038,6 +1155,12 @@ export function ServicesDashboard({
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Interactive App & Architecture Tour Modal */}
+        <OnboardingModal
+          open={isOnboardingOpen}
+          onOpenChange={setIsOnboardingOpen}
+        />
       </div>
     </SidebarProvider>
   )
