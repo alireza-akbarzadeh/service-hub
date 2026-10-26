@@ -83,7 +83,7 @@ export function CommandPalette({
       if (!q) return true
 
       const tags = getServiceTags(svc)
-      const matchesTag = tags.some((t) => t.toLowerCase().includes(q))
+      const matchesTag = tags.some((t: string) => t.toLowerCase().includes(q))
 
       return (
         svc.name.toLowerCase().includes(q) ||
@@ -370,7 +370,7 @@ export function CommandPalette({
                           >
                             {svc.category}
                           </Badge>
-                          {getServiceTags(svc).slice(0, 2).map((tag) => (
+                          {getServiceTags(svc).slice(0, 2).map((tag: string) => (
                             <span
                               key={tag}
                               className="hidden md:inline-flex rounded bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground"
