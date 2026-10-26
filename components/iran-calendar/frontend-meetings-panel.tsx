@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useMeetings } from "@/hooks/use-meetings"
-import type { FrontendMeeting } from "@/app/api/meetings/route"
+import type { FrontendMeeting } from "@/lib/meetings-data"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -158,8 +158,14 @@ export function FrontendMeetingsPanel() {
             <Radio className="size-3.5 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-foreground">Frontend Meeting Controls</h3>
-            <p className="text-[10px] text-muted-foreground">Configurable API & Browser Storage</p>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-foreground">Frontend Meeting Controls</h3>
+              <Badge variant="outline" className="h-4 gap-1 px-1 py-0 text-[9px] font-medium border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
+                <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
+                Neon DB
+              </Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Postgres Cloud Synced & Push Alerts</p>
           </div>
         </div>
 

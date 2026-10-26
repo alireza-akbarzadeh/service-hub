@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Service } from "@/lib/db/schema"
 import { useMeetings } from "@/hooks/use-meetings"
-import type { FrontendMeeting } from "@/app/api/meetings/route"
+import type { FrontendMeeting } from "@/lib/meetings-data"
 import {
   Search,
   ExternalLink,

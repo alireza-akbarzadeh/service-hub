@@ -35,7 +35,10 @@ export default function RootLayout({
         geist.variable
       )}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20"
+      >
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>

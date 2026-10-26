@@ -62,6 +62,7 @@ export function ServicesDashboard({
     totalItems,
     totalPages,
     healthMap,
+    telemetryMap,
     isCheckingAllHealth,
     handlePingSingle,
     handleCheckAllVisibleHealth,
@@ -229,6 +230,7 @@ export function ServicesDashboard({
                 onCopyUrl={copyUrl}
                 copiedId={copiedId}
                 healthMap={healthMap}
+                telemetryMap={telemetryMap}
                 onPingSingle={handlePingSingle}
                 mirrorMap={mirrorMap}
                 networkInfo={networkInfo}

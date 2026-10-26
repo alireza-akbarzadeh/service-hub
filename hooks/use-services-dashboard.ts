@@ -8,6 +8,8 @@ import {
   updateService,
   checkEndpointHealth,
   batchCheckEndpointsHealth,
+  recordServicePing,
+  getAllServicesTelemetrySummary,
   type HealthCheckResult,
 } from "@/app/actions/services"
 import { useNetworkLocation } from "@/components/network-status-indicator"
@@ -136,9 +138,27 @@ export function useServicesDashboard(initialServices: Service[]) {
   const [inspectingService, setInspectingService] = React.useState<Service | null>(null)
   const [editingService, setEditingService] = React.useState<Service | null>(null)
 
-  // Health check states
+  // Health check & Neon telemetry states
   const [healthMap, setHealthMap] = React.useState<Record<number, HealthCheckResult>>({})
   const [isCheckingAllHealth, setIsCheckingAllHealth] = React.useState(false)
+  const [telemetryMap, setTelemetryMap] = React.useState<
+    Record<number, { uptimeRate: number; avgLatency: number; sparkline: number[] }>
+  >({})
+
+  // Fetch telemetry summaries from Neon on mount
+  React.useEffect(() => {
+    let isMounted = true
+    getAllServicesTelemetrySummary()
+      .then((map) => {
+        if (isMounted && map) {
+          setTelemetryMap(map)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Network / Location & VPN detection
   const {
@@ -296,16 +316,21 @@ export function useServicesDashboard(initialServices: Service[]) {
       try {
         const res = await checkEndpointHealth(svc.url)
         setHealthMap((prev) => ({ ...prev, [svc.id]: res }))
+        // Record telemetry to Neon Postgres
+        recordServicePing(svc.id, svc.url, res)
+          .then(() => {
+            getAllServicesTelemetrySummary().then(setTelemetryMap).catch(() => {})
+          })
+          .catch(() => {})
       } catch {
-        setHealthMap((prev) => ({
-          ...prev,
-          [svc.id]: {
-            url: svc.url,
-            status: "offline",
-            latencyMs: 3500,
-            message: "Error",
-          },
-        }))
+        const failRes: HealthCheckResult = {
+          url: svc.url,
+          status: "offline",
+          latencyMs: 3500,
+          message: "Error",
+        }
+        setHealthMap((prev) => ({ ...prev, [svc.id]: failRes }))
+        recordServicePing(svc.id, svc.url, failRes).catch(() => {})
       }
     },
     []
@@ -322,10 +347,13 @@ export function useServicesDashboard(initialServices: Service[]) {
         paginatedServices.forEach((s) => {
           if (results[s.url]) {
             next[s.id] = results[s.url]
+            // Record each ping to Neon Postgres
+            recordServicePing(s.id, s.url, results[s.url]).catch(() => {})
           }
         })
         return next
       })
+      getAllServicesTelemetrySummary().then(setTelemetryMap).catch(() => {})
     } finally {
       setIsCheckingAllHealth(false)
     }
@@ -451,6 +479,7 @@ export function useServicesDashboard(initialServices: Service[]) {
     totalPages,
     // Health & Network
     healthMap,
+    telemetryMap,
     isCheckingAllHealth,
     handlePingSingle,
     handleCheckAllVisibleHealth,

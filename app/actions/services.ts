@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { services, type Service } from "@/lib/db/schema"
+import { services, serviceHealthLogs, type Service } from "@/lib/db/schema"
 import { initialServicesCatalog } from "@/lib/services-data"
 import {
   verifySession,
@@ -507,3 +507,183 @@ export async function testServiceEndpoint(
     }
   }
 }
+
+export interface ServiceTelemetryRecord {
+  id: number
+  serviceId: number
+  url: string
+  status: "online" | "warning" | "error" | "offline"
+  httpStatus?: number
+  latencyMs: number
+  message?: string
+  checkedAt: string
+}
+
+export interface ServiceTelemetrySummary {
+  uptimeRate: number
+  avgLatency: number
+  minLatency: number
+  maxLatency: number
+  totalChecks: number
+  history: ServiceTelemetryRecord[]
+}
+
+/**
+ * Record a service health ping result into Neon Postgres
+ */
+export async function recordServicePing(
+  serviceId: number,
+  url: string,
+  result: HealthCheckResult
+): Promise<{ success: boolean; logId?: number }> {
+  try {
+    const [inserted] = await db
+      .insert(serviceHealthLogs)
+      .values({
+        serviceId,
+        url,
+        status: result.status,
+        httpStatus: result.httpStatus ?? null,
+        latencyMs: result.latencyMs,
+        message: result.message || "",
+      })
+      .returning()
+
+    return { success: true, logId: inserted?.id }
+  } catch (err) {
+    console.warn("Neon recordServicePing warning:", (err as Error).message)
+    return { success: false }
+  }
+}
+
+/**
+ * Fetch historical health telemetry & sparkline data for a specific service
+ */
+export async function getServiceHealthTelemetry(
+  serviceId: number
+): Promise<ServiceTelemetrySummary> {
+  try {
+    const queryPromise = db
+      .select()
+      .from(serviceHealthLogs)
+      .where(eq(serviceHealthLogs.serviceId, serviceId))
+      .orderBy(desc(serviceHealthLogs.checkedAt))
+      .limit(30)
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), 3000)
+    )
+
+    const rows = await Promise.race([queryPromise, timeoutPromise])
+
+    if (rows && rows.length > 0) {
+      const chrono = [...rows].reverse()
+      const totalChecks = chrono.length
+      const successfulChecks = chrono.filter(
+        (r) =>
+          r.status === "online" ||
+          r.status === "warning" ||
+          (r.httpStatus && r.httpStatus >= 200 && r.httpStatus < 500)
+      ).length
+
+      const uptimeRate = Math.round((successfulChecks / totalChecks) * 1000) / 10
+      const latencies = chrono.map((r) => r.latencyMs)
+      const avgLatency = Math.round(
+        latencies.reduce((a, b) => a + b, 0) / latencies.length
+      )
+      const minLatency = Math.min(...latencies)
+      const maxLatency = Math.max(...latencies)
+
+      return {
+        uptimeRate,
+        avgLatency,
+        minLatency,
+        maxLatency,
+        totalChecks,
+        history: chrono.map((r) => ({
+          id: r.id,
+          serviceId: r.serviceId,
+          url: r.url,
+          status: r.status as ServiceTelemetryRecord["status"],
+          httpStatus: r.httpStatus ?? undefined,
+          latencyMs: r.latencyMs,
+          message: r.message ?? undefined,
+          checkedAt: r.checkedAt.toISOString(),
+        })),
+      }
+    }
+  } catch (err) {
+    console.warn("Neon getServiceHealthTelemetry warning:", (err as Error).message)
+  }
+
+  return {
+    uptimeRate: 100,
+    avgLatency: 0,
+    minLatency: 0,
+    maxLatency: 0,
+    totalChecks: 0,
+    history: [],
+  }
+}
+
+/**
+ * Fetch fleet-wide telemetry summaries for all services
+ */
+export async function getAllServicesTelemetrySummary(): Promise<
+  Record<number, { uptimeRate: number; avgLatency: number; sparkline: number[] }>
+> {
+  try {
+    const queryPromise = db
+      .select()
+      .from(serviceHealthLogs)
+      .orderBy(desc(serviceHealthLogs.checkedAt))
+      .limit(300)
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), 3500)
+    )
+
+    const rows = await Promise.race([queryPromise, timeoutPromise])
+    const map: Record<
+      number,
+      { uptimeRate: number; avgLatency: number; sparkline: number[] }
+    > = {}
+
+    if (rows && rows.length > 0) {
+      const groups: Record<number, typeof rows> = {}
+      for (const r of rows) {
+        if (!groups[r.serviceId]) groups[r.serviceId] = []
+        groups[r.serviceId].push(r)
+      }
+
+      for (const [idStr, sRows] of Object.entries(groups)) {
+        const sid = Number(idStr)
+        const chrono = [...sRows].reverse().slice(-10)
+        const total = chrono.length
+        const up = chrono.filter(
+          (r) =>
+            r.status === "online" ||
+            r.status === "warning" ||
+            (r.httpStatus && r.httpStatus >= 200 && r.httpStatus < 500)
+        ).length
+        const uptimeRate = Math.round((up / total) * 1000) / 10
+        const latencies = chrono.map((r) => r.latencyMs)
+        const avgLatency = Math.round(
+          latencies.reduce((a, b) => a + b, 0) / latencies.length
+        )
+
+        map[sid] = {
+          uptimeRate,
+          avgLatency,
+          sparkline: latencies,
+        }
+      }
+    }
+
+    return map
+  } catch (err) {
+    console.warn("getAllServicesTelemetrySummary warning:", (err as Error).message)
+    return {}
+  }
+}
+

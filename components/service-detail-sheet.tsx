@@ -3,6 +3,8 @@
 import {
   checkEndpointHealth,
   testServiceEndpoint,
+  getServiceHealthTelemetry,
+  recordServicePing,
   type EndpointTestResult,
   type HealthCheckResult,
 } from "@/app/actions/services"
@@ -94,24 +96,43 @@ export function ServiceDetailSheet({
       setTesterPath("/health")
     }
 
-    // Load ping history from localStorage
-    try {
-      const stored = localStorage.getItem(`service_pings_${service.id}`)
-      if (stored) {
-        setPingHistory(JSON.parse(stored))
-      } else {
-        setPingHistory([])
-      }
-    } catch {
-      setPingHistory([])
-    }
+    // Load telemetry from Neon Postgres with localStorage fallback
+    getServiceHealthTelemetry(service.id)
+      .then((telemetry) => {
+        if (telemetry && telemetry.history && telemetry.history.length > 0) {
+          setPingHistory(
+            telemetry.history.map((h) => ({
+              timestamp: new Date(h.checkedAt).getTime(),
+              latencyMs: h.latencyMs,
+              status: h.status === "error" ? "offline" : (h.status as PingRecord["status"]),
+            }))
+          )
+        } else {
+          try {
+            const stored = localStorage.getItem(`service_pings_${service.id}`)
+            if (stored) setPingHistory(JSON.parse(stored))
+            else setPingHistory([])
+          } catch {
+            setPingHistory([])
+          }
+        }
+      })
+      .catch(() => {
+        try {
+          const stored = localStorage.getItem(`service_pings_${service.id}`)
+          if (stored) setPingHistory(JSON.parse(stored))
+          else setPingHistory([])
+        } catch {
+          setPingHistory([])
+        }
+      })
   }, [service?.id])
 
   if (!service) return null
 
-  const recordPing = (record: PingRecord) => {
+  const recordPing = (record: PingRecord, rawResult?: HealthCheckResult) => {
     setPingHistory((prev) => {
-      const updated = [...prev.slice(-9), record]
+      const updated = [...prev.slice(-29), record]
       try {
         localStorage.setItem(
           `service_pings_${service.id}`,
@@ -122,6 +143,10 @@ export function ServiceDetailSheet({
       }
       return updated
     })
+
+    if (rawResult) {
+      recordServicePing(service.id, service.url, rawResult).catch(() => {})
+    }
   }
 
   const handlePing = async () => {
@@ -129,23 +154,30 @@ export function ServiceDetailSheet({
     try {
       const res = await checkEndpointHealth(service.url)
       setHealth(res)
-      recordPing({
-        timestamp: Date.now(),
-        latencyMs: res.latencyMs,
-        status: res.status === "error" ? "offline" : res.status,
-      })
+      recordPing(
+        {
+          timestamp: Date.now(),
+          latencyMs: res.latencyMs,
+          status: res.status === "error" ? "offline" : res.status,
+        },
+        res
+      )
     } catch {
-      setHealth({
+      const failRes: HealthCheckResult = {
         url: service.url,
         status: "offline",
         latencyMs: 3500,
         message: "Ping failed",
-      })
-      recordPing({
-        timestamp: Date.now(),
-        latencyMs: 3500,
-        status: "offline",
-      })
+      }
+      setHealth(failRes)
+      recordPing(
+        {
+          timestamp: Date.now(),
+          latencyMs: 3500,
+          status: "offline",
+        },
+        failRes
+      )
     } finally {
       setIsPinging(false)
     }
@@ -157,17 +189,29 @@ export function ServiceDetailSheet({
       try {
         const res = await checkEndpointHealth(service.url)
         setHealth(res)
-        recordPing({
-          timestamp: Date.now(),
-          latencyMs: res.latencyMs,
-          status: res.status === "error" ? "offline" : res.status,
-        })
+        recordPing(
+          {
+            timestamp: Date.now(),
+            latencyMs: res.latencyMs,
+            status: res.status === "error" ? "offline" : res.status,
+          },
+          res
+        )
       } catch {
-        recordPing({
-          timestamp: Date.now(),
-          latencyMs: 3500,
+        const failRes: HealthCheckResult = {
+          url: service.url,
           status: "offline",
-        })
+          latencyMs: 3500,
+          message: "Burst Ping Failed",
+        }
+        recordPing(
+          {
+            timestamp: Date.now(),
+            latencyMs: 3500,
+            status: "offline",
+          },
+          failRes
+        )
       }
       if (i < 2) {
         await new Promise((r) => setTimeout(r, 400))
@@ -458,12 +502,21 @@ export function ServiceDetailSheet({
                 {pingHistory.length > 0 && (
                   <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="flex items-center gap-1.5 font-semibold text-muted-foreground">
-                        <Activity className="size-3 text-primary" />
-                        <span>
-                          Latency Sparkline ({pingHistory.length} samples)
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1.5 font-semibold text-muted-foreground">
+                          <Activity className="size-3 text-primary" />
+                          <span>
+                            Latency Sparkline ({pingHistory.length} samples)
+                          </span>
                         </span>
-                      </span>
+                        <Badge
+                          variant="outline"
+                          className="h-4 gap-1 border-emerald-500/30 bg-emerald-500/5 px-1 py-0 font-mono text-[9px] text-emerald-500"
+                        >
+                          <span className="size-1 animate-pulse rounded-full bg-emerald-500" />
+                          Neon Telemetry
+                        </Badge>
+                      </div>
                       <div className="flex items-center gap-2 font-mono text-[10px]">
                         {avgLatency !== null && (
                           <span className="text-foreground">

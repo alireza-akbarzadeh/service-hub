@@ -37,6 +37,10 @@ interface ServicesTableProps {
   onCopyUrl: (url: string, id: number) => void
   copiedId: number | null
   healthMap: Record<number, HealthCheckResult>
+  telemetryMap?: Record<
+    number,
+    { uptimeRate: number; avgLatency: number; sparkline: number[] }
+  >
   onPingSingle: (svc: Service, e?: React.MouseEvent) => void
   mirrorMap: Map<number, Service[]>
   networkInfo: any
@@ -92,6 +96,7 @@ export function ServicesTable({
   onCopyUrl,
   copiedId,
   healthMap,
+  telemetryMap,
   onPingSingle,
   mirrorMap,
   networkInfo,
@@ -224,34 +229,81 @@ export function ServicesTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col items-start gap-1">
-                    {renderStatusBadge(svc.status)}
-                    {healthMap[svc.id] ? (
-                      <div
-                        onClick={(e) => onPingSingle(svc, e)}
-                        className={cn(
-                          "inline-flex cursor-pointer items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[10px] transition-all",
-                          healthMap[svc.id].status === "online"
-                            ? "border-emerald-500/30 bg-emerald-500/10 font-semibold text-emerald-600 dark:text-emerald-400"
-                            : healthMap[svc.id].status === "warning"
-                              ? "border-amber-500/30 bg-amber-500/10 font-medium text-amber-600 dark:text-amber-400"
-                              : "border-destructive/30 bg-destructive/10 font-medium text-destructive"
-                        )}
-                        title={`Ping again: ${healthMap[svc.id].message || healthMap[svc.id].status} (${healthMap[svc.id].latencyMs}ms)`}
-                      >
-                        <span className="size-1.5 rounded-full bg-current" />
-                        <span>{healthMap[svc.id].latencyMs}ms</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => onPingSingle(svc, e)}
-                        className="inline-flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-primary"
-                        title="Run live ping check"
-                      >
-                        <Activity className="size-2.5 opacity-60" />
-                        <span>Ping</span>
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {renderStatusBadge(svc.status)}
+                      {telemetryMap && telemetryMap[svc.id] && (
+                        <span
+                          className={cn(
+                            "rounded px-1 py-0.5 font-mono text-[9px] font-semibold tracking-tight border",
+                            telemetryMap[svc.id].uptimeRate >= 95
+                              ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                              : telemetryMap[svc.id].uptimeRate >= 80
+                                ? "border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5"
+                                : "border-destructive/30 text-destructive bg-destructive/5"
+                          )}
+                          title={`30-day reliability: ${telemetryMap[svc.id].uptimeRate}% • Avg: ${telemetryMap[svc.id].avgLatency}ms (Neon Postgres)`}
+                        >
+                          {telemetryMap[svc.id].uptimeRate}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {healthMap[svc.id] ? (
+                        <div
+                          onClick={(e) => onPingSingle(svc, e)}
+                          className={cn(
+                            "inline-flex cursor-pointer items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[10px] transition-all",
+                            healthMap[svc.id].status === "online"
+                              ? "border-emerald-500/30 bg-emerald-500/10 font-semibold text-emerald-600 dark:text-emerald-400"
+                              : healthMap[svc.id].status === "warning"
+                                ? "border-amber-500/30 bg-amber-500/10 font-medium text-amber-600 dark:text-amber-400"
+                                : "border-destructive/30 bg-destructive/10 font-medium text-destructive"
+                          )}
+                          title={`Ping again: ${healthMap[svc.id].message || healthMap[svc.id].status} (${healthMap[svc.id].latencyMs}ms)`}
+                        >
+                          <span className="size-1.5 rounded-full bg-current" />
+                          <span>{healthMap[svc.id].latencyMs}ms</span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => onPingSingle(svc, e)}
+                          className="inline-flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-primary"
+                          title="Run live ping check"
+                        >
+                          <Activity className="size-2.5 opacity-60" />
+                          <span>Ping</span>
+                        </button>
+                      )}
+
+                      {/* Mini Sparkline Bars */}
+                      {telemetryMap && telemetryMap[svc.id]?.sparkline?.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => onInspectService(svc)}
+                          className="flex items-end gap-0.5 h-3.5 px-1 py-0.5 rounded bg-muted/40 hover:bg-muted cursor-pointer transition-colors"
+                          title={`Neon Latency History (${telemetryMap[svc.id].sparkline.length} checks). Click to inspect details.`}
+                        >
+                          {telemetryMap[svc.id].sparkline.slice(-6).map((lat, idx) => {
+                            const heightPercent = Math.min(Math.max((lat / 150) * 100, 20), 100)
+                            return (
+                              <span
+                                key={idx}
+                                style={{ height: `${heightPercent}%` }}
+                                className={cn(
+                                  "w-1 rounded-t-2xs",
+                                  lat <= 90
+                                    ? "bg-emerald-500/80"
+                                    : lat <= 130
+                                      ? "bg-amber-500/80"
+                                      : "bg-destructive/80"
+                                )}
+                              />
+                            )
+                          })}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-xs text-muted-foreground">

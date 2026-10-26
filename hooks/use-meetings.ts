@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { INITIAL_MEETINGS, type FrontendMeeting } from "@/app/api/meetings/route"
+import { INITIAL_MEETINGS, type FrontendMeeting } from "@/lib/meetings-data"
 
 const STORAGE_KEY = "frontend_squad_meetings"
 
@@ -65,7 +65,12 @@ export function useMeetings() {
     return meetings[0]?.id || "standup"
   })
 
-  const [permission, setPermission] = React.useState<NotificationPermission>("default")
+  const [permission, setPermission] = React.useState<NotificationPermission>(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      return Notification.permission
+    }
+    return "default"
+  })
   const [soundEnabled, setSoundEnabled] = React.useState<boolean>(true)
   const [countdownText, setCountdownText] = React.useState<string>("")
   const [isLiveNow, setIsLiveNow] = React.useState<boolean>(false)
@@ -73,45 +78,55 @@ export function useMeetings() {
   // Notification deduplication set (to avoid notifying repeatedly for same meeting in same session)
   const notifiedEventsRef = React.useRef<Set<string>>(new Set())
 
-  // Check initial permission
-  React.useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setPermission(Notification.permission)
-    }
-  }, [])
+  // Native Web Push Notification sender
+  const sendPushNotification = React.useCallback(
+    (title: string, body: string, url?: string) => {
+      if (soundEnabled) {
+        playMeetingChime()
+      }
 
-  // Sync to API in background on mount if needed
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        try {
+          const notif = new Notification(title, {
+            body,
+            icon: "/favicon.ico",
+            badge: "/favicon.ico",
+          })
+          notif.onclick = () => {
+            window.focus()
+            if (url) {
+              window.open(url, "_blank")
+            }
+          }
+        } catch {}
+      }
+    },
+    [soundEnabled]
+  )
+
+  // Sync to Neon API on mount and update local cache
   React.useEffect(() => {
+    let isMounted = true
     async function syncWithServer() {
       try {
         const res = await fetch("/api/meetings")
         if (res.ok) {
           const json = await res.json()
           if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            // If localStorage had nothing, use server
-            if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {
+            if (isMounted) {
               setMeetings(json.data)
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data))
+              } catch {}
             }
           }
         }
       } catch {}
     }
     syncWithServer()
-  }, [])
-
-  // Save meetings to localStorage whenever changed
-  const persistMeetings = React.useCallback((next: FrontendMeeting[]) => {
-    setMeetings(next)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    } catch {}
-
-    // Send async update to API
-    fetch("/api/meetings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(next),
-    }).catch(() => {})
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   // Selected meeting
@@ -182,33 +197,7 @@ export function useMeetings() {
     compute()
     const timer = setInterval(compute, 1000)
     return () => clearInterval(timer)
-  }, [selectedMeeting])
-
-  // Native Web Push Notification sender
-  const sendPushNotification = React.useCallback(
-    (title: string, body: string, url?: string) => {
-      if (soundEnabled) {
-        playMeetingChime()
-      }
-
-      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-        try {
-          const notif = new Notification(title, {
-            body,
-            icon: "/favicon.ico",
-            badge: "/favicon.ico",
-          })
-          notif.onclick = () => {
-            window.focus()
-            if (url) {
-              window.open(url, "_blank")
-            }
-          }
-        } catch {}
-      }
-    },
-    [soundEnabled]
-  )
+  }, [selectedMeeting, sendPushNotification])
 
   // Request browser permission
   const requestPermission = React.useCallback(async () => {
@@ -231,54 +220,139 @@ export function useMeetings() {
     }
   }, [sendPushNotification])
 
-  // CRUD actions
+  // CRUD actions connected to Neon Postgres
   const addMeeting = React.useCallback(
-    (data: Omit<FrontendMeeting, "id" | "createdAt">) => {
+    async (data: Omit<FrontendMeeting, "id" | "createdAt">) => {
       const newM: FrontendMeeting = {
         ...data,
-        id: `meet-${Date.now()}`,
+        id: `meet-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         createdAt: new Date().toISOString(),
       }
       const next = [...meetings, newM]
-      persistMeetings(next)
+      setMeetings(next)
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch {}
       setActiveMeetingId(newM.id)
       sendPushNotification(
         "Meeting Created! 📅",
         `"${newM.title}" scheduled for ${newM.tehranTime} IRST.`
       )
+
+      // Persist to Neon Postgres
+      try {
+        const res = await fetch("/api/meetings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newM),
+        })
+        if (res.ok) {
+          const json = await res.json()
+          if (json.all) {
+            setMeetings(json.all)
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(json.all))
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn("Neon persistence error:", err)
+      }
+
       return newM
     },
-    [meetings, persistMeetings, sendPushNotification]
+    [meetings, sendPushNotification]
   )
 
   const updateMeeting = React.useCallback(
-    (id: string, data: Partial<FrontendMeeting>) => {
+    async (id: string, data: Partial<FrontendMeeting>) => {
       const next = meetings.map((m) => (m.id === id ? { ...m, ...data } : m))
-      persistMeetings(next)
+      setMeetings(next)
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch {}
       sendPushNotification("Meeting Updated! ✏️", "Meeting schedule has been updated.")
+
+      // Persist to Neon Postgres
+      try {
+        const res = await fetch("/api/meetings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...data, id }),
+        })
+        if (res.ok) {
+          const json = await res.json()
+          if (json.all) {
+            setMeetings(json.all)
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(json.all))
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn("Neon update error:", err)
+      }
     },
-    [meetings, persistMeetings, sendPushNotification]
+    [meetings, sendPushNotification]
   )
 
   const deleteMeeting = React.useCallback(
-    (id: string) => {
+    async (id: string) => {
       const next = meetings.filter((m) => m.id !== id)
-      persistMeetings(next)
+      setMeetings(next)
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch {}
       if (activeMeetingId === id && next.length > 0) {
         setActiveMeetingId(next[0].id)
       }
+
+      // Delete from Neon Postgres
+      try {
+        const res = await fetch(`/api/meetings?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        })
+        if (res.ok) {
+          const json = await res.json()
+          if (json.all) {
+            setMeetings(json.all)
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(json.all))
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn("Neon delete error:", err)
+      }
     },
-    [meetings, activeMeetingId, persistMeetings]
+    [meetings, activeMeetingId]
   )
 
   const toggleMeetingActive = React.useCallback(
-    (id: string) => {
+    async (id: string) => {
+      const target = meetings.find((m) => m.id === id)
+      if (!target) return
+      const nextActive = !target.isActive
       const next = meetings.map((m) =>
-        m.id === id ? { ...m, isActive: !m.isActive } : m
+        m.id === id ? { ...m, isActive: nextActive } : m
       )
-      persistMeetings(next)
+      setMeetings(next)
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      } catch {}
+
+      // Persist to Neon Postgres
+      try {
+        await fetch("/api/meetings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, isActive: nextActive }),
+        })
+      } catch (err) {
+        console.warn("Neon toggle error:", err)
+      }
     },
-    [meetings, persistMeetings]
+    [meetings]
   )
 
   return {
