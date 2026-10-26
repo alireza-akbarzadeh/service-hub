@@ -130,24 +130,117 @@ export function IranClockCalendar() {
     tehranTime.hours >= 9 &&
     (tehranTime.hours < 17 || (tehranTime.hours === 17 && tehranTime.minutes <= 30))
 
-  return (
-    <div className="flex flex-col space-y-4">
-      {/* Exact Tehran Digital Clock Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-linear-to-br from-amber-500/10 via-card to-background p-4 shadow-sm">
-        <div className="absolute -right-6 -top-6 size-24 rounded-full bg-amber-500/10 blur-xl pointer-events-none" />
+  // Collapsible state for calendar section (stored in browser localStorage)
+  const [isCalendarCollapsed, setIsCalendarCollapsed] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    try {
+      return localStorage.getItem("service_hub_calendar_collapsed") === "true"
+    } catch {}
+    return false
+  })
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 font-medium">
-            <Globe2 className="size-3.5 text-amber-500 animate-spin-slow" />
-            <span>Tehran, Iran</span>
-          </div>
-          <Badge
-            variant="outline"
-            className="border-amber-500/30 bg-amber-500/10 font-mono text-[10px] text-amber-600 dark:text-amber-400"
-          >
-            IRST (UTC+03:30)
-          </Badge>
+  const toggleCalendarCollapse = () => {
+    setIsCalendarCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem("service_hub_calendar_collapsed", String(next))
+      } catch {}
+      return next
+    })
+  }
+
+  return (
+    <div className="flex flex-col space-y-3">
+      {/* Calendar Section Header with Collapse / Expand Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <CalendarIcon className="size-3.5 text-amber-500" />
+          <span className="text-xs font-bold text-foreground">Iranian Time & Calendar</span>
         </div>
+        <Button
+          variant="outline"
+          size="xs"
+          onClick={toggleCalendarCollapse}
+          className="h-6 cursor-pointer gap-1 px-2 text-[10px] font-medium text-muted-foreground hover:text-foreground shadow-2xs"
+          title={isCalendarCollapsed ? "Expand Calendar" : "Collapse Calendar like sidebar"}
+        >
+          <span>{isCalendarCollapsed ? "Expand Calendar" : "Collapse"}</span>
+          <ChevronRight
+            className={cn(
+              "size-3 transition-transform duration-200",
+              !isCalendarCollapsed && "rotate-90"
+            )}
+          />
+        </Button>
+      </div>
+
+      {/* Collapsed Compact Strip View */}
+      {isCalendarCollapsed ? (
+        <div
+          onClick={toggleCalendarCollapse}
+          className="group flex cursor-pointer items-center justify-between rounded-xl border border-border/80 bg-linear-to-r from-amber-500/10 via-card to-background p-3 shadow-2xs transition-all hover:border-amber-500/40 hover:shadow-xs"
+        >
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500 shadow-2xs">
+              <Clock className="size-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-base font-bold tabular-nums text-foreground">
+                  {tehranTime.timeString}
+                </span>
+                <Badge
+                  variant="outline"
+                  className="px-1 py-0 font-mono text-[9px] border-amber-500/30 text-amber-600 dark:text-amber-400"
+                >
+                  IRST
+                </Badge>
+              </div>
+              <div className="font-vazirmatn text-xs font-bold text-foreground/80">
+                {todayJalali
+                  ? `${todayJalali.weekdayNameFa} ${toPersianDigits(todayJalali.jd)} ${todayJalali.monthNameFa}`
+                  : "Tehran"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {todayStatus && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "font-vazirmatn text-[10px] font-bold px-1.5 py-0.5",
+                  todayStatus.isOffDay
+                    ? "border-rose-500/40 text-rose-600 dark:text-rose-400 bg-rose-500/10"
+                    : todayStatus.isHalfDay
+                      ? "border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                      : "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                )}
+              >
+                {todayStatus.isOffDay ? "تعطیل" : todayStatus.isHalfDay ? "نیمه‌وقت" : "کاری"}
+              </Badge>
+            )}
+            <ChevronRight className="size-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Exact Tehran Digital Clock Card */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-linear-to-br from-amber-500/10 via-card to-background p-4 shadow-sm">
+            <div className="absolute -right-6 -top-6 size-24 rounded-full bg-amber-500/10 blur-xl pointer-events-none" />
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 font-medium">
+                <Globe2 className="size-3.5 text-amber-500 animate-spin-slow" />
+                <span>Tehran, Iran</span>
+              </div>
+              <Badge
+                variant="outline"
+                className="border-amber-500/30 bg-amber-500/10 font-mono text-[10px] text-amber-600 dark:text-amber-400"
+              >
+                IRST (UTC+03:30)
+              </Badge>
+            </div>
 
         {/* Big Live Digital Clock Display */}
         <div className="mt-3 flex items-baseline justify-between">
@@ -424,6 +517,8 @@ export function IranClockCalendar() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   )
 }
