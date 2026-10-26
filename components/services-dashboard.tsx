@@ -320,6 +320,7 @@ export function ServicesDashboard({
           services={services}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+          onToggleRightPanel={toggleRightPanel}
         />
 
         {/* Frontend .env Generator Modal */}
