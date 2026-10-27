@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -14,7 +15,8 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Clock, PanelRight, PanelRightClose, Radio, Search } from "lucide-react"
+import { Clock, FileJson, PanelRight, PanelRightClose, Radio, Search } from "lucide-react"
+import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 
 interface DashboardHeaderProps {
   selectedEnv: string
@@ -92,8 +94,27 @@ export function DashboardHeader({
         </Breadcrumb>
       </div>
 
-      {/* Right: Search, Tehran Time & Meeting Toggle, Theme */}
+      {/* Right: Market Rates, Dev Tools, Search, Tehran Time & Meeting Toggle, Theme */}
       <div className="flex items-center gap-2">
+        {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
+        <HeaderMarketSection />
+
+        <Separator orientation="vertical" className="hidden sm:block h-5" />
+
+        {/* Developer Tools Link */}
+        <Link href="/tools">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground hover:bg-muted shadow-2xs"
+            title="Open Developer Tools Suite (JSON Formatter, JWT, Encoders)"
+          >
+            <FileJson className="size-3.5 text-violet-500" />
+            <span className="hidden sm:inline">Dev Tools</span>
+          </Button>
+        </Link>
+
         {/* Quick Search */}
         <button
           type="button"

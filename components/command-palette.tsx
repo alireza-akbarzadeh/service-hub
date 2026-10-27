@@ -14,6 +14,8 @@ import {
   Check,
   Star,
   CornerDownLeft,
+  FileJson,
+  Terminal,
   X,
   Layers,
   Code2,
@@ -134,6 +136,32 @@ export function CommandPalette({
   // Actions list for fast meeting creation & navigation
   const quickActions: PaletteAction[] = React.useMemo(() => {
     const actions: PaletteAction[] = [
+      {
+        type: "action",
+        id: "act-curl-inspector",
+        title: "cURL Command Inspector",
+        subtitle: "Parse cURL to extract URL, headers, Bearer tokens, JSON payload, and client device",
+        badge: "New Tool",
+        icon: Terminal,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/tools"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-dev-tools",
+        title: "Developer Tools & JSON Formatter",
+        subtitle: "Launch interactive JSON formatter, tree inspector, JWT debugger, and encoders",
+        badge: "Dev Suite",
+        icon: FileJson,
+        iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
+        onSelect: () => {
+          window.location.href = "/tools"
+          onOpenChange(false)
+        },
+      },
       {
         type: "action",
         id: "act-instant-meet",

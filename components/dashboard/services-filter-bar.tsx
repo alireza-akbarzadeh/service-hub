@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Filter, Plus, Search, Star, Tag } from "lucide-react"
 import { CATEGORIES, AVAILABLE_TAGS } from "@/hooks/use-services-dashboard"
+import { GridConfig, DEFAULT_GRID_CONFIG } from "./grid-view-config"
+import { GridConfigMenu } from "./grid-config-menu"
 
 interface ServicesFilterBarProps {
   showOnlyFavorites: boolean
@@ -19,6 +21,8 @@ interface ServicesFilterBarProps {
   onSelectTag: (tag: string) => void
   tagCounts: Record<string, number>
   onOpenAddModal: () => void
+  gridConfig?: GridConfig
+  onChangeGridConfig?: (config: GridConfig) => void
 }
 
 export function ServicesFilterBar({
@@ -33,6 +37,8 @@ export function ServicesFilterBar({
   onSelectTag,
   tagCounts,
   onOpenAddModal,
+  gridConfig = DEFAULT_GRID_CONFIG,
+  onChangeGridConfig,
 }: ServicesFilterBarProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-3 shadow-xs space-y-3">
@@ -107,8 +113,15 @@ export function ServicesFilterBar({
           </div>
         </div>
 
-        {/* Add Service Button */}
-        <div className="flex shrink-0 items-center justify-end">
+        {/* View Mode Configuration & Add Service Button */}
+        <div className="flex shrink-0 items-center justify-between sm:justify-end gap-2">
+          {onChangeGridConfig && (
+            <GridConfigMenu
+              config={gridConfig}
+              onChangeConfig={onChangeGridConfig}
+            />
+          )}
+
           <Button
             size="sm"
             onClick={onOpenAddModal}

@@ -21,6 +21,12 @@ import { StatsOverview } from "@/components/dashboard/stats-overview"
 import { PinnedServices } from "@/components/dashboard/pinned-services"
 import { ServicesFilterBar } from "@/components/dashboard/services-filter-bar"
 import { ServicesTable } from "@/components/dashboard/services-table"
+import { ServicesCardsGrid } from "@/components/dashboard/services-cards-grid"
+import {
+  GridConfig,
+  loadGridConfig,
+  saveGridConfig,
+} from "@/components/dashboard/grid-view-config"
 import { ServicesPagination } from "@/components/dashboard/services-pagination"
 import { ServiceFormDialogs } from "@/components/dashboard/service-form-dialogs"
 import { IranCalendarPanel } from "@/components/iran-calendar/iran-calendar-panel"

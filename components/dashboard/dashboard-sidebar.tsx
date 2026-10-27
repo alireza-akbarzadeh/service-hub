@@ -29,6 +29,9 @@ import {
   Cpu,
   Database,
   FileCode,
+  FileJson,
+  Terminal,
+  Wrench,
   Layers,
   LogOut,
   MonitorCheck,
@@ -143,6 +146,44 @@ export function DashboardSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* cURL Inspector */}
+              <SidebarMenuItem>
+                <Link href="/tools" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="cURL Command Inspector"
+                    className="cursor-pointer w-full"
+                  >
+                    <Terminal className="size-4 text-emerald-500" />
+                    <span>cURL Inspector</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto px-1 py-0 text-[9px] font-mono border-emerald-500/30 text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      New
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* JSON Formatter & Dev Tools Suite */}
+              <SidebarMenuItem>
+                <Link href="/tools" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="JSON Formatter & Dev Tools"
+                    className="cursor-pointer w-full"
+                  >
+                    <FileJson className="size-4 text-violet-500" />
+                    <span>JSON Formatter</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto px-1 py-0 text-[9px] font-mono border-violet-500/30 text-violet-600 dark:text-violet-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Viewer
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
               {/* Quick Search Trigger */}
               <SidebarMenuItem>
                 <SidebarMenuButton
