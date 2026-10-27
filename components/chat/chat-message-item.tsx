@@ -6,26 +6,37 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import {
+  CheckCheck,
   Coins,
+  Copy,
+  Check,
   Dices,
+  Reply,
   SmilePlus,
 } from "lucide-react"
 
-const POPULAR_REACTIONS = ["🔥", "❤️", "😂", "🎮", "🚀", "👍", "🎉"]
+const POPULAR_REACTIONS = ["🔥", "❤️", "😂", "👍", "🚀", "🎉"]
 
 interface ChatMessageItemProps {
   message: ChatMessage
   currentUser: AnonUser
   onToggleReaction: (messageId: string, emoji: string) => void
+  onReply?: (message: ChatMessage) => void
+  onScrollToMessage?: (messageId: string) => void
+  isHighlighted?: boolean
 }
 
 export function ChatMessageItem({
   message,
   currentUser,
   onToggleReaction,
+  onReply,
+  onScrollToMessage,
+  isHighlighted = false,
 }: ChatMessageItemProps) {
   const isMe = message.senderId === currentUser.id
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false)
+  const [isCopied, setIsCopied] = React.useState(false)
 
   const timeFormatted = React.useMemo(() => {
     try {
@@ -36,6 +47,14 @@ export function ChatMessageItem({
     }
   }, [message.createdAt])
 
+  const handleCopy = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(message.content)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 1500)
+    }
+  }
+
   const reactions = message.reactions || {}
   const reactionKeys = Object.keys(reactions).filter(
     (k) => Array.isArray(reactions[k]) && reactions[k].length > 0
@@ -43,63 +62,128 @@ export function ChatMessageItem({
 
   return (
     <div
+      id={`msg-${message.id}`}
       className={cn(
-        "group relative flex gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40",
-        isMe && "bg-primary/[0.03]"
+        "group relative flex w-full items-end gap-2 px-3 py-1 sm:px-6 transition-all duration-300",
+        isMe ? "justify-end" : "justify-start",
+        isHighlighted && "bg-primary/10 rounded-xl"
       )}
     >
-      {/* Sender Avatar */}
+      {/* Sender Avatar for incoming messages on the left */}
+      {!isMe && (
+        <div
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm shadow-xs select-none self-end mb-1",
+            message.senderColor || "from-violet-500 to-purple-600"
+          )}
+          title={message.senderName}
+        >
+          <span>{message.senderAvatar}</span>
+        </div>
+      )}
+
+      {/* Message Bubble Container */}
       <div
         className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-base shadow-2xs select-none",
-          message.senderColor || "from-violet-500 to-purple-600"
+          "relative flex flex-col max-w-[85%] sm:max-w-[72%] md:max-w-[62%] lg:max-w-[52%] shadow-xs transition-all",
+          isMe ? "items-end" : "items-start"
         )}
       >
-        <span>{message.senderAvatar}</span>
-      </div>
-
-      {/* Message Body */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-vazirmatn text-xs font-bold text-foreground" dir="auto">
-            {message.senderName}
-          </span>
-          {isMe && (
-            <Badge
-              variant="outline"
-              className="text-[9px] px-1 py-0 h-4 border-primary/40 text-primary font-mono"
-            >
-              You
-            </Badge>
-          )}
-          <span className="text-[10px] text-muted-foreground font-mono">
-            {timeFormatted}
-          </span>
-        </div>
-
-        {/* Message Content Render */}
+        {/* Telegram Bubble */}
         <div
-          dir="auto"
-          className="font-vazirmatn mt-1 text-[13px] text-foreground/90 leading-relaxed break-words"
-        >
-          {message.type === "dice" ? (
-            <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-amber-700 dark:text-amber-300 font-medium">
-              <Dices className="size-4 text-amber-500 animate-spin" />
-              <span>{message.content}</span>
-            </div>
-          ) : message.type === "coin" ? (
-            <div className="inline-flex items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-sky-700 dark:text-sky-300 font-medium">
-              <Coins className="size-4 text-sky-500 animate-bounce" />
-              <span>{message.content}</span>
-            </div>
-          ) : (
-            <p className="whitespace-pre-wrap">{message.content}</p>
+          className={cn(
+            "relative rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed transition-all duration-300",
+            isMe
+              ? "bg-primary text-primary-foreground rounded-br-xs dark:bg-sky-600 dark:text-white"
+              : "bg-card border border-border/80 text-card-foreground rounded-bl-xs dark:bg-slate-900/90",
+            isHighlighted && "ring-2 ring-primary ring-offset-2 ring-offset-background"
           )}
+        >
+          {/* Sender Name (for incoming messages in group chat) */}
+          {!isMe && (
+            <div className="mb-1 flex items-center gap-1.5 font-vazirmatn text-[11px] font-bold text-sky-600 dark:text-sky-400 select-none">
+              <span>{message.senderName}</span>
+            </div>
+          )}
+
+          {/* Quoted Reply Preview inside bubble */}
+          {message.replyTo && (
+            <button
+              type="button"
+              onClick={() => onScrollToMessage?.(message.replyTo!.id)}
+              className={cn(
+                "mb-1.5 flex w-full cursor-pointer flex-col rounded-md border-l-3 px-2.5 py-1 text-left text-xs transition-opacity hover:opacity-90",
+                isMe
+                  ? "border-white/80 bg-black/15 text-white/90"
+                  : "border-primary/80 bg-muted/60 text-foreground dark:bg-muted/30"
+              )}
+              title="Jump to original message"
+            >
+              <div className="flex items-center gap-1 font-semibold text-[11px]">
+                <Reply className="size-3 shrink-0" />
+                <span className="truncate">{message.replyTo.senderName}</span>
+              </div>
+              <p className="truncate text-[11px] opacity-85 font-vazirmatn" dir="auto">
+                {message.replyTo.content}
+              </p>
+            </button>
+          )}
+
+          {/* Message Content */}
+          <div dir="auto" className="font-vazirmatn break-words">
+            {message.type === "dice" ? (
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl border px-3 py-1 font-medium",
+                  isMe
+                    ? "border-white/30 bg-white/15 text-white"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                )}
+              >
+                <Dices className="size-4 animate-spin text-amber-400" />
+                <span>{message.content}</span>
+              </div>
+            ) : message.type === "coin" ? (
+              <div
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-xl border px-3 py-1 font-medium",
+                  isMe
+                    ? "border-white/30 bg-white/15 text-white"
+                    : "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                )}
+              >
+                <Coins className="size-4 animate-bounce text-sky-300" />
+                <span>{message.content}</span>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            )}
+          </div>
+
+          {/* Time & Double Checkmark footer */}
+          <div
+            className={cn(
+              "mt-0.5 flex items-center justify-end gap-1 font-mono text-[10px] select-none",
+              isMe ? "text-white/80 dark:text-white/80" : "text-muted-foreground"
+            )}
+          >
+            <span>{timeFormatted}</span>
+            {isMe && (
+              <span title="Delivered">
+                <CheckCheck className="size-3 text-sky-200 dark:text-sky-200" />
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Reaction Badges */}
+        {/* Reaction Badges below the bubble */}
         {reactionKeys.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div
+            className={cn(
+              "mt-1 flex flex-wrap gap-1",
+              isMe ? "justify-end" : "justify-start"
+            )}
+          >
             {reactionKeys.map((emoji) => {
               const users = reactions[emoji] || []
               const hasReacted = users.includes(currentUser.id)
@@ -109,67 +193,115 @@ export function ChatMessageItem({
                   type="button"
                   onClick={() => onToggleReaction(message.id, emoji)}
                   className={cn(
-                    "inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-all",
+                    "inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-all shadow-2xs",
                     hasReacted
-                      ? "border-primary bg-primary/15 text-primary font-bold shadow-2xs scale-105"
-                      : "border-border bg-card/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "border-primary bg-primary/20 text-primary font-bold scale-105"
+                      : "border-border bg-card/90 text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                   title={`${users.length} reaction${users.length > 1 ? "s" : ""}`}
                 >
                   <span>{emoji}</span>
-                  <span className="font-mono text-[11px]">{users.length}</span>
+                  <span className="font-mono text-[10.5px]">{users.length}</span>
                 </button>
               )
             })}
           </div>
         )}
-      </div>
 
-      {/* Hover Reaction Bar */}
-      <div className="absolute right-3 top-2 hidden items-center gap-0.5 rounded-lg border border-border bg-background/95 p-0.5 shadow-xs backdrop-blur-xs group-hover:flex">
-        {POPULAR_REACTIONS.slice(0, 4).map((emoji) => (
-          <button
-            key={emoji}
-            type="button"
-            onClick={() => onToggleReaction(message.id, emoji)}
-            className="flex size-6 cursor-pointer items-center justify-center rounded text-xs transition-transform hover:scale-125 hover:bg-muted"
-            title={`React ${emoji}`}
-          >
-            {emoji}
-          </button>
-        ))}
-
-        <div className="relative">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="size-6 text-muted-foreground hover:text-foreground"
-            title="More reactions"
-          >
-            <SmilePlus className="size-3.5" />
-          </Button>
-
-          {showEmojiPicker && (
-            <div className="absolute right-0 top-8 z-30 flex gap-1 rounded-lg border border-border bg-popover p-1.5 shadow-md">
-              {POPULAR_REACTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => {
-                    onToggleReaction(message.id, emoji)
-                    setShowEmojiPicker(false)
-                  }}
-                  className="flex size-7 cursor-pointer items-center justify-center rounded text-sm transition-transform hover:scale-125 hover:bg-muted"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+        {/* Telegram Hover Floating Action Bar */}
+        <div
+          className={cn(
+            "absolute -top-3.5 hidden items-center gap-0.5 rounded-full border border-border bg-background/95 px-1 py-0.5 shadow-md backdrop-blur-md group-hover:flex z-10",
+            isMe ? "right-2" : "left-2"
           )}
+        >
+          {/* Reply Button */}
+          <button
+            type="button"
+            onClick={() => onReply?.(message)}
+            className="flex size-6 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            title="Reply to message"
+          >
+            <Reply className="size-3.5" />
+          </button>
+
+          {/* Copy Button */}
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex size-6 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            title={isCopied ? "Copied!" : "Copy message"}
+          >
+            {isCopied ? (
+              <Check className="size-3 text-emerald-500" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </button>
+
+          <div className="h-3 w-px bg-border/80 mx-0.5" />
+
+          {/* Quick Reaction Emojis */}
+          {POPULAR_REACTIONS.slice(0, 3).map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => onToggleReaction(message.id, emoji)}
+              className="flex size-6 cursor-pointer items-center justify-center rounded-full text-xs transition-transform hover:scale-125 hover:bg-muted"
+            >
+              {emoji}
+            </button>
+          ))}
+
+          {/* More Emojis */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="flex size-6 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              title="More reactions"
+            >
+              <SmilePlus className="size-3.5" />
+            </button>
+
+            {showEmojiPicker && (
+              <div
+                className={cn(
+                  "absolute top-8 z-30 flex gap-1 rounded-xl border border-border bg-popover p-1.5 shadow-lg",
+                  isMe ? "right-0" : "left-0"
+                )}
+              >
+                {POPULAR_REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      onToggleReaction(message.id, emoji)
+                      setShowEmojiPicker(false)
+                    }}
+                    className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-sm transition-transform hover:scale-125 hover:bg-muted"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Outgoing Avatar on the right */}
+      {isMe && (
+        <div
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm shadow-xs select-none self-end mb-1",
+            currentUser.color || "from-violet-500 to-purple-600"
+          )}
+          title="You"
+        >
+          <span>{currentUser.avatar}</span>
+        </div>
+      )}
     </div>
   )
 }

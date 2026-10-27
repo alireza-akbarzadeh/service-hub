@@ -71,6 +71,7 @@ export const chatMessages = pgTable("chat_messages", {
   content: text("content").notNull(),
   type: text("type").notNull().default("text"), // "text" | "dice" | "coin" | "system"
   reactions: text("reactions").notNull().default("{}"), // JSON string
+  replyTo: text("reply_to"), // JSON string { id, senderName, content, senderAvatar }
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
 

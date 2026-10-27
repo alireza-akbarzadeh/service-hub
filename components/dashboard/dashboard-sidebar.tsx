@@ -31,6 +31,7 @@ import {
   FileCode,
   FileJson,
   Gamepad2,
+  GitPullRequest,
   Terminal,
   Wrench,
   Layers,
@@ -111,36 +112,78 @@ export function DashboardSidebar({
             Quick actions
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={onOpenCommandPalette}
-                className="cursor-pointer"
-                tooltip="Search & Commands (Ctrl+K)"
-              >
-                <Search className="size-4 text-primary" />
-                <span>Quick Search</span>
-                <kbd className="ml-auto rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
-                  ⌘K
-                </kbd>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link href="/chat" className="w-full">
+            <SidebarMenu>
+              <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="Anonymous Chat Lounge (#general, #game)"
-                  className="w-full cursor-pointer"
+                  onClick={onOpenCommandPalette}
+                  className="cursor-pointer"
+                  tooltip="Search & Commands (Ctrl+K)"
                 >
-                  <Gamepad2 className="size-4 text-pink-500" />
-                  <span>Anon Chat Lounge</span>
-                  <Badge
-                    variant="outline"
-                    className="ml-auto border-pink-500/30 px-1 py-0 font-mono text-[9px] text-pink-600 group-data-[collapsible=icon]:hidden dark:text-pink-400"
-                  >
-                    Fun
-                  </Badge>
+                  <Search className="size-4 text-primary" />
+                  <span>Quick Search</span>
+                  <kbd className="ml-auto rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+                    ⌘K
+                  </kbd>
                 </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+              </SidebarMenuItem>
+
+              {/* Dev Tools */}
+              <SidebarMenuItem>
+                <Link href="/tools" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Developer Tools Suite (JSON, JWT, Encoders)"
+                    className="w-full cursor-pointer"
+                  >
+                    <FileJson className="size-4 text-violet-500" />
+                    <span>Dev Tools</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-violet-500/30 px-1 py-0 font-mono text-[9px] text-violet-600 group-data-[collapsible=icon]:hidden dark:text-violet-400"
+                    >
+                      Suite
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Anon Chat */}
+              <SidebarMenuItem>
+                <Link href="/chat" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Anonymous Chat Lounge (#general, #game)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Gamepad2 className="size-4 text-pink-500" />
+                    <span>Anon Chat</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-pink-500/30 px-1 py-0 font-mono text-[9px] text-pink-600 group-data-[collapsible=icon]:hidden dark:text-pink-400"
+                    >
+                      Fun
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Requests & PRs */}
+              <SidebarMenuItem>
+                <Link href="/requests" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Feature Requests & Coworker Bug Fix PRs"
+                    className="w-full cursor-pointer"
+                  >
+                    <GitPullRequest className="size-4 text-purple-500" />
+                    <span>Requests & PRs</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-purple-500/30 px-1 py-0 font-mono text-[9px] text-purple-600 group-data-[collapsible=icon]:hidden dark:text-purple-400"
+                    >
+                      Hub
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         {/* Section 1: Environments Navigation */}
@@ -199,6 +242,25 @@ export function DashboardSidebar({
                       className="ml-auto border-emerald-500/30 px-1 py-0 font-mono text-[9px] text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400"
                     >
                       New
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* DevOps Explorer */}
+              <SidebarMenuItem>
+                <Link href="/workspace-query" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Azure DevOps Explorer (WIQL & Delivery)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Layers className="size-4 text-blue-500" />
+                    <span>DevOps Explorer</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-blue-500/30 px-1 py-0 font-mono text-[9px] text-blue-600 group-data-[collapsible=icon]:hidden dark:text-blue-400"
+                    >
+                      WIQL
                     </Badge>
                   </SidebarMenuButton>
                 </Link>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   type ChatChannel,
   type ChatMessage,
+  type ChatReplyPreview,
   type AnonUser,
   INITIAL_CHANNELS,
   INITIAL_MESSAGES,
@@ -23,13 +24,11 @@ import { CreateChannelDialog } from "./create-channel-dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  ArrowDown,
   ArrowLeft,
   ChevronDown,
-  Hash,
   Menu,
-  MessageSquare,
   Sparkles,
-  Users,
   Volume2,
   VolumeX,
   X,
@@ -38,6 +37,24 @@ import { cn } from "@/lib/utils"
 
 const STORAGE_USER_KEY = "anon_chat_identity_v1"
 const STORAGE_SOUND_KEY = "anon_chat_sound_enabled"
+
+function formatChatDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr)
+    const today = new Date()
+    if (d.toDateString() === today.toDateString()) return "Today"
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    if (d.toDateString() === yesterday.toDateString()) return "Yesterday"
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  } catch {
+    return ""
+  }
+}
 
 export function AnonChatView() {
   // 1. User Persona State
@@ -64,12 +81,18 @@ export function AnonChatView() {
   const [isCreateChannelOpen, setIsCreateChannelOpen] = React.useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false)
 
-  // 3. Messages State
+  // 3. Messages & Reply State
   const [messages, setMessages] = React.useState<ChatMessage[]>(() =>
     INITIAL_MESSAGES.filter((m) => m.channelId === "general")
   )
   const [isLoadingMessages, setIsLoadingMessages] = React.useState<boolean>(false)
+  const [replyingTo, setReplyingTo] = React.useState<ChatReplyPreview | null>(null)
+  const [highlightedMessageId, setHighlightedMessageId] = React.useState<string | null>(null)
+
+  // 4. Telegram-style Auto-scroll & Floating button state
   const [showScrollBottom, setShowScrollBottom] = React.useState(false)
+  const [unreadBelowCount, setUnreadBelowCount] = React.useState(0)
+  const isNearBottomRef = React.useRef(true)
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const chatScrollContainerRef = React.useRef<HTMLDivElement>(null)
@@ -114,8 +137,16 @@ export function AnonChatView() {
               if (prev.some((m) => m.id === newMsg.id)) return prev
               return [...prev, newMsg]
             })
+
             if (soundEnabled && newMsg.senderId !== user.id) {
               chatAudio.playIncomingMessage()
+            }
+
+            // Auto scroll if near bottom
+            if (isNearBottomRef.current) {
+              setTimeout(() => scrollToBottom("smooth"), 50)
+            } else if (newMsg.senderId !== user.id) {
+              setUnreadBelowCount((c) => c + 1)
             }
           } else {
             setUnreadCounts((prev) => ({
@@ -164,7 +195,10 @@ export function AnonChatView() {
     const granted = await requestDesktopNotification()
     setNotificationsEnabled(granted)
     if (granted) {
-      triggerDesktopNotification("Anon Chat Alerts Active!", "You will be alerted when new anonymous messages arrive.")
+      triggerDesktopNotification(
+        "Anon Chat Alerts Active!",
+        "You will be alerted when new anonymous messages arrive."
+      )
     }
   }
 
@@ -190,16 +224,20 @@ export function AnonChatView() {
   React.useEffect(() => {
     let isCancelled = false
     setIsLoadingMessages(true)
+    setReplyingTo(null)
 
     async function loadMessages() {
       try {
-        const res = await fetch(`/api/chat/messages?channelId=${encodeURIComponent(activeChannelId)}`)
+        const res = await fetch(
+          `/api/chat/messages?channelId=${encodeURIComponent(activeChannelId)}`
+        )
         if (res.ok) {
           const data = await res.json()
           if (!isCancelled && data.success && Array.isArray(data.data)) {
             setMessages(data.data)
             if (data.data.length > 0) {
-              latestMessageTimeRef.current = data.data[data.data.length - 1].createdAt
+              latestMessageTimeRef.current =
+                data.data[data.data.length - 1].createdAt
             }
           }
         }
@@ -210,7 +248,7 @@ export function AnonChatView() {
           setIsLoadingMessages(false)
           // Clear unread for active channel
           setUnreadCounts((prev) => ({ ...prev, [activeChannelId]: 0 }))
-          scrollToBottom("auto")
+          setTimeout(() => scrollToBottom("auto"), 60)
         }
       }
     }
@@ -226,14 +264,15 @@ export function AnonChatView() {
   React.useEffect(() => {
     const timer = setInterval(async () => {
       try {
-        const res = await fetch(`/api/chat/messages?channelId=${encodeURIComponent(activeChannelId)}`)
+        const res = await fetch(
+          `/api/chat/messages?channelId=${encodeURIComponent(activeChannelId)}`
+        )
         if (res.ok) {
           const data = await res.json()
           if (data.success && Array.isArray(data.data)) {
             const incoming: ChatMessage[] = data.data
 
             setMessages((prev) => {
-              // Check if there are new messages
               const existingIds = new Set(prev.map((m) => m.id))
               const brandNew = incoming.filter((m) => !existingIds.has(m.id))
 
@@ -249,6 +288,13 @@ export function AnonChatView() {
                       `#${activeChannelId} • ${last.senderName}`,
                       last.content
                     )
+                  }
+
+                  // Auto scroll if user was near bottom
+                  if (isNearBottomRef.current) {
+                    setTimeout(() => scrollToBottom("smooth"), 60)
+                  } else {
+                    setUnreadBelowCount((c) => c + brandNew.length)
                   }
                 }
                 return [...prev, ...brandNew]
@@ -268,17 +314,53 @@ export function AnonChatView() {
   // Scroll Helper
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior })
+    setUnreadBelowCount(0)
+    setShowScrollBottom(false)
+    isNearBottomRef.current = true
   }
 
   const handleScroll = () => {
     if (!chatScrollContainerRef.current) return
-    const { scrollTop, scrollHeight, clientHeight } = chatScrollContainerRef.current
-    const isUp = scrollHeight - scrollTop - clientHeight > 140
-    setShowScrollBottom(isUp)
+    const { scrollTop, scrollHeight, clientHeight } =
+      chatScrollContainerRef.current
+    const distanceToBottom = scrollHeight - scrollTop - clientHeight
+    const isNear = distanceToBottom < 100
+    isNearBottomRef.current = isNear
+    setShowScrollBottom(!isNear)
+    if (isNear) {
+      setUnreadBelowCount(0)
+    }
+  }
+
+  // Handle Reply to a message
+  const handleReply = (msg: ChatMessage) => {
+    setReplyingTo({
+      id: msg.id,
+      senderName: msg.senderName,
+      content:
+        msg.content.length > 100
+          ? msg.content.slice(0, 100) + "…"
+          : msg.content,
+      senderAvatar: msg.senderAvatar,
+    })
+  }
+
+  // Jump to quoted message
+  const handleScrollToMessage = (messageId: string) => {
+    const el = document.getElementById(`msg-${messageId}`)
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" })
+      setHighlightedMessageId(messageId)
+      setTimeout(() => setHighlightedMessageId(null), 2200)
+    }
   }
 
   // Send Message Handler
-  const handleSendMessage = async (content: string, type: "text" | "dice" | "coin" = "text") => {
+  const handleSendMessage = async (
+    content: string,
+    type: "text" | "dice" | "coin" = "text",
+    replyTo?: ChatReplyPreview
+  ) => {
     if (!content.trim()) return
 
     // Sound effect
@@ -291,7 +373,9 @@ export function AnonChatView() {
     }
 
     // Optimistic message
-    const tempId = `optimistic_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+    const tempId = `optimistic_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 6)}`
     const optimisticMessage: ChatMessage = {
       id: tempId,
       channelId: activeChannelId,
@@ -301,11 +385,15 @@ export function AnonChatView() {
       senderColor: user.color,
       content,
       type,
+      replyTo: replyTo || undefined,
       reactions: {},
       createdAt: new Date().toISOString(),
     }
 
     setMessages((prev) => [...prev, optimisticMessage])
+    setReplyingTo(null)
+
+    // Always auto-scroll immediately on user send
     setTimeout(() => scrollToBottom("smooth"), 50)
 
     // Broadcast to other tabs
@@ -326,6 +414,7 @@ export function AnonChatView() {
           senderColor: user.color,
           content,
           type,
+          replyTo: replyTo || undefined,
         }),
       })
 
@@ -386,7 +475,8 @@ export function AnonChatView() {
     })
   }
 
-  const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0]
+  const activeChannel =
+    channels.find((c) => c.id === activeChannelId) || channels[0]
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
@@ -401,7 +491,11 @@ export function AnonChatView() {
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             className="md:hidden size-8 cursor-pointer text-muted-foreground hover:text-foreground"
           >
-            {isMobileSidebarOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+            {isMobileSidebarOpen ? (
+              <X className="size-4" />
+            ) : (
+              <Menu className="size-4" />
+            )}
           </Button>
 
           {/* Back to Home Link */}
@@ -419,12 +513,15 @@ export function AnonChatView() {
 
           {/* Active Channel Title Info */}
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary font-mono text-xs font-bold">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono text-xs font-bold">
               #
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-vazirmatn text-sm font-bold text-foreground" dir="auto">
+                <span
+                  className="font-vazirmatn text-sm font-bold text-foreground"
+                  dir="auto"
+                >
                   {activeChannel ? activeChannel.name : "general"}
                 </span>
                 <Badge
@@ -435,7 +532,10 @@ export function AnonChatView() {
                 </Badge>
               </div>
               {activeChannel?.topic && (
-                <p className="font-vazirmatn hidden md:block truncate text-[11px] text-muted-foreground max-w-sm lg:max-w-md" dir="auto">
+                <p
+                  className="font-vazirmatn hidden md:block truncate text-[11px] text-muted-foreground max-w-sm lg:max-w-md"
+                  dir="auto"
+                >
                   {activeChannel.topic}
                 </p>
               )}
@@ -448,7 +548,9 @@ export function AnonChatView() {
           {/* Squad status badge */}
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-600 dark:text-emerald-400">
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-medium text-[11px]">Anonymous Squad Online</span>
+            <span className="font-medium text-[11px]">
+              Anonymous Squad Online
+            </span>
           </div>
 
           {/* Quick Sound Toggle */}
@@ -458,7 +560,11 @@ export function AnonChatView() {
             size="icon"
             onClick={handleToggleSound}
             className="size-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted"
-            title={soundEnabled ? "Mute notification sounds" : "Enable notification sounds"}
+            title={
+              soundEnabled
+                ? "Mute notification sounds"
+                : "Enable notification sounds"
+            }
           >
             {soundEnabled ? (
               <Volume2 className="size-4 text-emerald-500" />
@@ -519,24 +625,26 @@ export function AnonChatView() {
           </div>
         )}
 
-        {/* Center Chat Content Area */}
-        <main className="flex flex-1 flex-col overflow-hidden bg-background">
+        {/* Center Chat Content Area - Telegram Style Pattern */}
+        <main className="relative flex flex-1 flex-col overflow-hidden bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] bg-slate-50/70 dark:bg-slate-950/60">
           {/* Channel banner info pill */}
           {activeChannel?.description && (
-            <div className="border-b border-border/60 bg-muted/20 px-4 py-1.5 text-xs text-muted-foreground flex items-center justify-between">
-              <span className="font-vazirmatn truncate" dir="auto">{activeChannel.description}</span>
+            <div className="border-b border-border/60 bg-background/80 px-4 py-1.5 text-xs text-muted-foreground flex items-center justify-between backdrop-blur-xs z-10">
+              <span className="font-vazirmatn truncate" dir="auto">
+                {activeChannel.description}
+              </span>
               <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground/70 shrink-0">
                 <Sparkles className="size-3 text-amber-500" />
-                Live Channels
+                Telegram Style
               </span>
             </div>
           )}
 
-          {/* Messages Feed */}
+          {/* Messages Feed Container */}
           <div
             ref={chatScrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto divide-y divide-border/20 py-2"
+            className="flex-1 overflow-y-auto px-1 py-4 sm:px-2 space-y-1.5"
           >
             {isLoadingMessages && messages.length === 0 ? (
               <div className="flex h-full items-center justify-center p-6 text-xs text-muted-foreground">
@@ -547,49 +655,78 @@ export function AnonChatView() {
               </div>
             ) : messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-muted/60 text-2xl">
+                <div className="flex size-14 items-center justify-center rounded-2xl bg-card border border-border shadow-xs text-3xl">
                   💬
                 </div>
                 <h3 className="mt-3 text-sm font-semibold text-foreground">
                   Welcome to #{activeChannel ? activeChannel.name : "channel"}
                 </h3>
                 <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-                  This room is quiet right now. Send the first anonymous message or roll the dice!
+                  No messages yet. Send your first message, roll dice, or flip a
+                  coin!
                 </p>
               </div>
             ) : (
-              messages.map((msg) => (
-                <ChatMessageItem
-                  key={msg.id}
-                  message={msg}
-                  currentUser={user}
-                  onToggleReaction={handleToggleReaction}
-                />
-              ))
+              messages.map((msg, index) => {
+                const prevMsg = messages[index - 1]
+                const showDateSeparator =
+                  !prevMsg ||
+                  new Date(msg.createdAt).toDateString() !==
+                    new Date(prevMsg.createdAt).toDateString()
+
+                return (
+                  <React.Fragment key={msg.id}>
+                    {/* Telegram Date Separator Pill */}
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-3 select-none">
+                        <span className="rounded-full bg-muted/90 dark:bg-slate-800/90 border border-border/60 px-3.5 py-1 text-[11px] font-medium text-muted-foreground shadow-2xs backdrop-blur-xs">
+                          {formatChatDate(msg.createdAt)}
+                        </span>
+                      </div>
+                    )}
+
+                    <ChatMessageItem
+                      message={msg}
+                      currentUser={user}
+                      onToggleReaction={handleToggleReaction}
+                      onReply={handleReply}
+                      onScrollToMessage={handleScrollToMessage}
+                      isHighlighted={highlightedMessageId === msg.id}
+                    />
+                  </React.Fragment>
+                )
+              })
             )}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-2" />
           </div>
 
           {/* Floating Scroll to Bottom pill */}
           {showScrollBottom && (
-            <div className="absolute bottom-20 right-6 z-10">
+            <div className="absolute bottom-20 right-6 z-20 animate-in fade-in-50 slide-in-from-bottom-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => scrollToBottom("smooth")}
-                className="h-8 gap-1.5 rounded-full border-border bg-background/90 px-3 text-xs shadow-md backdrop-blur-xs hover:bg-muted cursor-pointer"
+                className="relative h-9 gap-1.5 rounded-full border-border bg-background/95 px-3.5 text-xs font-semibold shadow-lg backdrop-blur-md hover:bg-muted cursor-pointer hover:scale-105 transition-transform"
               >
-                <span>Latest messages</span>
-                <ChevronDown className="size-3.5" />
+                <span>Latest</span>
+                <ChevronDown className="size-4 text-sky-500" />
+                {unreadBelowCount > 0 && (
+                  <span className="flex size-4.5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-bold text-white shadow-xs">
+                    {unreadBelowCount > 9 ? "9+" : unreadBelowCount}
+                  </span>
+                )}
               </Button>
             </div>
           )}
 
-          {/* Chat Input Bar */}
+          {/* Chat Input Bar with Reply Banner */}
           <ChatInputBar
             channelName={activeChannel ? activeChannel.name : "channel"}
             onSendMessage={handleSendMessage}
+            replyingTo={replyingTo}
+            onCancelReply={() => setReplyingTo(null)}
           />
         </main>
       </div>

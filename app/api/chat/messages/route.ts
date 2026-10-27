@@ -15,6 +15,15 @@ function mapDbToMessage(row: DbChatMessage): ChatMessage {
     reactions = {}
   }
 
+  let replyTo = undefined
+  if (row.replyTo) {
+    try {
+      replyTo = typeof row.replyTo === "string" ? JSON.parse(row.replyTo) : row.replyTo
+    } catch {
+      replyTo = undefined
+    }
+  }
+
   return {
     id: row.id,
     channelId: row.channelId,
@@ -25,6 +34,7 @@ function mapDbToMessage(row: DbChatMessage): ChatMessage {
     content: row.content,
     type: (row.type as ChatMessage["type"]) || "text",
     reactions,
+    replyTo,
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
   }
 }
@@ -127,6 +137,7 @@ export async function POST(request: Request) {
       senderColor = "from-violet-500 to-purple-600",
       content,
       type = "text",
+      replyTo,
     } = body
 
     if (!content || typeof content !== "string" || content.trim().length === 0) {
@@ -146,6 +157,7 @@ export async function POST(request: Request) {
       content: content.trim(),
       type: type || "text",
       reactions: {},
+      replyTo: replyTo || undefined,
       createdAt: new Date().toISOString(),
     }
 
@@ -167,6 +179,7 @@ export async function POST(request: Request) {
         content: newMessage.content,
         type: newMessage.type,
         reactions: JSON.stringify(newMessage.reactions),
+        replyTo: newMessage.replyTo ? JSON.stringify(newMessage.replyTo) : null,
       })
     } catch (dbErr) {
       console.warn("Neon message insert warning:", dbErr)

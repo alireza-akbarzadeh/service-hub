@@ -250,6 +250,20 @@ export function CommandPalette({
       },
       {
         type: "action",
+        id: "act-devops-explorer",
+        title: "Azure DevOps Explorer (WIQL & Delivery Reports)",
+        subtitle:
+          "Run WIQL queries, inspect work items, and generate iteration delivery and bug metrics for HIT / Hastim",
+        badge: "DevOps Tool",
+        icon: Terminal,
+        iconColor: "text-blue-500 bg-blue-500/15 border-blue-500/30",
+        onSelect: () => {
+          window.location.href = "/workspace-query"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
         id: "act-instant-meet",
         title: "Start Instant Google Meet",
         subtitle:

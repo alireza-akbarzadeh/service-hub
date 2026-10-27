@@ -12,6 +12,13 @@ export interface ChatChannel {
   unreadCount?: number
 }
 
+export interface ChatReplyPreview {
+  id: string
+  senderName: string
+  content: string
+  senderAvatar?: string
+}
+
 export interface ChatMessage {
   id: string
   channelId: string
@@ -23,6 +30,7 @@ export interface ChatMessage {
   type: "text" | "dice" | "coin" | "system"
   reactions: Record<string, string[]> // emoji -> array of senderIds
   createdAt: string
+  replyTo?: ChatReplyPreview
 }
 
 export interface AnonUser {

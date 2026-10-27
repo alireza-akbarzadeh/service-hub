@@ -2,83 +2,113 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
+import type { ChatReplyPreview } from "@/lib/chat-data"
 import {
   Coins,
   Dices,
+  Reply,
   SendHorizontal,
   Smile,
   Sparkles,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ChatInputBarProps {
   channelName: string
-  onSendMessage: (content: string, type?: "text" | "dice" | "coin") => void
+  onSendMessage: (
+    content: string,
+    type?: "text" | "dice" | "coin",
+    replyTo?: ChatReplyPreview
+  ) => void
+  replyingTo?: ChatReplyPreview | null
+  onCancelReply?: () => void
   disabled?: boolean
 }
 
-const QUICK_EMOJIS = ["🎉", "🔥", "😂", "🚀", "❤️", "🎮", "👀", "☕"]
+const QUICK_EMOJIS = ["🎉", "🔥", "😂", "🚀", "❤️", "🎮", "👀", "☕", "👍", "✨"]
 
 export function ChatInputBar({
   channelName,
   onSendMessage,
+  replyingTo,
+  onCancelReply,
   disabled = false,
 }: ChatInputBarProps) {
   const [text, setText] = React.useState("")
   const [showEmojiRow, setShowEmojiRow] = React.useState(false)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
+  // Focus textarea when replyingTo changes
+  React.useEffect(() => {
+    if (replyingTo) {
+      inputRef.current?.focus()
+    }
+  }, [replyingTo])
+
   const handleSend = () => {
     const trimmed = text.trim()
     if (!trimmed || disabled) return
+
+    const currentReply = replyingTo || undefined
 
     // Check slash commands
     if (trimmed === "/roll" || trimmed.startsWith("/roll ")) {
       const sides = parseInt(trimmed.replace("/roll", "").trim(), 10) || 100
       const result = Math.floor(Math.random() * sides) + 1
-      onSendMessage(`🎲 Rolled a **${result}** (1-${sides})!`, "dice")
+      onSendMessage(`🎲 Rolled a **${result}** (1-${sides})!`, "dice", currentReply)
       setText("")
+      onCancelReply?.()
       return
     }
 
     if (trimmed === "/flip" || trimmed === "/coin") {
       const outcome = Math.random() > 0.5 ? "Heads 🪙" : "Tails 🪙"
-      onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin")
+      onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin", currentReply)
       setText("")
+      onCancelReply?.()
       return
     }
 
     if (trimmed === "/shrug") {
-      onSendMessage(`¯\\_(ツ)_/¯`, "text")
+      onSendMessage(`¯\\_(ツ)_/¯`, "text", currentReply)
       setText("")
+      onCancelReply?.()
       return
     }
 
     if (trimmed === "/tableflip") {
-      onSendMessage(`(╯°□°)╯︵ ┻━┻`, "text")
+      onSendMessage(`(╯°□°)╯︵ ┻━┻`, "text", currentReply)
       setText("")
+      onCancelReply?.()
       return
     }
 
-    onSendMessage(trimmed, "text")
+    onSendMessage(trimmed, "text", currentReply)
     setText("")
+    onCancelReply?.()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       handleSend()
+    } else if (e.key === "Escape" && replyingTo) {
+      e.preventDefault()
+      onCancelReply?.()
     }
   }
 
   const handleRollDice = () => {
     const roll = Math.floor(Math.random() * 100) + 1
-    onSendMessage(`🎲 Rolled a **${roll}** out of 100!`, "dice")
+    onSendMessage(`🎲 Rolled a **${roll}** out of 100!`, "dice", replyingTo || undefined)
+    onCancelReply?.()
   }
 
   const handleFlipCoin = () => {
     const outcome = Math.random() > 0.5 ? "Heads 🪙" : "Tails 🪙"
-    onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin")
+    onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin", replyingTo || undefined)
+    onCancelReply?.()
   }
 
   const insertEmoji = (emoji: string) => {
@@ -87,7 +117,36 @@ export function ChatInputBar({
   }
 
   return (
-    <div className="border-t border-border bg-card/60 p-3 backdrop-blur-xs">
+    <div className="border-t border-border bg-card/85 p-2.5 sm:p-3 backdrop-blur-md">
+      {/* Telegram-style Replying To Bar */}
+      {replyingTo && (
+        <div className="mb-2 flex items-center justify-between gap-3 rounded-xl border-l-4 border-sky-500 bg-sky-500/10 px-3 py-2 text-xs backdrop-blur-xs animate-in fade-in-50 slide-in-from-bottom-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400">
+              <Reply className="size-3.5" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-sky-600 dark:text-sky-400 truncate text-[11.5px]">
+                Reply to {replyingTo.senderName}
+              </span>
+              <span className="text-muted-foreground truncate text-[11px] font-vazirmatn" dir="auto">
+                {replyingTo.content}
+              </span>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onCancelReply}
+            className="size-6 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer rounded-full"
+            title="Cancel reply (Esc)"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Quick fun action pills bar */}
       <div className="mb-2 flex items-center justify-between gap-2 overflow-x-auto text-xs">
         <div className="flex items-center gap-1.5">
@@ -137,13 +196,13 @@ export function ChatInputBar({
 
       {/* Emoji drawer */}
       {showEmojiRow && (
-        <div className="mb-2 flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-1.5 animate-in fade-in-50">
+        <div className="mb-2 flex items-center gap-1 rounded-xl border border-border bg-muted/40 p-1.5 animate-in fade-in-50">
           {QUICK_EMOJIS.map((emoji) => (
             <button
               key={emoji}
               type="button"
               onClick={() => insertEmoji(emoji)}
-              className="flex size-7 cursor-pointer items-center justify-center rounded text-base transition-transform hover:scale-125 hover:bg-muted"
+              className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-base transition-transform hover:scale-125 hover:bg-muted"
             >
               {emoji}
             </button>
@@ -152,17 +211,21 @@ export function ChatInputBar({
       )}
 
       {/* Main input & send container */}
-      <div className="relative flex items-end gap-2 rounded-xl border border-border bg-background px-3 py-2 shadow-2xs focus-within:ring-2 focus-within:ring-primary/40">
+      <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-background px-3 py-2 shadow-2xs focus-within:ring-2 focus-within:ring-primary/40">
         <textarea
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`Message #${channelName} anonymously... پیام ناشناس بنویسید (Enter to send)`}
+          placeholder={
+            replyingTo
+              ? `Reply to ${replyingTo.senderName}...`
+              : `Message #${channelName} anonymously... (Enter to send)`
+          }
           rows={1}
           dir="auto"
           disabled={disabled}
-          className="font-vazirmatn max-h-28 min-h-[26px] w-full resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
+          className="font-vazirmatn max-h-28 min-h-[26px] w-full resize-none bg-transparent text-[13.5px] text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
         />
 
         <Button
@@ -171,10 +234,12 @@ export function ChatInputBar({
           onClick={handleSend}
           disabled={!text.trim() || disabled}
           className={cn(
-            "size-8 shrink-0 rounded-lg p-0 transition-transform cursor-pointer",
-            text.trim() ? "scale-100 opacity-100" : "scale-95 opacity-50"
+            "size-8 shrink-0 rounded-full p-0 transition-all cursor-pointer",
+            text.trim()
+              ? "scale-100 bg-primary text-primary-foreground opacity-100 shadow-xs"
+              : "scale-95 opacity-40"
           )}
-          title="Send anonymous message"
+          title="Send message"
         >
           <SendHorizontal className="size-4" />
         </Button>

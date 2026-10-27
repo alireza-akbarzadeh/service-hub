@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -17,9 +16,6 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   Clock,
-  FileJson,
-  Gamepad2,
-  GitPullRequest,
   PanelRight,
   PanelRightClose,
   Radio,
@@ -111,49 +107,6 @@ export function DashboardHeader({
         {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
         <HeaderMarketSection />
 
-        <Separator orientation="vertical" className="hidden h-5 sm:block" />
-
-        {/* Developer Tools Link */}
-        <Link href="/tools">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
-            title="Open Developer Tools Suite (JSON Formatter, JWT, Encoders)"
-          >
-            <FileJson className="size-3.5 text-violet-500" />
-            <span className="hidden sm:inline">Dev Tools</span>
-          </Button>
-        </Link>
-
-        {/* Anonymous Chat Lounge Link */}
-        <Link href="/chat">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
-            title="Open Anonymous Chat Lounge (#general, #game, etc.)"
-          >
-            <Gamepad2 className="size-3.5 text-pink-500" />
-            <span className="hidden sm:inline">Anon Chat</span>
-          </Button>
-        </Link>
-
-        {/* Requests & Bug Fix PRs Link */}
-        <Link href="/requests">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-semibold border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 shadow-2xs"
-            title="Open Feature Requests & Coworker Bug Fix PRs Hub"
-          >
-            <GitPullRequest className="size-3.5 text-purple-500" />
-            <span className="hidden sm:inline">Requests & PRs</span>
-          </Button>
-        </Link>
         {/* Iranian Timezone & Meeting Panel Toggle Pill */}
         <Button
           type="button"
