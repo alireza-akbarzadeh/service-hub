@@ -39,7 +39,9 @@ import {
   AlignJustify,
   LayoutGrid,
   Rows3,
+  ShieldCheck,
   SlidersHorizontal,
+  Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getServiceTags } from "@/components/services-dashboard"
@@ -259,6 +261,20 @@ export function CommandPalette({
         iconColor: "text-blue-500 bg-blue-500/15 border-blue-500/30",
         onSelect: () => {
           window.location.href = "/workspace-query"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-access-management",
+        title: "Access Management & Users Directory",
+        subtitle:
+          "Manage team members, roles (Admin/Developer/Viewer), Gmail accounts, and RBAC permissions",
+        badge: "Auth & Users",
+        icon: Users,
+        iconColor: "text-indigo-500 bg-indigo-500/15 border-indigo-500/30",
+        onSelect: () => {
+          window.location.href = "/users"
           onOpenChange(false)
         },
       },

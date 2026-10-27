@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import type { ChatReplyPreview } from "@/lib/chat-data"
+import type { ChatReplyPreview, AnonUser } from "@/lib/chat-data"
+import type { SessionUser } from "@/lib/auth"
 import {
   Coins,
   Dices,
@@ -10,6 +11,9 @@ import {
   SendHorizontal,
   Smile,
   Sparkles,
+  User,
+  UserCheck,
+  VenetianMask,
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -19,10 +23,15 @@ interface ChatInputBarProps {
   onSendMessage: (
     content: string,
     type?: "text" | "dice" | "coin",
-    replyTo?: ChatReplyPreview
+    replyTo?: ChatReplyPreview,
+    isAnonymous?: boolean
   ) => void
   replyingTo?: ChatReplyPreview | null
   onCancelReply?: () => void
+  accountUser?: SessionUser | null
+  anonUser: AnonUser
+  isAnonymousMode: boolean
+  onToggleAnonymousMode: () => void
   disabled?: boolean
 }
 
@@ -33,6 +42,10 @@ export function ChatInputBar({
   onSendMessage,
   replyingTo,
   onCancelReply,
+  accountUser,
+  anonUser,
+  isAnonymousMode,
+  onToggleAnonymousMode,
   disabled = false,
 }: ChatInputBarProps) {
   const [text, setText] = React.useState("")
@@ -56,7 +69,12 @@ export function ChatInputBar({
     if (trimmed === "/roll" || trimmed.startsWith("/roll ")) {
       const sides = parseInt(trimmed.replace("/roll", "").trim(), 10) || 100
       const result = Math.floor(Math.random() * sides) + 1
-      onSendMessage(`🎲 Rolled a **${result}** (1-${sides})!`, "dice", currentReply)
+      onSendMessage(
+        `🎲 Rolled a **${result}** (1-${sides})!`,
+        "dice",
+        currentReply,
+        isAnonymousMode
+      )
       setText("")
       onCancelReply?.()
       return
@@ -64,27 +82,32 @@ export function ChatInputBar({
 
     if (trimmed === "/flip" || trimmed === "/coin") {
       const outcome = Math.random() > 0.5 ? "Heads 🪙" : "Tails 🪙"
-      onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin", currentReply)
+      onSendMessage(
+        `🪙 Flipped coin and got **${outcome}**!`,
+        "coin",
+        currentReply,
+        isAnonymousMode
+      )
       setText("")
       onCancelReply?.()
       return
     }
 
     if (trimmed === "/shrug") {
-      onSendMessage(`¯\\_(ツ)_/¯`, "text", currentReply)
+      onSendMessage(`¯\\_(ツ)_/¯`, "text", currentReply, isAnonymousMode)
       setText("")
       onCancelReply?.()
       return
     }
 
     if (trimmed === "/tableflip") {
-      onSendMessage(`(╯°□°)╯︵ ┻━┻`, "text", currentReply)
+      onSendMessage(`(╯°□°)╯︵ ┻━┻`, "text", currentReply, isAnonymousMode)
       setText("")
       onCancelReply?.()
       return
     }
 
-    onSendMessage(trimmed, "text", currentReply)
+    onSendMessage(trimmed, "text", currentReply, isAnonymousMode)
     setText("")
     onCancelReply?.()
   }
@@ -101,13 +124,23 @@ export function ChatInputBar({
 
   const handleRollDice = () => {
     const roll = Math.floor(Math.random() * 100) + 1
-    onSendMessage(`🎲 Rolled a **${roll}** out of 100!`, "dice", replyingTo || undefined)
+    onSendMessage(
+      `🎲 Rolled a **${roll}** out of 100!`,
+      "dice",
+      replyingTo || undefined,
+      isAnonymousMode
+    )
     onCancelReply?.()
   }
 
   const handleFlipCoin = () => {
     const outcome = Math.random() > 0.5 ? "Heads 🪙" : "Tails 🪙"
-    onSendMessage(`🪙 Flipped coin and got **${outcome}**!`, "coin", replyingTo || undefined)
+    onSendMessage(
+      `🪙 Flipped coin and got **${outcome}**!`,
+      "coin",
+      replyingTo || undefined,
+      isAnonymousMode
+    )
     onCancelReply?.()
   }
 
@@ -129,7 +162,10 @@ export function ChatInputBar({
               <span className="font-semibold text-sky-600 dark:text-sky-400 truncate text-[11.5px]">
                 Reply to {replyingTo.senderName}
               </span>
-              <span className="text-muted-foreground truncate text-[11px] font-vazirmatn" dir="auto">
+              <span
+                className="text-muted-foreground truncate text-[11px] font-vazirmatn"
+                dir="auto"
+              >
                 {replyingTo.content}
               </span>
             </div>
@@ -147,8 +183,50 @@ export function ChatInputBar({
         </div>
       )}
 
-      {/* Quick fun action pills bar */}
-      <div className="mb-2 flex items-center justify-between gap-2 overflow-x-auto text-xs">
+      {/* Identity mode toggle & quick actions */}
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        {/* Left: Identity Switcher (Anonymous vs Real Account) */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onToggleAnonymousMode}
+            className={cn(
+              "flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium transition-all shadow-2xs",
+              isAnonymousMode
+                ? "border-pink-500/40 bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-500/20"
+                : "border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20"
+            )}
+            title="Click to toggle between Anonymous Mode and Real Account Profile"
+          >
+            {isAnonymousMode ? (
+              <>
+                <VenetianMask className="size-3.5 text-pink-500" />
+                <span>
+                  Posting as: <strong>{anonUser.name}</strong> (Anon)
+                </span>
+                <span className="text-[10px] opacity-70 underline ml-0.5">
+                  Switch
+                </span>
+              </>
+            ) : (
+              <>
+                <UserCheck className="size-3.5 text-sky-500" />
+                <span>
+                  Posting as:{" "}
+                  <strong>
+                    {accountUser ? accountUser.name : "My Real Profile"}
+                  </strong>{" "}
+                  {accountUser?.username && `(@${accountUser.username})`}
+                </span>
+                <span className="text-[10px] opacity-70 underline ml-0.5">
+                  Switch
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Right: Fun actions (Dice, Coin, Emojis) */}
         <div className="flex items-center gap-1.5">
           <Button
             type="button"
@@ -160,7 +238,7 @@ export function ChatInputBar({
             title="Roll a 100-sided die"
           >
             <Dices className="size-3.5" />
-            <span>Roll 1-100</span>
+            <span>Roll</span>
           </Button>
 
           <Button
@@ -173,7 +251,7 @@ export function ChatInputBar({
             title="Flip a coin"
           >
             <Coins className="size-3.5" />
-            <span>Flip Coin</span>
+            <span>Coin</span>
           </Button>
 
           <Button
@@ -184,13 +262,7 @@ export function ChatInputBar({
             className="h-7 cursor-pointer gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
           >
             <Smile className="size-3.5" />
-            <span className="hidden sm:inline">Emojis</span>
           </Button>
-        </div>
-
-        <div className="hidden sm:flex items-center gap-1 text-[11px] text-muted-foreground">
-          <Sparkles className="size-3 text-amber-500" />
-          <span>Tips: Try <code>/roll</code>, <code>/flip</code>, <code>/shrug</code></span>
         </div>
       </div>
 
@@ -220,7 +292,9 @@ export function ChatInputBar({
           placeholder={
             replyingTo
               ? `Reply to ${replyingTo.senderName}...`
-              : `Message #${channelName} anonymously... (Enter to send)`
+              : isAnonymousMode
+                ? `Message #${channelName} anonymously as ${anonUser.name}...`
+                : `Message #${channelName} as ${accountUser?.name || "your account"}...`
           }
           rows={1}
           dir="auto"

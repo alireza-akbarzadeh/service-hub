@@ -202,6 +202,25 @@ export function DashboardSidebar({
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+
+              {/* Access Management & Users (/users) */}
+              <SidebarMenuItem>
+                <Link href="/users" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Access Management & Users Directory (/users)"
+                    className="w-full cursor-pointer"
+                  >
+                    <ShieldCheck className="size-4 text-indigo-500" />
+                    <span>Users & Access</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-indigo-500/30 px-1 py-0 font-mono text-[9px] text-indigo-600 group-data-[collapsible=icon]:hidden dark:text-indigo-400"
+                    >
+                      Auth
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

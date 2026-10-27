@@ -17,6 +17,8 @@ import {
   hasDesktopNotificationPermission,
   triggerDesktopNotification,
 } from "@/lib/chat-audio"
+import { getCurrentUserAction } from "@/app/actions/auth"
+import type { SessionUser } from "@/lib/auth"
 import { ChannelSidebar } from "./channel-sidebar"
 import { ChatMessageItem } from "./chat-message-item"
 import { ChatInputBar } from "./chat-input-bar"
@@ -27,8 +29,14 @@ import {
   ArrowDown,
   ArrowLeft,
   ChevronDown,
+  LogIn,
   Menu,
+  ShieldCheck,
   Sparkles,
+  User,
+  UserCheck,
+  Users,
+  VenetianMask,
   Volume2,
   VolumeX,
   X,
@@ -37,6 +45,7 @@ import { cn } from "@/lib/utils"
 
 const STORAGE_USER_KEY = "anon_chat_identity_v1"
 const STORAGE_SOUND_KEY = "anon_chat_sound_enabled"
+const STORAGE_ANON_MODE_KEY = "anon_chat_is_anonymous_mode"
 
 function formatChatDate(dateStr: string): string {
   try {
@@ -99,6 +108,16 @@ export function AnonChatView() {
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null)
   const latestMessageTimeRef = React.useRef<string | null>(null)
 
+  // Real Account & Anonymous Mode
+  const [accountUser, setAccountUser] = React.useState<SessionUser | null>(null)
+  const [isAnonymousMode, setIsAnonymousMode] = React.useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(STORAGE_ANON_MODE_KEY)
+      if (saved !== null) return saved === "true"
+    }
+    return false
+  })
+
   // Load preferences from localStorage on mount
   React.useEffect(() => {
     try {
@@ -122,6 +141,34 @@ export function AnonChatView() {
     }
   }, [])
 
+  // Load logged in account user
+  React.useEffect(() => {
+    async function loadAccountUser() {
+      try {
+        const res = await getCurrentUserAction()
+        if (res.isAuthenticated && res.user) {
+          setAccountUser(res.user)
+        } else {
+          setAccountUser(null)
+          setIsAnonymousMode(true)
+        }
+      } catch {
+        setIsAnonymousMode(true)
+      }
+    }
+    loadAccountUser()
+  }, [])
+
+  const handleToggleAnonymousMode = () => {
+    setIsAnonymousMode((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(STORAGE_ANON_MODE_KEY, String(next))
+      } catch {}
+      return next
+    })
+  }
+
   // Multi-tab BroadcastChannel sync
   React.useEffect(() => {
     if (typeof window !== "undefined" && "BroadcastChannel" in window) {
@@ -138,14 +185,18 @@ export function AnonChatView() {
               return [...prev, newMsg]
             })
 
-            if (soundEnabled && newMsg.senderId !== user.id) {
+            const isMine =
+              newMsg.senderId === user.id ||
+              (Boolean(accountUser) && newMsg.senderId === accountUser?.id)
+
+            if (soundEnabled && !isMine) {
               chatAudio.playIncomingMessage()
             }
 
             // Auto scroll if near bottom
             if (isNearBottomRef.current) {
               setTimeout(() => scrollToBottom("smooth"), 50)
-            } else if (newMsg.senderId !== user.id) {
+            } else if (!isMine) {
               setUnreadBelowCount((c) => c + 1)
             }
           } else {
@@ -167,7 +218,7 @@ export function AnonChatView() {
         bc.close()
       }
     }
-  }, [activeChannelId, soundEnabled, user.id])
+  }, [activeChannelId, soundEnabled, user.id, accountUser])
 
   // Save user changes
   const handleUpdateUser = (updatedUser: AnonUser) => {
@@ -277,7 +328,11 @@ export function AnonChatView() {
               const brandNew = incoming.filter((m) => !existingIds.has(m.id))
 
               if (brandNew.length > 0) {
-                const containsOthers = brandNew.some((m) => m.senderId !== user.id)
+                const isMine = (m: ChatMessage) =>
+                  m.senderId === user.id ||
+                  (Boolean(accountUser) && m.senderId === accountUser?.id)
+                const containsOthers = brandNew.some((m) => !isMine(m))
+
                 if (containsOthers) {
                   if (soundEnabled) {
                     chatAudio.playIncomingMessage()
@@ -309,7 +364,7 @@ export function AnonChatView() {
     }, 2800)
 
     return () => clearInterval(timer)
-  }, [activeChannelId, soundEnabled, notificationsEnabled, user.id])
+  }, [activeChannelId, soundEnabled, notificationsEnabled, user.id, accountUser])
 
   // Scroll Helper
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -359,9 +414,21 @@ export function AnonChatView() {
   const handleSendMessage = async (
     content: string,
     type: "text" | "dice" | "coin" = "text",
-    replyTo?: ChatReplyPreview
+    replyTo?: ChatReplyPreview,
+    forceAnonymous?: boolean
   ) => {
     if (!content.trim()) return
+
+    const sendAnon =
+      forceAnonymous !== undefined
+        ? forceAnonymous
+        : isAnonymousMode || !accountUser
+    const senderId = sendAnon ? user.id : accountUser?.id || user.id
+    const senderName = sendAnon ? user.name : accountUser?.name || user.name
+    const senderAvatar = sendAnon ? user.avatar : accountUser?.avatar || user.avatar
+    const senderUsername = sendAnon ? undefined : accountUser?.username
+    const senderColor = sendAnon ? user.color : "from-sky-500 to-indigo-600"
+    const isAnonymous = sendAnon
 
     // Sound effect
     if (soundEnabled) {
@@ -379,10 +446,12 @@ export function AnonChatView() {
     const optimisticMessage: ChatMessage = {
       id: tempId,
       channelId: activeChannelId,
-      senderId: user.id,
-      senderName: user.name,
-      senderAvatar: user.avatar,
-      senderColor: user.color,
+      senderId,
+      senderName,
+      senderAvatar,
+      senderColor,
+      senderUsername,
+      isAnonymous,
       content,
       type,
       replyTo: replyTo || undefined,
@@ -408,10 +477,12 @@ export function AnonChatView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           channelId: activeChannelId,
-          senderId: user.id,
-          senderName: user.name,
-          senderAvatar: user.avatar,
-          senderColor: user.color,
+          senderId,
+          senderName,
+          senderAvatar,
+          senderColor,
+          senderUsername,
+          isAnonymous,
           content,
           type,
           replyTo: replyTo || undefined,
@@ -545,13 +616,71 @@ export function AnonChatView() {
 
         {/* Right side stats & quick controls */}
         <div className="flex items-center gap-2">
-          {/* Squad status badge */}
-          <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-600 dark:text-emerald-400">
-            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-medium text-[11px]">
-              Anonymous Squad Online
-            </span>
-          </div>
+          {/* Identity & Account Badge */}
+          {accountUser ? (
+            <div className="flex items-center gap-2 rounded-full border border-border/80 bg-background/80 py-1 pl-2.5 pr-1.5 shadow-2xs backdrop-blur-xs">
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-base select-none leading-none">
+                  {accountUser.avatar || "👤"}
+                </span>
+                <div className="hidden sm:flex flex-col leading-tight">
+                  <span className="font-semibold text-foreground truncate max-w-[100px] text-[11px]">
+                    {accountUser.name}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground font-mono">
+                    @{accountUser.username}
+                  </span>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="hidden md:inline-flex text-[9px] px-1.5 py-0 h-4 capitalize font-mono"
+                >
+                  {accountUser.role}
+                </Badge>
+              </div>
+
+              {/* Mode indicator switch button */}
+              <button
+                type="button"
+                onClick={handleToggleAnonymousMode}
+                title={
+                  isAnonymousMode
+                    ? "Currently posting as Anonymous (Click to switch to your Verified Account)"
+                    : "Currently posting as Verified User (Click to switch to Anonymous)"
+                }
+                className={cn(
+                  "cursor-pointer inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold transition-all border",
+                  isAnonymousMode
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                    : "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30 hover:bg-sky-500/20"
+                )}
+              >
+                {isAnonymousMode ? (
+                  <>
+                    <VenetianMask className="size-3" />
+                    <span>Anon</span>
+                  </>
+                ) : (
+                  <>
+                    <UserCheck className="size-3 text-sky-500" />
+                    <span>Verified</span>
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold border-sky-500/40 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 cursor-pointer shadow-2xs"
+              >
+                <LogIn className="size-3.5" />
+                <span>Sign In / Register</span>
+              </Button>
+            </Link>
+          )}
 
           {/* Quick Sound Toggle */}
           <Button
@@ -688,6 +817,7 @@ export function AnonChatView() {
                     <ChatMessageItem
                       message={msg}
                       currentUser={user}
+                      accountUserId={accountUser?.id}
                       onToggleReaction={handleToggleReaction}
                       onReply={handleReply}
                       onScrollToMessage={handleScrollToMessage}
@@ -721,12 +851,16 @@ export function AnonChatView() {
             </div>
           )}
 
-          {/* Chat Input Bar with Reply Banner */}
+          {/* Chat Input Bar with Reply Banner & Mode Switcher */}
           <ChatInputBar
             channelName={activeChannel ? activeChannel.name : "channel"}
             onSendMessage={handleSendMessage}
             replyingTo={replyingTo}
             onCancelReply={() => setReplyingTo(null)}
+            accountUser={accountUser}
+            anonUser={user}
+            isAnonymousMode={isAnonymousMode}
+            onToggleAnonymousMode={handleToggleAnonymousMode}
           />
         </main>
       </div>

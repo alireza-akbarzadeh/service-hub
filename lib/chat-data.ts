@@ -26,6 +26,8 @@ export interface ChatMessage {
   senderName: string
   senderAvatar: string
   senderColor: string
+  senderUsername?: string
+  isAnonymous?: boolean
   content: string
   type: "text" | "dice" | "coin" | "system"
   reactions: Record<string, string[]> // emoji -> array of senderIds

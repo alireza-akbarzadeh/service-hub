@@ -20,6 +20,7 @@ const POPULAR_REACTIONS = ["🔥", "❤️", "😂", "👍", "🚀", "🎉"]
 interface ChatMessageItemProps {
   message: ChatMessage
   currentUser: AnonUser
+  accountUserId?: string
   onToggleReaction: (messageId: string, emoji: string) => void
   onReply?: (message: ChatMessage) => void
   onScrollToMessage?: (messageId: string) => void
@@ -29,12 +30,15 @@ interface ChatMessageItemProps {
 export function ChatMessageItem({
   message,
   currentUser,
+  accountUserId,
   onToggleReaction,
   onReply,
   onScrollToMessage,
   isHighlighted = false,
 }: ChatMessageItemProps) {
-  const isMe = message.senderId === currentUser.id
+  const isMe =
+    message.senderId === currentUser.id ||
+    (Boolean(accountUserId) && message.senderId === accountUserId)
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false)
   const [isCopied, setIsCopied] = React.useState(false)
 
@@ -99,12 +103,26 @@ export function ChatMessageItem({
             isHighlighted && "ring-2 ring-primary ring-offset-2 ring-offset-background"
           )}
         >
-          {/* Sender Name (for incoming messages in group chat) */}
-          {!isMe && (
+          {/* Sender Name */}
+          {!isMe ? (
             <div className="mb-1 flex items-center gap-1.5 font-vazirmatn text-[11px] font-bold text-sky-600 dark:text-sky-400 select-none">
               <span>{message.senderName}</span>
+              {message.senderUsername && (
+                <span className="font-mono text-[9.5px] font-normal text-muted-foreground">
+                  @{message.senderUsername}
+                </span>
+              )}
+              {message.isAnonymous === false && (
+                <span className="rounded bg-sky-500/15 border border-sky-500/30 px-1 py-0 text-[8.5px] text-sky-600 dark:text-sky-300 font-medium">
+                  Verified
+                </span>
+              )}
             </div>
-          )}
+          ) : message.isAnonymous === false ? (
+            <div className="mb-0.5 flex items-center gap-1 font-vazirmatn text-[10px] text-white/80 select-none">
+              <span className="font-medium">You (@{message.senderUsername || "account"})</span>
+            </div>
+          ) : null}
 
           {/* Quoted Reply Preview inside bubble */}
           {message.replyTo && (

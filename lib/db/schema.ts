@@ -68,6 +68,8 @@ export const chatMessages = pgTable("chat_messages", {
   senderName: text("sender_name").notNull(),
   senderAvatar: text("sender_avatar").notNull(),
   senderColor: text("sender_color").notNull().default("#3b82f6"),
+  senderUsername: text("sender_username"),
+  isAnonymous: boolean("is_anonymous").default(true),
   content: text("content").notNull(),
   type: text("type").notNull().default("text"), // "text" | "dice" | "coin" | "system"
   reactions: text("reactions").notNull().default("{}"), // JSON string
@@ -111,4 +113,20 @@ export const feedbackRequests = pgTable("feedback_requests", {
 
 export type FeedbackRequest = typeof feedbackRequests.$inferSelect
 export type NewFeedbackRequest = typeof feedbackRequests.$inferInsert
+
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  avatar: text("avatar").notNull().default("👤"),
+  role: text("role").notNull().default("developer"), // "admin" | "developer" | "viewer"
+  bio: text("bio").default(""),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export type User = typeof users.$inferSelect
+export type NewUser = typeof users.$inferInsert
 
