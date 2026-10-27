@@ -140,3 +140,40 @@ export const appSettings = pgTable("app_settings", {
 export type AppSetting = typeof appSettings.$inferSelect
 export type NewAppSetting = typeof appSettings.$inferInsert
 
+export const aiTools = pgTable("ai_tools", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  tagline: text("tagline").notNull(),
+  category: text("category").notNull().default("ide-agents"),
+  categoryLabel: text("category_label").notNull().default("Agentic IDEs & Editors"),
+  url: text("url").notNull(),
+  pricing: text("pricing").notNull().default("Freemium"),
+  iconBg: text("icon_bg").notNull().default("from-blue-600 to-indigo-600"),
+  bestFor: text("best_for").notNull().default("[]"),
+  description: text("description").notNull(),
+  workflowTips: text("workflow_tips").notNull().default(""),
+  quickCommand: text("quick_command"),
+  setupInstructions: text("setup_instructions"),
+  createdBy: text("created_by").default("Team"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export type AiTool = typeof aiTools.$inferSelect
+export type NewAiTool = typeof aiTools.$inferInsert
+
+export const aiPrompts = pgTable("ai_prompts", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  category: text("category").notNull().default("Full-Stack"),
+  prompt: text("prompt").notNull(),
+  bestModel: text("best_model").notNull().default("Claude 3.7 Sonnet"),
+  tags: text("tags").notNull().default("[]"),
+  createdBy: text("created_by").default("Team"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export type AiPrompt = typeof aiPrompts.$inferSelect
+export type NewAiPrompt = typeof aiPrompts.$inferInsert
+

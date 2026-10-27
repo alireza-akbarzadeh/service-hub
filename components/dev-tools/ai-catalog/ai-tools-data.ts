@@ -11,6 +11,9 @@ export interface AiToolItem {
   description: string
   workflowTips: string
   quickCommand?: string
+  setupInstructions?: string
+  createdBy?: string
+  createdAt?: string
 }
 
 export const AI_DEVELOPER_TOOLS: AiToolItem[] = [
@@ -328,21 +331,42 @@ export const AI_DEVELOPER_TOOLS: AiToolItem[] = [
       "Analyzes your code functions and generates comprehensive unit test suites covering tricky edge cases, null pointers, and boundary conditions that developers often miss.",
     workflowTips:
       "Click 'Generate Tests' on critical payment or authentication functions to get ready-to-run Jest/Vitest tests with mocked network calls.",
+    setupInstructions: `# 🧪 Qodo (CodiumAI) Setup & Automated Testing
+
+### 1. Installation
+Install the extension in VS Code, Cursor, or WebStorm:
+\`\`\`bash
+# In VS Code Quick Open (Ctrl+P / Cmd+P):
+ext install Codium.codium
+\`\`\`
+
+### 2. Generating Unit Tests
+Open any TypeScript/JavaScript file:
+- Click the **"Generate Tests"** code lens above any function.
+- Review edge cases generated (null values, network timeouts, invalid inputs).
+- Click **"Apply"** to generate a matching \`.test.ts\` file.
+`,
   },
 ]
 
 export interface PromptTemplate {
+  id: string
   title: string
   category: string
   prompt: string
   bestModel: string
+  tags?: string[]
+  createdBy?: string
+  createdAt?: string
 }
 
 export const DEVELOPER_PROMPTS: PromptTemplate[] = [
   {
+    id: "prompt_arch_review",
     title: "Full-Stack Architecture & Security Review",
     category: "Architecture",
     bestModel: "Claude 3.7 Sonnet / DeepSeek R1",
+    tags: ["Next.js", "Security", "Postgres", "Architecture"],
     prompt: `Analyze the following full-stack architecture for a Next.js (App Router) + PostgreSQL system.
 Review:
 1. Data security & potential IDOR/authorization leaks between client components and Server Actions.
@@ -351,9 +375,11 @@ Review:
 Provide actionable refactoring diffs formatted in clean TypeScript.`,
   },
   {
+    id: "prompt_server_action",
     title: "Next.js Server Action with Zod & Optimistic State",
     category: "Frontend/Next.js",
     bestModel: "Claude 3.7 Sonnet / Cursor",
+    tags: ["Next.js", "ServerActions", "Zod", "TypeScript"],
     prompt: `Write a production-ready Next.js Server Action with:
 1. Zod schema validation for all form inputs with localized error formatting.
 2. User authentication & role verification check.
@@ -362,9 +388,11 @@ Provide actionable refactoring diffs formatted in clean TypeScript.`,
 5. Type-safe return format \`{ success: boolean, data?: T, error?: string }\`.`,
   },
   {
+    id: "prompt_db_indexing",
     title: "Postgres Migration & High-Performance Indexing",
     category: "Database",
     bestModel: "Claude 3.7 Sonnet / Supabase AI",
+    tags: ["SQL", "Postgres", "Drizzle", "Performance"],
     prompt: `Design a high-scale PostgreSQL schema for [Describe Domain].
 Include:
 1. Foreign key constraints with proper ON DELETE behavior.
@@ -373,9 +401,11 @@ Include:
 4. Row Level Security (RLS) policies isolating user data.`,
   },
   {
+    id: "prompt_docker_build",
     title: "Docker Multi-Stage Build & Web Performance Audit",
     category: "DevOps",
     bestModel: "Gemini 2.0 Flash / GPT-4o",
+    tags: ["Docker", "DevOps", "Alpine", "CI/CD"],
     prompt: `Write an optimized multi-stage Dockerfile for a Next.js App Router application.
 Ensure:
 1. Minimal final image size using node:alpine or distroless.
