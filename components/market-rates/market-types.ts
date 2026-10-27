@@ -16,6 +16,7 @@ export interface MarketAsset {
   symbol: string
   icon: string
   currentPrice: number // In Tomans (or USD for ounce)
+  rialPrice?: number // Official quoted price in Iranian Rials (TGJU)
   currency: "toman" | "usd"
   change24h: number
   change24hPercent: number
@@ -27,5 +28,7 @@ export interface MarketAsset {
   unitFa: string
   descriptionEn: string
   descriptionFa: string
+  sourceUrl?: string
+  sourceLabel?: string
   history: Record<Timeframe, ChartPoint[]>
 }

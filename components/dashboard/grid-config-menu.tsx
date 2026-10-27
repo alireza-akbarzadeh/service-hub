@@ -16,14 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   GridConfig,
-  ViewMode,
+  ViewShape,
   DEFAULT_GRID_CONFIG,
 } from "./grid-view-config"
 import { cn } from "@/lib/utils"
 import {
+  AlignJustify,
   Columns2,
   Columns3,
   Columns4,
+  FileJson,
   LayoutGrid,
   RotateCcw,
   Rows3,
@@ -34,13 +36,21 @@ import {
 interface GridConfigMenuProps {
   config: GridConfig
   onChangeConfig: (newConfig: GridConfig) => void
+  onOpenSettings?: () => void
 }
 
-export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) {
-  const handleViewModeChange = (mode: ViewMode) => {
+export function GridConfigMenu({
+  config,
+  onChangeConfig,
+  onOpenSettings,
+}: GridConfigMenuProps) {
+  const currentShape = config.viewShape || "table"
+
+  const handleShapeChange = (shape: ViewShape) => {
     onChangeConfig({
       ...config,
-      viewMode: mode,
+      viewShape: shape,
+      viewMode: shape,
     })
   }
 
@@ -58,7 +68,12 @@ export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) 
     })
   }
 
-  const handleToggle = (key: keyof Pick<GridConfig, "showTags" | "showTelemetry" | "showHops" | "showOwner">) => {
+  const handleToggle = (
+    key: keyof Pick<
+      GridConfig,
+      "showTags" | "showTelemetry" | "showHops" | "showOwner" | "showDescription"
+    >
+  ) => {
     onChangeConfig({
       ...config,
       [key]: !config[key],
@@ -71,40 +86,58 @@ export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) 
 
   return (
     <div className="flex items-center gap-1.5">
-      {/* Segmented View Mode Switcher: Table ⇄ Cards */}
+      {/* 3-Shape Segmented Switcher: Table | Row Cards | Squared Cards */}
       <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shadow-2xs">
+        {/* 1. Table */}
         <button
           type="button"
-          onClick={() => handleViewModeChange("table")}
+          onClick={() => handleShapeChange("table")}
           className={cn(
             "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
-            config.viewMode === "table"
+            currentShape === "table"
               ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
           )}
-          title="Switch to Table view"
+          title="Table view (data-dense tabular rows)"
         >
           <Rows3 className="size-3.5" />
           <span className="hidden sm:inline">Table</span>
         </button>
 
+        {/* 2. Row Card */}
         <button
           type="button"
-          onClick={() => handleViewModeChange("card")}
+          onClick={() => handleShapeChange("row-card")}
           className={cn(
             "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
-            config.viewMode === "card"
+            currentShape === "row-card"
               ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
           )}
-          title="Switch to Card Grid view"
+          title="Row Cards view (full-width horizontal cards)"
+        >
+          <AlignJustify className="size-3.5" />
+          <span className="hidden sm:inline">Row Cards</span>
+        </button>
+
+        {/* 3. Squared Card */}
+        <button
+          type="button"
+          onClick={() => handleShapeChange("square-card")}
+          className={cn(
+            "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
+            currentShape === "square-card"
+              ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          title="Squared Cards view (multi-column grid)"
         >
           <LayoutGrid className="size-3.5" />
-          <span className="hidden sm:inline">Cards</span>
+          <span className="hidden sm:inline">Squared Cards</span>
         </button>
       </div>
 
-      {/* Grid & Card Configuration Dropdown */}
+      {/* Quick Layout Dropdown & Settings Modal Trigger */}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -113,71 +146,80 @@ export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) 
               size="sm"
               className={cn(
                 "h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground shadow-2xs",
-                config.viewMode === "card" && "border-primary/40 text-foreground"
+                currentShape !== "table" && "border-primary/40 text-foreground"
               )}
-              title="Configure View Style & Card layout options"
+              title="Quick view style & display configuration"
             />
           }
         >
           <SlidersHorizontal className="size-3.5 text-primary" />
-          <span className="hidden sm:inline">Layout Config</span>
+          <span className="hidden sm:inline">Config</span>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-56 text-xs">
+        <DropdownMenuContent align="end" className="w-58 text-xs">
           <DropdownMenuLabel className="font-bold text-foreground">
-            View Style & Card Config
+            Display Shape & Layout
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          {/* View Mode Radio */}
+          {/* 3 Shapes Radio */}
           <DropdownMenuGroup>
             <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Display Style
+              Display Shape
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
-              value={config.viewMode}
-              onValueChange={(v) => handleViewModeChange(v as ViewMode)}
+              value={currentShape}
+              onValueChange={(v) => handleShapeChange(v as ViewShape)}
             >
               <DropdownMenuRadioItem value="table" className="cursor-pointer text-xs">
                 <Rows3 className="size-3.5 mr-2 opacity-70" />
                 <span>Table List</span>
               </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="card" className="cursor-pointer text-xs">
+              <DropdownMenuRadioItem value="row-card" className="cursor-pointer text-xs">
+                <AlignJustify className="size-3.5 mr-2 opacity-70" />
+                <span>Row Cards</span>
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="square-card" className="cursor-pointer text-xs">
                 <LayoutGrid className="size-3.5 mr-2 opacity-70" />
-                <span>Card Grid</span>
+                <span>Squared Cards</span>
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
 
-          {/* Card-specific configurations */}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Card Grid Columns
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={config.cardColumns}
-              onValueChange={(v) => handleColumnsChange(v as any)}
-            >
-              <DropdownMenuRadioItem value="auto" className="cursor-pointer text-xs">
-                Auto Responsive (1 - 4)
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="2" className="cursor-pointer text-xs">
-                2 Columns
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="3" className="cursor-pointer text-xs">
-                3 Columns
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="4" className="cursor-pointer text-xs">
-                4 Columns
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
+          {/* Column options when in Squared Cards mode */}
+          {currentShape === "square-card" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Grid Columns
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={config.cardColumns}
+                  onValueChange={(v) => handleColumnsChange(v as any)}
+                >
+                  <DropdownMenuRadioItem value="auto" className="cursor-pointer text-xs">
+                    Auto Responsive (1 - 4)
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="2" className="cursor-pointer text-xs">
+                    2 Columns
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="3" className="cursor-pointer text-xs">
+                    3 Columns
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="4" className="cursor-pointer text-xs">
+                    4 Columns
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+            </>
+          )}
 
+          {/* Elements visibility */}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Card Elements
+              Visibility Toggles
             </DropdownMenuLabel>
             <DropdownMenuCheckboxItem
               checked={config.showTelemetry}
@@ -209,6 +251,7 @@ export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) 
             </DropdownMenuCheckboxItem>
           </DropdownMenuGroup>
 
+          {/* Density */}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
@@ -226,6 +269,20 @@ export function GridConfigMenu({ config, onChangeConfig }: GridConfigMenuProps) 
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
+
+          {/* Full Settings & JSON Config Modal */}
+          {onOpenSettings && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onOpenSettings}
+                className="cursor-pointer text-xs font-semibold text-primary"
+              >
+                <FileJson className="size-3.5 mr-2 text-primary" />
+                <span>Full Settings & JSON Config...</span>
+              </DropdownMenuItem>
+            </>
+          )}
 
           <DropdownMenuSeparator />
           <DropdownMenuItem

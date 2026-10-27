@@ -8,13 +8,14 @@ import {
 } from "./market-data"
 import { MarketAsset, MarketAssetId } from "./market-types"
 import { MarketDialog } from "./market-dialog"
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Sparkles, Languages } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, TrendingUp, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function HeaderMarketSection() {
   const [assets, setAssets] = React.useState<MarketAsset[]>(INITIAL_MARKET_ASSETS)
   const [isDialogOpen, setIsDialogOpen] = React.useState<boolean>(false)
   const [selectedAssetId, setSelectedAssetId] = React.useState<MarketAssetId>("usd")
+  const [isSyncing, setIsSyncing] = React.useState<boolean>(false)
 
   // Persian toggle state - persistent in localStorage
   const [isPersian, setIsPersian] = React.useState<boolean>(() => {
@@ -28,6 +29,56 @@ export function HeaderMarketSection() {
 
   // Tehran live clock for timestamping
   const [lastUpdatedTime, setLastUpdatedTime] = React.useState<string>("")
+
+  // Live TGJU Rates Sync function
+  const syncWithTgju = React.useCallback(async () => {
+    setIsSyncing(true)
+    try {
+      const res = await fetch("/api/market-rates")
+      if (res.ok) {
+        const json = await res.json()
+        if (json.success && json.data) {
+          const { dollarToman, dollarRial, dollarChangePercent, gold18kToman, gold18kRial, goldChangePercent } = json.data
+
+          setAssets((prev) =>
+            prev.map((asset) => {
+              if (asset.id === "usd") {
+                return {
+                  ...asset,
+                  currentPrice: dollarToman,
+                  rialPrice: dollarRial,
+                  change24hPercent: dollarChangePercent,
+                  change24h: Math.round(dollarToman * (dollarChangePercent / 100)),
+                  sourceUrl: "https://www.tgju.org/profile/price_dollar_rl",
+                }
+              }
+              if (asset.id === "gold18k" && gold18kToman) {
+                return {
+                  ...asset,
+                  currentPrice: gold18kToman,
+                  rialPrice: gold18kRial,
+                  change24hPercent: goldChangePercent,
+                  change24h: Math.round(gold18kToman * (goldChangePercent / 100)),
+                }
+              }
+              return asset
+            })
+          )
+        }
+      }
+    } catch (e) {
+      console.warn("Could not sync with TGJU, using reliable baseline", e)
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [])
+
+  // Sync on mount and periodically every 60 seconds
+  React.useEffect(() => {
+    syncWithTgju()
+    const syncTimer = setInterval(syncWithTgju, 60000)
+    return () => clearInterval(syncTimer)
+  }, [syncWithTgju])
 
   React.useEffect(() => {
     function updateClock() {
@@ -83,14 +134,17 @@ export function HeaderMarketSection() {
   return (
     <>
       <div
-        className="group relative flex items-center gap-1.5 rounded-xl border border-border/80 bg-muted/40 p-1 shadow-2xs backdrop-blur-xs transition-all hover:border-border hover:bg-muted/70"
+        className={cn(
+          "group relative flex items-center gap-1.5 rounded-xl border border-border/80 bg-muted/40 p-1 shadow-2xs backdrop-blur-xs transition-all hover:border-border hover:bg-muted/70",
+          isPersian && "font-vazirmatn"
+        )}
         title={
           isPersian
             ? "دابل کلیک: باز کردن نمودار و جزییات • تک کلیک: تبدیل به انگلیسی"
             : "Double-click: Open Info & Chart • Click: Convert to Persian"
         }
       >
-        {/* US Dollar Pill */}
+        {/* US Dollar Pill (Synced with TGJU price_dollar_rl) */}
         <div
           role="button"
           tabIndex={0}
@@ -108,7 +162,7 @@ export function HeaderMarketSection() {
             $
           </span>
           <div className="flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground text-[11px]">
+            <span className={cn("font-semibold text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
               {isPersian ? "دلار:" : "USD:"}
             </span>
             <span className="font-mono text-xs font-bold text-foreground tabular-nums">
@@ -129,8 +183,8 @@ export function HeaderMarketSection() {
               <ArrowDownRight className="size-3" />
             )}
             {isPersian
-              ? toPersianDigits(usdAsset.change24hPercent.toFixed(1))
-              : usdAsset.change24hPercent.toFixed(1)}
+              ? toPersianDigits(usdAsset.change24hPercent.toFixed(2))
+              : usdAsset.change24hPercent.toFixed(2)}
             %
           </span>
         </div>
@@ -155,7 +209,7 @@ export function HeaderMarketSection() {
             🥇
           </span>
           <div className="flex items-center gap-1">
-            <span className="font-semibold text-muted-foreground text-[11px]">
+            <span className={cn("font-semibold text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
               {isPersian ? "طلا ۱۸:" : "Gold:"}
             </span>
             <span className="font-mono text-xs font-bold text-foreground tabular-nums">
@@ -176,18 +230,29 @@ export function HeaderMarketSection() {
               <ArrowDownRight className="size-3" />
             )}
             {isPersian
-              ? toPersianDigits(goldAsset.change24hPercent.toFixed(1))
-              : goldAsset.change24hPercent.toFixed(1)}
+              ? toPersianDigits(goldAsset.change24hPercent.toFixed(2))
+              : goldAsset.change24hPercent.toFixed(2)}
             %
           </span>
         </div>
 
-        {/* Quick Chart Dialog Icon Button (also allows single click for mobile/accessibility) */}
+        {/* Direct Link to TGJU price_dollar_rl with target="_blank" */}
+        <a
+          href="https://www.tgju.org/profile/price_dollar_rl"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary transition-all"
+          title="Open TGJU.org Dollar Rate in a new tab"
+        >
+          <ExternalLink className="size-3" />
+        </a>
+
+        {/* Quick Chart Dialog Icon Button */}
         <button
           type="button"
           onClick={(e) => handleOpenDialog("usd", e)}
           className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary transition-all"
-          title="Open Market Info & Chart (Double-click pill or click here)"
+          title="Open Market Info & Chart Dialog (or double-click pill)"
         >
           <TrendingUp className="size-3.5" />
         </button>
@@ -202,6 +267,8 @@ export function HeaderMarketSection() {
         isPersian={isPersian}
         onTogglePersian={togglePersian}
         lastUpdatedTime={lastUpdatedTime}
+        onSyncRates={syncWithTgju}
+        isSyncing={isSyncing}
       />
     </>
   )

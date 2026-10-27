@@ -27,14 +27,11 @@ import { MarketConverter } from "./market-converter"
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Coins,
-  DollarSign,
-  Globe2,
+  ExternalLink,
   Info,
   Languages,
   Radio,
-  Sparkles,
-  TrendingUp,
+  RefreshCw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -46,6 +43,8 @@ interface MarketDialogProps {
   isPersian: boolean
   onTogglePersian: () => void
   lastUpdatedTime: string
+  onSyncRates?: () => Promise<void>
+  isSyncing?: boolean
 }
 
 export function MarketDialog({
@@ -56,6 +55,8 @@ export function MarketDialog({
   isPersian,
   onTogglePersian,
   lastUpdatedTime,
+  onSyncRates,
+  isSyncing = false,
 }: MarketDialogProps) {
   const [selectedAssetId, setSelectedAssetId] = React.useState<MarketAssetId>(initialAssetId)
   const [timeframe, setTimeframe] = React.useState<Timeframe>("24H")
@@ -74,9 +75,12 @@ export function MarketDialog({
   const historyData = currentAsset.history[timeframe] || currentAsset.history["24H"]
   const colorTheme = currentAsset.id === "usd" ? "emerald" : "amber"
 
+  const defaultTgjuUrl =
+    currentAsset.sourceUrl || "https://www.tgju.org/profile/price_dollar_rl"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl">
+      <DialogContent className={cn("max-h-[90vh] overflow-y-auto sm:max-w-2xl md:max-w-3xl", isPersian && "font-vazirmatn")}>
         <DialogHeader>
           <div className="flex flex-wrap items-center justify-between gap-2 pr-6">
             <div className="flex items-center gap-2">
@@ -84,7 +88,7 @@ export function MarketDialog({
                 {currentAsset.icon}
               </div>
               <div>
-                <DialogTitle className="flex items-center gap-2 text-base font-bold sm:text-lg">
+                <DialogTitle className={cn("flex items-center gap-2 text-base font-bold sm:text-lg", isPersian && "font-vazirmatn")}>
                   <span>
                     {isPersian ? currentAsset.nameFa : currentAsset.nameEn}
                   </span>
@@ -95,28 +99,43 @@ export function MarketDialog({
                     {currentAsset.symbol}
                   </Badge>
                 </DialogTitle>
-                <DialogDescription className="text-xs">
+                <DialogDescription className={cn("text-xs", isPersian && "font-vazirmatn")}>
                   {isPersian ? currentAsset.descriptionFa : currentAsset.descriptionEn}
                 </DialogDescription>
               </div>
             </div>
 
-            {/* Language / Persian Conversion Toggle Button */}
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={onTogglePersian}
-              className={cn(
-                "h-7 cursor-pointer gap-1.5 px-2.5 text-xs font-semibold shadow-2xs transition-all",
-                isPersian
-                  ? "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Toggle Persian / English digits & currency format"
-            >
-              <Languages className="size-3.5" />
-              <span>{isPersian ? "فارسی (تومان)" : "English (Toman)"}</span>
-            </Button>
+            {/* TGJU Source Link & Persian Toggle Button */}
+            <div className="flex items-center gap-2">
+              {/* Direct Link to TGJU with target="_blank" */}
+              <a
+                href={defaultTgjuUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-border/80 bg-muted/40 px-2.5 text-xs font-semibold text-primary shadow-2xs transition-all hover:border-primary/50 hover:bg-muted"
+                title="Open official TGJU profile page in a new tab (target=_blank)"
+              >
+                <span>{isPersian ? "پروفایل TGJU" : "TGJU Profile"}</span>
+                <ExternalLink className="size-3" />
+              </a>
+
+              {/* Language / Persian Conversion Toggle Button */}
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onTogglePersian}
+                className={cn(
+                  "h-7 cursor-pointer gap-1.5 px-2.5 text-xs font-semibold shadow-2xs transition-all",
+                  isPersian
+                    ? "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-vazirmatn"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                title="Toggle Persian / English digits & Vazirmatn font"
+              >
+                <Languages className="size-3.5" />
+                <span>{isPersian ? "فارسی (تومان)" : "English (Toman)"}</span>
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
@@ -134,12 +153,13 @@ export function MarketDialog({
                   "flex cursor-pointer flex-col rounded-lg p-2 text-left transition-all",
                   isSelected
                     ? "bg-background text-foreground shadow-xs ring-1 ring-border"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  isPersian && "font-vazirmatn"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold">
-                    {asset.icon} {isPersian ? (asset.id === "usd" ? "دلار" : asset.id === "gold18k" ? "طلا ۱۸" : asset.id === "coin_emami" ? "سکه امامی" : "اونس") : asset.id.toUpperCase()}
+                    {asset.icon} {isPersian ? (asset.id === "usd" ? "دلار TGJU" : asset.id === "gold18k" ? "طلا ۱۸" : asset.id === "coin_emami" ? "سکه امامی" : "اونس") : asset.id.toUpperCase()}
                   </span>
                   <span
                     className={cn(
@@ -149,8 +169,8 @@ export function MarketDialog({
                   >
                     {isPositive ? "+" : ""}
                     {isPersian
-                      ? toPersianDigits(asset.change24hPercent.toFixed(1))
-                      : asset.change24hPercent.toFixed(1)}
+                      ? toPersianDigits(asset.change24hPercent.toFixed(2))
+                      : asset.change24hPercent.toFixed(2)}
                     %
                   </span>
                 </div>
@@ -169,8 +189,8 @@ export function MarketDialog({
           {/* Main Price Box */}
           <div className="col-span-2 rounded-xl border border-border/80 bg-linear-to-br from-card via-card to-muted/30 p-3 shadow-2xs">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-medium">
-                {isPersian ? "قیمت لحظه‌ای بازار:" : "Live Market Rate:"}
+              <span className={cn("font-medium", isPersian && "font-vazirmatn")}>
+                {isPersian ? "قیمت آنلاین (اتحادیه TGJU):" : "Live TGJU Rate:"}
               </span>
               <div className="flex items-center gap-1 font-mono text-[10px] text-emerald-500">
                 <Radio className="size-2.5 animate-pulse" />
@@ -185,15 +205,17 @@ export function MarketDialog({
             </div>
 
             {currentAsset.currency === "toman" && (
-              <div className="mt-1 font-mono text-xs text-muted-foreground">
-                ≈ {formatInRials(currentAsset.currentPrice, isPersian)}
+              <div className={cn("mt-1 font-mono text-xs text-muted-foreground", isPersian && "font-vazirmatn")}>
+                ≈ {currentAsset.rialPrice
+                  ? (isPersian ? `${formatNumberWithCommas(currentAsset.rialPrice, true)} ریال` : `${formatNumberWithCommas(currentAsset.rialPrice, false)} IRR`)
+                  : formatInRials(currentAsset.currentPrice, isPersian)}
               </div>
             )}
           </div>
 
           {/* 24h Change Box */}
           <div className="rounded-xl border border-border/80 bg-card p-3 shadow-2xs">
-            <div className="text-[11px] font-medium text-muted-foreground">
+            <div className={cn("text-[11px] font-medium text-muted-foreground", isPersian && "font-vazirmatn")}>
               {isPersian ? "تغییر ۲۴ ساعته:" : "24h Change:"}
             </div>
             <div
@@ -228,7 +250,7 @@ export function MarketDialog({
 
           {/* 24h High / Low Box */}
           <div className="rounded-xl border border-border/80 bg-card p-3 shadow-2xs">
-            <div className="text-[11px] font-medium text-muted-foreground">
+            <div className={cn("text-[11px] font-medium text-muted-foreground", isPersian && "font-vazirmatn")}>
               {isPersian ? "دامنه نوسان امروز:" : "24h Range:"}
             </div>
             <div className="mt-1.5 space-y-1 font-mono text-xs">
@@ -277,24 +299,54 @@ export function MarketDialog({
           onTogglePersian={onTogglePersian}
         />
 
-        {/* Market Context & Reference Footer */}
-        <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5 text-xs text-muted-foreground">
-          <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
-          <div className="leading-relaxed">
-            {isPersian ? (
+        {/* Live TGJU Source Reference Card */}
+        <div className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/20 p-3 text-xs text-muted-foreground", isPersian && "font-vazirmatn")}>
+          <div className="flex items-start gap-2">
+            <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+            <div className="leading-relaxed">
               <span>
-                <strong>اطلاعات بازار:</strong> نرخ‌ها بر اساس معاملات نقدی بازار آزاد و سبزه میدان تهران، به همراه مظنه اتحادیه طلا و جواهر به‌روزرسانی می‌شوند. ساعت کاری معاملات فعال بین ۱۱:۰۰ تا ۱۹:۰۰ به وقت تهران (IRST) می‌باشد.
+                {isPersian ? (
+                  <>
+                    <strong>مرجع قیمت:</strong> نرخ‌ها همگام با سامانه رسمی <strong>TGJU (شبکه اطلاع‌رسانی طلا و ارز)</strong> بروزرسانی می‌شوند.
+                  </>
+                ) : (
+                  <>
+                    <strong>Market Reference:</strong> Quotes are synced with <strong>TGJU (Tehran Gold & Jewelry Union)</strong> official market feeds.
+                  </>
+                )}
               </span>
-            ) : (
-              <span>
-                <strong>Market Info:</strong> Quotes are sourced from the Tehran open FX bazaar, Sabze-Meydan gold guild, and international spot bullion indices. Peak market trading hours operate between 11:00 and 19:00 IRST.
-              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            {onSyncRates && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onSyncRates}
+                disabled={isSyncing}
+                className="h-7 cursor-pointer gap-1.5 px-2 text-xs font-medium"
+              >
+                <RefreshCw className={cn("size-3", isSyncing && "animate-spin")} />
+                <span>{isSyncing ? (isPersian ? "همگام‌سازی..." : "Syncing...") : (isPersian ? "بروزرسانی زنده" : "Sync TGJU")}</span>
+              </Button>
             )}
+
+            <a
+              href={defaultTgjuUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-7 items-center gap-1 rounded-md bg-primary px-2.5 text-xs font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
+              title="Open https://www.tgju.org/profile/price_dollar_rl in a new tab"
+            >
+              <span>{isPersian ? "باز کردن در TGJU" : "Open TGJU"}</span>
+              <ExternalLink className="size-3" />
+            </a>
           </div>
         </div>
 
         <DialogFooter className="mt-2 flex items-center justify-between sm:justify-between">
-          <div className="font-mono text-[11px] text-muted-foreground">
+          <div className={cn("font-mono text-[11px] text-muted-foreground", isPersian && "font-vazirmatn")}>
             {isPersian
               ? `آخرین بروزرسانی: ${lastUpdatedTime || "اکنون"}`
               : `Last sync: ${lastUpdatedTime || "Just now"}`}

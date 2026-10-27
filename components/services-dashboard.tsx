@@ -121,6 +121,14 @@ export function ServicesDashboard({
   // Mobile drawer state for Iran Calendar & Sync panel
   const [isMobilePanelOpen, setIsMobilePanelOpen] = React.useState(false)
 
+  // Grid / Table View Mode & Configuration stored in localStorage
+  const [gridConfig, setGridConfig] = React.useState<GridConfig>(() => loadGridConfig())
+
+  const handleUpdateGridConfig = React.useCallback((newConfig: GridConfig) => {
+    setGridConfig(newConfig)
+    saveGridConfig(newConfig)
+  }, [])
+
   const handleTogglePanel = () => {
     // On large screens, toggle right dock
     toggleRightPanel()
@@ -198,7 +206,7 @@ export function ServicesDashboard({
                 copiedId={copiedId}
               />
 
-              {/* Filter, Search & Tag Chips */}
+              {/* Filter, Search, Tag Chips & View Style Configuration */}
               <ServicesFilterBar
                 showOnlyFavorites={showOnlyFavorites}
                 onToggleShowOnlyFavorites={() => {
@@ -223,36 +231,69 @@ export function ServicesDashboard({
                 }}
                 tagCounts={tagCounts}
                 onOpenAddModal={openAddModal}
+                gridConfig={gridConfig}
+                onChangeGridConfig={handleUpdateGridConfig}
               />
 
-              {/* Services Data Table */}
-              <ServicesTable
-                services={paginatedServices}
-                favorites={favorites}
-                onToggleFavorite={toggleFavorite}
-                onInspectService={setInspectingService}
-                onEditService={openEditModal}
-                onDeleteService={handleDeleteService}
-                onCopyUrl={copyUrl}
-                copiedId={copiedId}
-                healthMap={healthMap}
-                telemetryMap={telemetryMap}
-                onPingSingle={handlePingSingle}
-                mirrorMap={mirrorMap}
-                networkInfo={networkInfo}
-                selectedTag={selectedTag}
-                onSelectTag={(t) => {
-                  setSelectedTag(t)
-                  setCurrentPage(1)
-                }}
-                onResetFilters={() => {
-                  setSelectedEnv("All")
-                  setSelectedCategory("All")
-                  setSelectedTag("#all")
-                  setSearchQuery("")
-                  setCurrentPage(1)
-                }}
-              />
+              {/* Services List: Table View or Cards Grid based on Config */}
+              {gridConfig.viewMode === "card" ? (
+                <ServicesCardsGrid
+                  services={paginatedServices}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
+                  onInspectService={setInspectingService}
+                  onEditService={openEditModal}
+                  onDeleteService={handleDeleteService}
+                  onCopyUrl={copyUrl}
+                  copiedId={copiedId}
+                  healthMap={healthMap}
+                  telemetryMap={telemetryMap}
+                  onPingSingle={handlePingSingle}
+                  mirrorMap={mirrorMap}
+                  networkInfo={networkInfo}
+                  selectedTag={selectedTag}
+                  onSelectTag={(t) => {
+                    setSelectedTag(t)
+                    setCurrentPage(1)
+                  }}
+                  onResetFilters={() => {
+                    setSelectedEnv("All")
+                    setSelectedCategory("All")
+                    setSelectedTag("#all")
+                    setSearchQuery("")
+                    setCurrentPage(1)
+                  }}
+                  gridConfig={gridConfig}
+                />
+              ) : (
+                <ServicesTable
+                  services={paginatedServices}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
+                  onInspectService={setInspectingService}
+                  onEditService={openEditModal}
+                  onDeleteService={handleDeleteService}
+                  onCopyUrl={copyUrl}
+                  copiedId={copiedId}
+                  healthMap={healthMap}
+                  telemetryMap={telemetryMap}
+                  onPingSingle={handlePingSingle}
+                  mirrorMap={mirrorMap}
+                  networkInfo={networkInfo}
+                  selectedTag={selectedTag}
+                  onSelectTag={(t) => {
+                    setSelectedTag(t)
+                    setCurrentPage(1)
+                  }}
+                  onResetFilters={() => {
+                    setSelectedEnv("All")
+                    setSelectedCategory("All")
+                    setSelectedTag("#all")
+                    setSearchQuery("")
+                    setCurrentPage(1)
+                  }}
+                />
+              )}
 
               {/* Pagination Controls */}
               <ServicesPagination

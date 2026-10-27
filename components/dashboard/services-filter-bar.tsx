@@ -4,7 +4,7 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Filter, Plus, Search, Star, Tag } from "lucide-react"
+import { ChevronDown, Filter, Plus, Search, Settings, Star, Tag } from "lucide-react"
 import { CATEGORIES, AVAILABLE_TAGS } from "@/hooks/use-services-dashboard"
 import { GridConfig, DEFAULT_GRID_CONFIG } from "./grid-view-config"
 import { GridConfigMenu } from "./grid-config-menu"
@@ -23,6 +23,7 @@ interface ServicesFilterBarProps {
   onOpenAddModal: () => void
   gridConfig?: GridConfig
   onChangeGridConfig?: (config: GridConfig) => void
+  onOpenSettings?: () => void
 }
 
 export function ServicesFilterBar({
@@ -39,6 +40,7 @@ export function ServicesFilterBar({
   onOpenAddModal,
   gridConfig = DEFAULT_GRID_CONFIG,
   onChangeGridConfig,
+  onOpenSettings,
 }: ServicesFilterBarProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-3 shadow-xs space-y-3">
@@ -119,7 +121,21 @@ export function ServicesFilterBar({
             <GridConfigMenu
               config={gridConfig}
               onChangeConfig={onChangeGridConfig}
+              onOpenSettings={onOpenSettings}
             />
+          )}
+
+          {onOpenSettings && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onOpenSettings}
+              className="size-9 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground shadow-2xs"
+              title="Dashboard Settings & JSON Config Editor"
+            >
+              <Settings className="size-4" />
+            </Button>
           )}
 
           <Button
