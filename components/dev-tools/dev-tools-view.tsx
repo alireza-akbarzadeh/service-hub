@@ -27,12 +27,18 @@ import { CurlInspector } from "./curl-inspector/curl-inspector"
 import { JwtInspector } from "./jwt-inspector/jwt-inspector"
 import { Base64Tool } from "./base64-tool/base64-tool"
 import { HashGenerator } from "./hash-generator/hash-generator"
+import { AiDeveloperHub } from "./ai-catalog/ai-developer-hub"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
+import { Bot } from "lucide-react"
 
-export type ActiveTool = "curl" | "json" | "jwt" | "base64" | "hash"
+export type ActiveTool = "ai" | "curl" | "json" | "jwt" | "base64" | "hash"
 
-export function DevToolsView() {
-  const [activeTool, setActiveTool] = React.useState<ActiveTool>("curl")
+interface DevToolsViewProps {
+  initialTab?: ActiveTool
+}
+
+export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
+  const [activeTool, setActiveTool] = React.useState<ActiveTool>(initialTab)
   const [passedJson, setPassedJson] = React.useState<string | null>(null)
 
   const handleSendToJsonFormatter = (jsonString: string) => {
@@ -137,6 +143,13 @@ export function DevToolsView() {
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border pb-2">
           {[
             {
+              id: "ai" as const,
+              label: "AI for Developers",
+              icon: Bot,
+              badge: "Hot",
+              badgeColor: "border-primary/40 text-primary bg-primary/10",
+            },
+            {
               id: "curl" as const,
               label: "cURL Inspector",
               icon: Terminal,
@@ -202,6 +215,7 @@ export function DevToolsView() {
 
         {/* Active Tool View */}
         <div className="pt-2">
+          {activeTool === "ai" && <AiDeveloperHub />}
           {activeTool === "curl" && (
             <CurlInspector onSendToJsonFormatter={handleSendToJsonFormatter} />
           )}

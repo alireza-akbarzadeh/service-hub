@@ -360,31 +360,8 @@ export function ServicesDashboard({
                 totalPages={totalPages}
               />
             </main>
-
-            {/* Right Side: Iran Timezone & Calendar + Frontend Meeting Push Panel */}
-            {isRightPanelOpen && (
-              <IranCalendarPanel
-                className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-84 shrink-0 shadow-lg xl:flex 2xl:w-[410px]"
-                onClose={() => setIsRightPanelOpen(false)}
-                isCollapsible={true}
-              />
-            )}
           </div>
         </SidebarInset>
-
-        {/* Mobile / Tablet Drawer for Iran Calendar & Meetings Panel */}
-        <Sheet open={isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-          <SheetContent side="right" className="w-[340px] p-0 sm:w-[400px]">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Iranian Calendar & Frontend Meeting</SheetTitle>
-            </SheetHeader>
-            <IranCalendarPanel
-              className="h-full border-none"
-              onClose={() => setIsMobilePanelOpen(false)}
-              isCollapsible={true}
-            />
-          </SheetContent>
-        </Sheet>
 
         {/* Add & Edit Service Form Modals */}
         <ServiceFormDialogs

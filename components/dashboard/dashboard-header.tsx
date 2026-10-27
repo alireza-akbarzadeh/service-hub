@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -15,6 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  CalendarDays,
   Clock,
   PanelRight,
   PanelRightClose,
@@ -22,6 +24,7 @@ import {
   Settings,
 } from "lucide-react"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
+import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
 
 interface DashboardHeaderProps {
   selectedEnv: string
@@ -107,34 +110,28 @@ export function DashboardHeader({
         {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
         <HeaderMarketSection />
 
-        {/* Iranian Timezone & Meeting Panel Toggle Pill */}
-        <Button
-          type="button"
-          variant={isRightPanelOpen ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleRightPanel}
-          className={cn(
-            "h-8 cursor-pointer gap-2 px-3 text-xs font-medium shadow-2xs transition-all",
-            isRightPanelOpen
-              ? "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
-              : "text-foreground hover:bg-muted"
-          )}
-          title="Toggle Iranian Timezone Calendar & Frontend Meeting notifications"
-        >
-          <Clock className="size-3.5 shrink-0" />
-          <span className="font-mono font-semibold">
-            {tehranTimeMini || "Tehran"}
-          </span>
-          <span className="hidden items-center gap-1 opacity-90 sm:inline-flex">
-            <span>• IRST</span>
-            <Radio className="size-2.5 animate-pulse text-sky-300" />
-          </span>
-          {isRightPanelOpen ? (
-            <PanelRightClose className="size-3.5 opacity-80" />
-          ) : (
-            <PanelRight className="size-3.5 opacity-80" />
-          )}
-        </Button>
+        {/* Meet Quick Action Popover */}
+        <MeetQuickAction variant="pill" />
+
+        {/* Dedicated Calendar & Iran Sync Page Link */}
+        <Link href="/calendar">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
+            title="Open Dedicated Calendar, Meetings & Iran Sync (/calendar)"
+          >
+            <Clock className="size-3.5 text-amber-500" />
+            <span className="font-mono font-semibold">
+              {tehranTimeMini || "Tehran"}
+            </span>
+            <span className="hidden items-center gap-1 opacity-90 sm:inline-flex">
+              <span>• IRST</span>
+              <Radio className="size-2.5 animate-pulse text-sky-400" />
+            </span>
+          </Button>
+        </Link>
 
         {onOpenSettings && (
           <Button

@@ -10,6 +10,8 @@ import type { FrontendMeeting } from "@/lib/meetings-data"
 import {
   Search,
   ExternalLink,
+  Bot,
+  CalendarDays,
   Copy,
   Check,
   Star,
@@ -275,6 +277,34 @@ export function CommandPalette({
         iconColor: "text-indigo-500 bg-indigo-500/15 border-indigo-500/30",
         onSelect: () => {
           window.location.href = "/users"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-ai-hub",
+        title: "AI Tools for Developers & Full-Stacks",
+        subtitle:
+          "Explore curated AI coding assistants (Cursor, Claude Code), UI generators (v0, 21st.dev), serverless databases & prompts",
+        badge: "/ai",
+        icon: Bot,
+        iconColor: "text-primary bg-primary/15 border-primary/30",
+        onSelect: () => {
+          window.location.href = "/ai"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-calendar-hub",
+        title: "Calendar, Meetings & Iran Sync Hub",
+        subtitle:
+          "Dedicated scheduling command center: Google Meet launcher, Iranian Jalali calendar & CS2 squad match",
+        badge: "/calendar",
+        icon: CalendarDays,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/calendar"
           onOpenChange(false)
         },
       },

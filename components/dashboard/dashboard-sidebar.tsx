@@ -20,10 +20,13 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { NetworkStatusPill } from "@/components/network-status-indicator"
 import { PwaSidebarInstallButton } from "@/components/pwa-installer"
+import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
 import { logoutAction } from "@/app/actions/services"
 import {
   Activity,
+  Bot,
   Building2,
+  CalendarDays,
   Code2,
   Cpu,
   Database,
@@ -32,6 +35,7 @@ import {
   Gamepad2,
   GitPullRequest,
   Terminal,
+  Video,
   Wrench,
   Layers,
   LogOut,
@@ -216,6 +220,30 @@ export function DashboardSidebar({
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+
+              {/* Calendar, Meetings & Iran Sync (/calendar) */}
+              <SidebarMenuItem>
+                <Link href="/calendar" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Calendar, Meetings & Iran Time Sync (/calendar)"
+                    className="w-full cursor-pointer"
+                  >
+                    <CalendarDays className="size-4 text-emerald-500" />
+                    <span>Calendar & Meet</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-emerald-500/30 px-1 py-0 font-mono text-[9px] text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400"
+                    >
+                      Sync
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Meet Quick Action Popover */}
+              <SidebarMenuItem className="group-data-[collapsible=icon]:hidden pt-1">
+                <MeetQuickAction variant="sidebar-item" />
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -227,6 +255,25 @@ export function DashboardSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* AI for Developers */}
+              <SidebarMenuItem>
+                <Link href="/ai" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Curated AI Directory & Prompts for Full-Stack Developers (/ai)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Bot className="size-4 text-primary" />
+                    <span>AI for Developers</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-primary/30 px-1 py-0 font-mono text-[9px] text-primary group-data-[collapsible=icon]:hidden bg-primary/10"
+                    >
+                      Top AI
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
               {/* cURL Inspector */}
               <SidebarMenuItem>
                 <Link href="/tools" className="w-full">
