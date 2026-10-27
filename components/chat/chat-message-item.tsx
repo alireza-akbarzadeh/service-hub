@@ -61,7 +61,7 @@ export function ChatMessageItem({
       {/* Message Body */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-foreground">
+          <span className="font-vazirmatn text-xs font-bold text-foreground" dir="auto">
             {message.senderName}
           </span>
           {isMe && (
@@ -78,7 +78,10 @@ export function ChatMessageItem({
         </div>
 
         {/* Message Content Render */}
-        <div className="mt-1 text-xs text-foreground/90 leading-relaxed break-words">
+        <div
+          dir="auto"
+          className="font-vazirmatn mt-1 text-[13px] text-foreground/90 leading-relaxed break-words"
+        >
           {message.type === "dice" ? (
             <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-amber-700 dark:text-amber-300 font-medium">
               <Dices className="size-4 text-amber-500 animate-spin" />

@@ -116,8 +116,9 @@ export function ChannelSidebar({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search channels..."
-            className="h-8 pl-8 text-xs bg-muted/30"
+            placeholder="Search channels... جستجو"
+            dir="auto"
+            className="h-8 pl-8 text-xs bg-muted/30 font-vazirmatn"
           />
         </div>
       </div>
@@ -164,7 +165,7 @@ export function ChannelSidebar({
                             isActive ? "text-primary-foreground" : "text-muted-foreground"
                           )}
                         />
-                        <span className="truncate">#{channel.name}</span>
+                        <span className="font-vazirmatn truncate" dir="auto">#{channel.name}</span>
                       </div>
 
                       {unread > 0 && !isActive && (

@@ -424,7 +424,7 @@ export function AnonChatView() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-foreground">
+                <span className="font-vazirmatn text-sm font-bold text-foreground" dir="auto">
                   {activeChannel ? activeChannel.name : "general"}
                 </span>
                 <Badge
@@ -435,7 +435,7 @@ export function AnonChatView() {
                 </Badge>
               </div>
               {activeChannel?.topic && (
-                <p className="hidden md:block truncate text-[11px] text-muted-foreground max-w-sm lg:max-w-md">
+                <p className="font-vazirmatn hidden md:block truncate text-[11px] text-muted-foreground max-w-sm lg:max-w-md" dir="auto">
                   {activeChannel.topic}
                 </p>
               )}
@@ -524,7 +524,7 @@ export function AnonChatView() {
           {/* Channel banner info pill */}
           {activeChannel?.description && (
             <div className="border-b border-border/60 bg-muted/20 px-4 py-1.5 text-xs text-muted-foreground flex items-center justify-between">
-              <span className="truncate">{activeChannel.description}</span>
+              <span className="font-vazirmatn truncate" dir="auto">{activeChannel.description}</span>
               <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground/70 shrink-0">
                 <Sparkles className="size-3 text-amber-500" />
                 Live Channels

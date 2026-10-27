@@ -158,10 +158,11 @@ export function ChatInputBar({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`Message #${channelName} anonymously... (Enter to send, Shift+Enter for new line)`}
+          placeholder={`Message #${channelName} anonymously... پیام ناشناس بنویسید (Enter to send)`}
           rows={1}
+          dir="auto"
           disabled={disabled}
-          className="max-h-28 min-h-[24px] w-full resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="font-vazirmatn max-h-28 min-h-[26px] w-full resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
         />
 
         <Button

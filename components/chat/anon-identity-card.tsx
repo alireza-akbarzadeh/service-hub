@@ -91,7 +91,7 @@ export function AnonIdentityCard({
           {/* User info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-xs font-bold text-foreground">
+              <span className="font-vazirmatn truncate text-xs font-bold text-foreground" dir="auto">
                 {user.name}
               </span>
               <span title="Anonymous identity verified">
@@ -155,8 +155,9 @@ export function AnonIdentityCard({
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 maxLength={32}
-                placeholder="e.g. Cyber Otter"
-                className="mt-1"
+                placeholder="e.g. Cyber Otter یا نام دلخواه"
+                dir="auto"
+                className="mt-1 font-vazirmatn text-xs"
                 required
               />
             </div>

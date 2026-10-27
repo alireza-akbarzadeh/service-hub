@@ -213,8 +213,9 @@ export function CreateChannelDialog({
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this channel about? (optional)"
-              className="mt-1 text-xs"
+              placeholder="What is this channel about? (optional) توضیحات کانال"
+              className="mt-1 text-xs font-vazirmatn"
+              dir="auto"
               maxLength={120}
             />
           </div>
