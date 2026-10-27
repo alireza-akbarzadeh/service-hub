@@ -5,12 +5,17 @@ import {
   AI_DEVELOPER_TOOLS,
   DEVELOPER_PROMPTS,
   type AiToolItem,
+  type PromptTemplate,
 } from "./ai-tools-data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { AiGuideModal } from "./ai-guide-modal"
+import { AiToolDialog } from "./ai-tool-dialog"
+import { AiPromptDialog } from "./ai-prompt-dialog"
 import {
   ArrowUpRight,
+  BookOpen,
   Bot,
   BrainCircuit,
   Check,
@@ -18,20 +23,24 @@ import {
   Copy,
   Cpu,
   Database,
+  Edit2,
   ExternalLink,
   FileCode2,
+  FileEdit,
   Filter,
   Flame,
   Globe2,
   Layers,
   Lightbulb,
   MessageSquareCode,
+  Plus,
   Rocket,
   Search,
   Share2,
   ShieldCheck,
   Sparkles,
   Terminal,
+  Trash2,
   Wand2,
   Wrench,
   Zap,
@@ -39,17 +48,154 @@ import {
 import { cn } from "@/lib/utils"
 
 export function AiDeveloperHub() {
+  const [tools, setTools] = React.useState<AiToolItem[]>(AI_DEVELOPER_TOOLS)
+  const [prompts, setPrompts] = React.useState<PromptTemplate[]>(DEVELOPER_PROMPTS)
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  // Filters & State
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all")
   const [selectedPricing, setSelectedPricing] = React.useState<string>("all")
+  const [activeViewMode, setActiveViewMode] = React.useState<"tools" | "prompts">("tools")
+
+  // Copy feedback
   const [copiedId, setCopiedId] = React.useState<string | null>(null)
   const [copiedCommandId, setCopiedCommandId] = React.useState<string | null>(null)
-  const [copiedPromptIndex, setCopiedPromptIndex] = React.useState<number | null>(null)
-  const [activeViewMode, setActiveViewMode] = React.useState<"tools" | "prompts">("tools")
+  const [copiedPromptId, setCopiedPromptId] = React.useState<string | null>(null)
+
+  // Modals state
+  const [guideTool, setGuideTool] = React.useState<AiToolItem | null>(null)
+  const [isGuideOpen, setIsGuideOpen] = React.useState(false)
+
+  const [toolModalOpen, setToolModalOpen] = React.useState(false)
+  const [editingTool, setEditingTool] = React.useState<AiToolItem | null>(null)
+
+  const [promptModalOpen, setPromptModalOpen] = React.useState(false)
+  const [editingPrompt, setEditingPrompt] = React.useState<PromptTemplate | null>(null)
+
+  // Fetch from API on mount
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true)
+      try {
+        const [toolsRes, promptsRes] = await Promise.all([
+          fetch("/api/ai/tools"),
+          fetch("/api/ai/prompts"),
+        ])
+        if (toolsRes.ok) {
+          const toolsData = await toolsRes.json()
+          if (toolsData.success && Array.isArray(toolsData.tools) && toolsData.tools.length > 0) {
+            setTools(toolsData.tools)
+          }
+        }
+        if (promptsRes.ok) {
+          const promptsData = await promptsRes.json()
+          if (promptsData.success && Array.isArray(promptsData.prompts) && promptsData.prompts.length > 0) {
+            setPrompts(promptsData.prompts)
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load AI data from API, using fallback defaults:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Tool CRUD Handlers
+  const handleSaveTool = async (payload: Partial<AiToolItem>): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/ai/tools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.tool) {
+          setTools((prev) => {
+            const index = prev.findIndex((t) => t.id === data.tool.id)
+            if (index >= 0) {
+              const updated = [...prev]
+              updated[index] = data.tool
+              return updated
+            }
+            return [data.tool, ...prev]
+          })
+          return true
+        }
+      }
+    } catch (err) {
+      console.error("Save tool error:", err)
+    }
+    return false
+  }
+
+  const handleDeleteTool = async (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    if (!confirm("Are you sure you want to remove this AI tool?")) return
+
+    try {
+      const res = await fetch(`/api/ai/tools?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      })
+      if (res.ok) {
+        setTools((prev) => prev.filter((t) => t.id !== id))
+      }
+    } catch (err) {
+      console.error("Delete tool error:", err)
+    }
+  }
+
+  // Prompt CRUD Handlers
+  const handleSavePrompt = async (payload: Partial<PromptTemplate>): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/ai/prompts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.prompt) {
+          setPrompts((prev) => {
+            const index = prev.findIndex((p) => p.id === data.prompt.id)
+            if (index >= 0) {
+              const updated = [...prev]
+              updated[index] = data.prompt
+              return updated
+            }
+            return [data.prompt, ...prev]
+          })
+          return true
+        }
+      }
+    } catch (err) {
+      console.error("Save prompt error:", err)
+    }
+    return false
+  }
+
+  const handleDeletePrompt = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this prompt template?")) return
+
+    try {
+      const res = await fetch(`/api/ai/prompts?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      })
+      if (res.ok) {
+        setPrompts((prev) => prev.filter((p) => p.id !== id))
+      }
+    } catch (err) {
+      console.error("Delete prompt error:", err)
+    }
+  }
 
   // Filter tools
   const filteredTools = React.useMemo(() => {
-    return AI_DEVELOPER_TOOLS.filter((tool) => {
+    return tools.filter((tool) => {
       const q = searchQuery.toLowerCase().trim()
       const matchesSearch =
         !q ||
@@ -71,9 +217,24 @@ export function AiDeveloperHub() {
 
       return matchesSearch && matchesCategory && matchesPricing
     })
-  }, [searchQuery, selectedCategory, selectedPricing])
+  }, [tools, searchQuery, selectedCategory, selectedPricing])
 
-  const handleCopyLink = (id: string, url: string) => {
+  // Filter prompts
+  const filteredPrompts = React.useMemo(() => {
+    return prompts.filter((p) => {
+      const q = searchQuery.toLowerCase().trim()
+      return (
+        !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.prompt.toLowerCase().includes(q) ||
+        p.bestModel.toLowerCase().includes(q)
+      )
+    })
+  }, [prompts, searchQuery])
+
+  const handleCopyLink = (id: string, url: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(url)
       setCopiedId(id)
@@ -81,7 +242,8 @@ export function AiDeveloperHub() {
     }
   }
 
-  const handleCopyCommand = (id: string, cmd: string) => {
+  const handleCopyCommand = (id: string, cmd: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(cmd)
       setCopiedCommandId(id)
@@ -89,12 +251,18 @@ export function AiDeveloperHub() {
     }
   }
 
-  const handleCopyPrompt = (index: number, text: string) => {
+  const handleCopyPrompt = (id: string, text: string) => {
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(text)
-      setCopiedPromptIndex(index)
-      setTimeout(() => setCopiedPromptIndex(null), 1500)
+      setCopiedPromptId(id)
+      setTimeout(() => setCopiedPromptId(null), 1500)
     }
+  }
+
+  const openGuide = (tool: AiToolItem, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setGuideTool(tool)
+    setIsGuideOpen(true)
   }
 
   return (
@@ -118,7 +286,7 @@ export function AiDeveloperHub() {
                 variant="outline"
                 className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono px-2 py-0.5"
               >
-                Curated & Verified Links
+                Full CRUD & Setup Guides (.md)
               </Badge>
             </div>
 
@@ -127,13 +295,41 @@ export function AiDeveloperHub() {
             </h2>
 
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Hand-picked agentic IDEs, UI generators, serverless databases, fast inference engines,
-              and code review agents designed to eliminate boilerplate, debug faster, and ship in record time.
+              Curated agentic IDEs, UI generators, serverless databases, fast inference engines,
+              and code review agents. Complete with Markdown setup instructions and custom prompt library.
             </p>
           </div>
 
-          {/* Quick Stats / View Mode Switcher */}
-          <div className="flex sm:flex-col items-center sm:items-end gap-2 shrink-0">
+          {/* Quick Actions & View Switcher */}
+          <div className="flex sm:flex-col items-center sm:items-end gap-2.5 shrink-0">
+            {activeViewMode === "tools" ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setEditingTool(null)
+                  setToolModalOpen(true)
+                }}
+                className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs text-xs cursor-pointer"
+              >
+                <Plus className="size-3.5" />
+                <span>Add AI Tool</span>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setEditingPrompt(null)
+                  setPromptModalOpen(true)
+                }}
+                className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs text-xs cursor-pointer"
+              >
+                <Plus className="size-3.5" />
+                <span>Add Prompt</span>
+              </Button>
+            )}
+
             <div className="flex items-center rounded-xl border border-border bg-muted/50 p-1 shadow-2xs">
               <button
                 type="button"
@@ -145,7 +341,7 @@ export function AiDeveloperHub() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                AI Tools Directory ({AI_DEVELOPER_TOOLS.length})
+                AI Tools ({tools.length})
               </button>
               <button
                 type="button"
@@ -158,12 +354,9 @@ export function AiDeveloperHub() {
                 )}
               >
                 <MessageSquareCode className="size-3.5 text-primary" />
-                Prompt Library ({DEVELOPER_PROMPTS.length})
+                Prompts ({prompts.length})
               </button>
             </div>
-            <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">
-              All links open in new tab
-            </span>
           </div>
         </div>
       </div>
@@ -193,7 +386,7 @@ export function AiDeveloperHub() {
             </div>
 
             {/* Pricing Filter */}
-            <div className="flex items-center gap-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-xs flex-wrap">
               <span className="text-muted-foreground text-[11px] font-medium hidden sm:inline">
                 Pricing:
               </span>
@@ -223,12 +416,12 @@ export function AiDeveloperHub() {
           {/* Category Tabs */}
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-border pb-2">
             {[
-              { id: "all", label: "All Tools", icon: Layers, count: AI_DEVELOPER_TOOLS.length },
-              { id: "ide-agents", label: "Agentic IDEs & Editors", icon: Code2, count: 5 },
-              { id: "frontend-ui", label: "Frontend & Generative UI", icon: Wand2, count: 4 },
-              { id: "backend-devops", label: "Backend, DB & DevOps", icon: Database, count: 5 },
-              { id: "models-apis", label: "Models & Reasoning", icon: BrainCircuit, count: 3 },
-              { id: "review-testing", label: "Code Review & Testing", icon: ShieldCheck, count: 3 },
+              { id: "all", label: "All Tools", icon: Layers, count: tools.length },
+              { id: "ide-agents", label: "Agentic IDEs & Editors", icon: Code2, count: tools.filter(t => t.category === "ide-agents").length },
+              { id: "frontend-ui", label: "Frontend & Generative UI", icon: Wand2, count: tools.filter(t => t.category === "frontend-ui").length },
+              { id: "backend-devops", label: "Backend, DB & DevOps", icon: Database, count: tools.filter(t => t.category === "backend-devops").length },
+              { id: "models-apis", label: "Models & Reasoning", icon: BrainCircuit, count: tools.filter(t => t.category === "models-apis").length },
+              { id: "review-testing", label: "Code Review & Testing", icon: ShieldCheck, count: tools.filter(t => t.category === "review-testing").length },
             ].map((tab) => {
               const isActive = selectedCategory === tab.id
               const Icon = tab.icon
@@ -262,10 +455,10 @@ export function AiDeveloperHub() {
             })}
           </div>
 
-          {/* Results Counter */}
+          {/* Results Counter & Add Tool Shortcut */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              Showing <strong>{filteredTools.length}</strong> developer AI tools
+              Showing <strong>{filteredTools.length}</strong> AI developer tools
             </span>
             {(searchQuery || selectedCategory !== "all" || selectedPricing !== "all") && (
               <button
@@ -287,9 +480,10 @@ export function AiDeveloperHub() {
             {filteredTools.map((tool) => (
               <div
                 key={tool.id}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                onClick={() => openGuide(tool)}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md cursor-pointer"
               >
-                {/* Top: Icon, Title, Pricing Badge */}
+                {/* Top: Icon, Title, Pricing Badge & Manage Actions */}
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -313,19 +507,47 @@ export function AiDeveloperHub() {
                       </div>
                     </div>
 
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] font-mono px-2 py-0.5 shrink-0 shadow-2xs",
-                        tool.pricing.includes("Free") || tool.pricing.includes("Open Source")
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : tool.pricing === "Freemium"
-                            ? "border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-400"
-                            : "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      )}
-                    >
-                      {tool.pricing}
-                    </Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] font-mono px-2 py-0.5 shadow-2xs",
+                          tool.pricing.includes("Free") || tool.pricing.includes("Open Source")
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : tool.pricing === "Freemium"
+                              ? "border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                              : "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        )}
+                      >
+                        {tool.pricing}
+                      </Badge>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingTool(tool)
+                          setToolModalOpen(true)
+                        }}
+                        className="size-6 text-muted-foreground hover:text-foreground rounded-md cursor-pointer"
+                        title="Edit tool & markdown setup instructions"
+                      >
+                        <Edit2 className="size-3" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleDeleteTool(tool.id, e)}
+                        className="size-6 text-muted-foreground hover:text-destructive rounded-md cursor-pointer"
+                        title="Delete AI tool"
+                      >
+                        <Trash2 className="size-3" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Description */}
@@ -357,7 +579,7 @@ export function AiDeveloperHub() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleCopyCommand(tool.id, tool.quickCommand!)}
+                        onClick={(e) => handleCopyCommand(tool.id, tool.quickCommand!, e)}
                         className="size-5 shrink-0 rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
                         title="Copy command"
                       >
@@ -387,34 +609,47 @@ export function AiDeveloperHub() {
                 <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleCopyLink(tool.id, tool.url)}
-                    className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
-                    title="Copy official website link"
+                    onClick={(e) => openGuide(tool, e)}
+                    className="h-7 px-2.5 text-[11px] font-medium gap-1 text-foreground border-border/80 hover:bg-muted cursor-pointer"
                   >
-                    {copiedId === tool.id ? (
-                      <>
-                        <Check className="size-3 text-emerald-500" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Share2 className="size-3" />
-                        <span>Share</span>
-                      </>
-                    )}
+                    <BookOpen className="size-3 text-primary" />
+                    <span>Setup Guide (.md)</span>
                   </Button>
 
-                  <a
-                    href={tool.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-primary px-3 text-[11px] font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer group-hover:shadow-sm"
-                  >
-                    <span>Visit {tool.name}</span>
-                    <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </a>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleCopyLink(tool.id, tool.url, e)}
+                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground gap-1 cursor-pointer"
+                      title="Share official link"
+                    >
+                      {copiedId === tool.id ? (
+                        <>
+                          <Check className="size-3 text-emerald-500" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="size-3" />
+                        </>
+                      )}
+                    </Button>
+
+                    <a
+                      href={tool.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex h-7 items-center gap-1 rounded-lg bg-primary px-3 text-[11px] font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
+                    >
+                      <span>Visit</span>
+                      <ArrowUpRight className="size-3" />
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -423,30 +658,72 @@ export function AiDeveloperHub() {
       ) : (
         /* Prompt Library View */
         <div className="space-y-4">
-          <div className="rounded-xl border border-border/70 bg-card p-4">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-              <MessageSquareCode className="size-4 text-primary" />
-              High-Impact Full-Stack Engineering Prompts
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Battle-tested prompt templates tailored for Claude 3.7 Sonnet, DeepSeek R1, Cursor, and ChatGPT. Click to copy directly into your clipboard.
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-border/70 bg-card p-4">
+            <div>
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <MessageSquareCode className="size-4 text-primary" />
+                Developer Prompt Library ({filteredPrompts.length})
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Save, copy, and edit battle-tested prompts for Claude 3.7 Sonnet, DeepSeek R1, Cursor, and ChatGPT.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setEditingPrompt(null)
+                setPromptModalOpen(true)
+              }}
+              className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs text-xs cursor-pointer shrink-0"
+            >
+              <Plus className="size-3.5" />
+              <span>Create Prompt</span>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {DEVELOPER_PROMPTS.map((item, idx) => (
+            {filteredPrompts.map((item) => (
               <div
-                key={idx}
+                key={item.id}
                 className="rounded-2xl border border-border/80 bg-card p-5 shadow-2xs space-y-3 flex flex-col justify-between"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
                     <span className="font-bold text-xs text-foreground">
                       {item.title}
                     </span>
-                    <Badge variant="outline" className="text-[10px] font-mono">
-                      {item.category}
-                    </Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        {item.category}
+                      </Badge>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingPrompt(item)
+                          setPromptModalOpen(true)
+                        }}
+                        className="size-6 text-muted-foreground hover:text-foreground rounded-md cursor-pointer"
+                        title="Edit prompt"
+                      >
+                        <Edit2 className="size-3" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeletePrompt(item.id)}
+                        className="size-6 text-muted-foreground hover:text-destructive rounded-md cursor-pointer"
+                        title="Delete prompt"
+                      >
+                        <Trash2 className="size-3" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -463,10 +740,10 @@ export function AiDeveloperHub() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopyPrompt(idx, item.prompt)}
+                  onClick={() => handleCopyPrompt(item.id, item.prompt)}
                   className="w-full gap-2 text-xs font-semibold cursor-pointer border-primary/30 text-primary hover:bg-primary/10"
                 >
-                  {copiedPromptIndex === idx ? (
+                  {copiedPromptId === item.id ? (
                     <>
                       <Check className="size-3.5 text-emerald-500" />
                       <span>Copied Prompt to Clipboard!</span>
@@ -483,6 +760,33 @@ export function AiDeveloperHub() {
           </div>
         </div>
       )}
+
+      {/* View Setup Guide (.md) Modal */}
+      <AiGuideModal
+        tool={guideTool}
+        open={isGuideOpen}
+        onOpenChange={setIsGuideOpen}
+        onEdit={(tool) => {
+          setEditingTool(tool)
+          setToolModalOpen(true)
+        }}
+      />
+
+      {/* Add / Edit Tool Modal */}
+      <AiToolDialog
+        open={toolModalOpen}
+        onOpenChange={setToolModalOpen}
+        tool={editingTool}
+        onSave={handleSaveTool}
+      />
+
+      {/* Add / Edit Prompt Modal */}
+      <AiPromptDialog
+        open={promptModalOpen}
+        onOpenChange={setPromptModalOpen}
+        prompt={editingPrompt}
+        onSave={handleSavePrompt}
+      />
     </div>
   )
 }
