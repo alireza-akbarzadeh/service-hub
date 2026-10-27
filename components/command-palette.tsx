@@ -310,6 +310,20 @@ export function CommandPalette({
       },
       {
         type: "action",
+        id: "act-advanced-dev-tools",
+        title: "Advanced Developer Tools (Image Compressor, RegEx, Diff, Cron)",
+        subtitle:
+          "Client-side image compressor & WebP converter, RegEx evaluator, Git code diff checker, Cron schedule builder, and Tailwind palettes",
+        badge: "/tools/advanced",
+        icon: Sparkles,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/tools/advanced"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
         id: "act-instant-meet",
         title: "Start Instant Google Meet",
         subtitle:

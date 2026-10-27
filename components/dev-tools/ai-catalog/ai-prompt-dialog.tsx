@@ -82,7 +82,7 @@ export function AiPromptDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl p-5 sm:p-6">
+      <DialogContent className="w-full sm:max-w-xl max-h-[90vh] overflow-y-auto border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl p-5 sm:p-6">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15 text-primary">

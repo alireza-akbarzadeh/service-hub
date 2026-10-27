@@ -56,7 +56,7 @@ ${tool.bestFor.map((b) => `- **${b}**`).join("\n")}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto border-border/80 bg-card/95 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
+      <DialogContent className="w-full sm:max-w-4xl max-h-[85vh] overflow-y-auto border-border/80 bg-card/95 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
         <DialogHeader className="border-b border-border/60 pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">

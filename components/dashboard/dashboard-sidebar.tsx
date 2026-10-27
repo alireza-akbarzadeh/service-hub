@@ -45,6 +45,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  FileImage,
 } from "lucide-react"
 
 const ENVIRONMENTS = [
@@ -183,25 +184,6 @@ export function DashboardSidebar({
                 </Link>
               </SidebarMenuItem>
 
-              {/* Workspace Query (/workspace-query) */}
-              <SidebarMenuItem>
-                <Link href="/workspace-query" className="w-full">
-                  <SidebarMenuButton
-                    tooltip="DevOps Workspace Query & Reports (/workspace-query)"
-                    className="w-full cursor-pointer"
-                  >
-                    <Layers className="size-4 text-blue-500" />
-                    <span>Workspace Query</span>
-                    <Badge
-                      variant="outline"
-                      className="ml-auto border-blue-500/30 px-1 py-0 font-mono text-[9px] text-blue-600 group-data-[collapsible=icon]:hidden dark:text-blue-400"
-                    >
-                      WIQL
-                    </Badge>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-
               {/* Access Management & Users (/users) */}
               <SidebarMenuItem>
                 <Link href="/users" className="w-full">
@@ -241,7 +223,7 @@ export function DashboardSidebar({
               </SidebarMenuItem>
 
               {/* Meet Quick Action Popover */}
-              <SidebarMenuItem className="group-data-[collapsible=icon]:hidden pt-1">
+              <SidebarMenuItem className="pt-1 group-data-[collapsible=icon]:hidden">
                 <MeetQuickAction variant="sidebar-item" />
               </SidebarMenuItem>
             </SidebarMenu>
@@ -266,9 +248,28 @@ export function DashboardSidebar({
                     <span>AI for Developers</span>
                     <Badge
                       variant="outline"
-                      className="ml-auto border-primary/30 px-1 py-0 font-mono text-[9px] text-primary group-data-[collapsible=icon]:hidden bg-primary/10"
+                      className="ml-auto border-primary/30 bg-primary/10 px-1 py-0 font-mono text-[9px] text-primary group-data-[collapsible=icon]:hidden"
                     >
                       Top AI
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Advanced Dev Tools */}
+              <SidebarMenuItem>
+                <Link href="/tools/advanced" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Advanced Dev Tools (Image Compressor, RegEx, Diff, Cron, Palettes)"
+                    className="w-full cursor-pointer"
+                  >
+                    <FileImage className="size-4 text-emerald-500" />
+                    <span>Advanced Tools</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Image/RegEx
                     </Badge>
                   </SidebarMenuButton>
                 </Link>
