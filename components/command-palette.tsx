@@ -32,6 +32,11 @@ import {
   Plus,
   Radio,
   Sparkles,
+  Gamepad2,
+  AlignJustify,
+  LayoutGrid,
+  Rows3,
+  SlidersHorizontal,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getServiceTags } from "@/components/services-dashboard"
@@ -43,6 +48,8 @@ interface CommandPaletteProps {
   favorites: number[]
   onToggleFavorite: (id: number) => void
   onToggleRightPanel?: () => void
+  onOpenSettings?: () => void
+  onSelectViewShape?: (shape: "table" | "row-card" | "square-card") => void
 }
 
 const ENV_ICONS: Record<string, React.ElementType> = {
@@ -85,6 +92,8 @@ export function CommandPalette({
   favorites,
   onToggleFavorite,
   onToggleRightPanel,
+  onOpenSettings,
+  onSelectViewShape,
 }: CommandPaletteProps) {
   const { meetings, addMeeting } = useMeetings()
 
@@ -138,6 +147,58 @@ export function CommandPalette({
     const actions: PaletteAction[] = [
       {
         type: "action",
+        id: "act-dashboard-settings",
+        title: "Dashboard View & Layout Settings",
+        subtitle: "Customize 3 shapes (Table, Row Cards, Squared Cards), density, and edit raw JSON config",
+        badge: "Layout Config",
+        icon: SlidersHorizontal,
+        iconColor: "text-primary bg-primary/15 border-primary/30",
+        onSelect: () => {
+          onOpenSettings?.()
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-shape-table",
+        title: "Switch View to Table Mode",
+        subtitle: "Dense tabular list with sorting, columns, and inline telemetry status",
+        badge: "Shape 1",
+        icon: Rows3,
+        iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
+        onSelect: () => {
+          onSelectViewShape?.("table")
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-shape-row-card",
+        title: "Switch View to Row Cards Mode",
+        subtitle: "Horizontal expansive cards spanning the full width for modern catalog scanning",
+        badge: "Shape 2",
+        icon: AlignJustify,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          onSelectViewShape?.("row-card")
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-shape-square-card",
+        title: "Switch View to Squared Cards Mode",
+        subtitle: "Modular square box cards in a multi-column responsive grid layout",
+        badge: "Shape 3",
+        icon: LayoutGrid,
+        iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
+        onSelect: () => {
+          onSelectViewShape?.("square-card")
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
         id: "act-curl-inspector",
         title: "cURL Command Inspector",
         subtitle: "Parse cURL to extract URL, headers, Bearer tokens, JSON payload, and client device",
@@ -159,6 +220,19 @@ export function CommandPalette({
         iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
         onSelect: () => {
           window.location.href = "/tools"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-anon-chat",
+        title: "Anonymous Chat Lounge & Channels",
+        subtitle: "Chat anonymously with randomized avatar, dice rolls, sound notifications & channels (#game, #general)",
+        badge: "Fun Lounge",
+        icon: Gamepad2,
+        iconColor: "text-pink-500 bg-pink-500/15 border-pink-500/30",
+        onSelect: () => {
+          window.location.href = "/chat"
           onOpenChange(false)
         },
       },

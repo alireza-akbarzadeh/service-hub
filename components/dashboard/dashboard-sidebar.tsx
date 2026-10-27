@@ -30,6 +30,7 @@ import {
   Database,
   FileCode,
   FileJson,
+  Gamepad2,
   Terminal,
   Wrench,
   Layers,
@@ -184,7 +185,24 @@ export function DashboardSidebar({
                 </Link>
               </SidebarMenuItem>
 
-              {/* Quick Search Trigger */}
+              {/* Anonymous Chat Lounge */}
+              <SidebarMenuItem>
+                <Link href="/chat" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Anonymous Chat Lounge (#general, #game)"
+                    className="cursor-pointer w-full"
+                  >
+                    <Gamepad2 className="size-4 text-pink-500" />
+                    <span>Anon Chat Lounge</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto px-1 py-0 text-[9px] font-mono border-pink-500/30 text-pink-600 dark:text-pink-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Fun
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={onOpenCommandPalette}

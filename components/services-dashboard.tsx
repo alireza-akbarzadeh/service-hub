@@ -24,9 +24,14 @@ import { ServicesTable } from "@/components/dashboard/services-table"
 import { ServicesCardsGrid } from "@/components/dashboard/services-cards-grid"
 import {
   GridConfig,
+  ViewShape,
+  DEFAULT_GRID_CONFIG,
   loadGridConfig,
   saveGridConfig,
+  decodeConfigFromUrlHash,
+  CONFIG_CHANGED_EVENT,
 } from "@/components/dashboard/grid-view-config"
+import { DashboardSettingsDialog } from "@/components/dashboard/dashboard-settings-dialog"
 import { ServicesPagination } from "@/components/dashboard/services-pagination"
 import { ServiceFormDialogs } from "@/components/dashboard/service-form-dialogs"
 import { IranCalendarPanel } from "@/components/iran-calendar/iran-calendar-panel"
@@ -121,13 +126,41 @@ export function ServicesDashboard({
   // Mobile drawer state for Iran Calendar & Sync panel
   const [isMobilePanelOpen, setIsMobilePanelOpen] = React.useState(false)
 
-  // Grid / Table View Mode & Configuration stored in localStorage
+  // Dashboard Settings & JSON Config Modal State
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false)
+
+  // 3-Shape Display Mode & Preferences stored in localStorage
   const [gridConfig, setGridConfig] = React.useState<GridConfig>(() => loadGridConfig())
 
   const handleUpdateGridConfig = React.useCallback((newConfig: GridConfig) => {
     setGridConfig(newConfig)
     saveGridConfig(newConfig)
   }, [])
+
+  // Client-side hydration & shared URL hash detection
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check for shareable URL hash config
+      if (window.location.hash) {
+        const sharedConfig = decodeConfigFromUrlHash(window.location.hash)
+        if (sharedConfig) {
+          handleUpdateGridConfig(sharedConfig)
+        }
+      }
+
+      // Sync across components on custom event
+      const handleConfigEvent = (e: Event) => {
+        const customEvent = e as CustomEvent<GridConfig>
+        if (customEvent.detail) {
+          setGridConfig(customEvent.detail)
+        }
+      }
+      window.addEventListener(CONFIG_CHANGED_EVENT, handleConfigEvent)
+      return () => {
+        window.removeEventListener(CONFIG_CHANGED_EVENT, handleConfigEvent)
+      }
+    }
+  }, [handleUpdateGridConfig])
 
   const handleTogglePanel = () => {
     // On large screens, toggle right dock
@@ -178,6 +211,7 @@ export function ServicesDashboard({
             onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
             isRightPanelOpen={isRightPanelOpen}
             onToggleRightPanel={handleTogglePanel}
+            onOpenSettings={() => setIsSettingsOpen(true)}
           />
 
           {/* Body: Split View with Right-Side Iran Calendar & Meetings Panel */}
@@ -233,10 +267,39 @@ export function ServicesDashboard({
                 onOpenAddModal={openAddModal}
                 gridConfig={gridConfig}
                 onChangeGridConfig={handleUpdateGridConfig}
+                onOpenSettings={() => setIsSettingsOpen(true)}
               />
 
-              {/* Services List: Table View or Cards Grid based on Config */}
-              {gridConfig.viewMode === "card" ? (
+              {/* Services List: Table View vs Row Cards vs Squared Cards */}
+              {gridConfig.viewShape === "table" ? (
+                <ServicesTable
+                  services={paginatedServices}
+                  favorites={favorites}
+                  onToggleFavorite={toggleFavorite}
+                  onInspectService={setInspectingService}
+                  onEditService={openEditModal}
+                  onDeleteService={handleDeleteService}
+                  onCopyUrl={copyUrl}
+                  copiedId={copiedId}
+                  healthMap={healthMap}
+                  telemetryMap={telemetryMap}
+                  onPingSingle={handlePingSingle}
+                  mirrorMap={mirrorMap}
+                  networkInfo={networkInfo}
+                  selectedTag={selectedTag}
+                  onSelectTag={(t) => {
+                    setSelectedTag(t)
+                    setCurrentPage(1)
+                  }}
+                  onResetFilters={() => {
+                    setSelectedEnv("All")
+                    setSelectedCategory("All")
+                    setSelectedTag("#all")
+                    setSearchQuery("")
+                    setCurrentPage(1)
+                  }}
+                />
+              ) : (
                 <ServicesCardsGrid
                   services={paginatedServices}
                   favorites={favorites}
@@ -264,34 +327,7 @@ export function ServicesDashboard({
                     setCurrentPage(1)
                   }}
                   gridConfig={gridConfig}
-                />
-              ) : (
-                <ServicesTable
-                  services={paginatedServices}
-                  favorites={favorites}
-                  onToggleFavorite={toggleFavorite}
-                  onInspectService={setInspectingService}
-                  onEditService={openEditModal}
-                  onDeleteService={handleDeleteService}
-                  onCopyUrl={copyUrl}
-                  copiedId={copiedId}
-                  healthMap={healthMap}
-                  telemetryMap={telemetryMap}
-                  onPingSingle={handlePingSingle}
-                  mirrorMap={mirrorMap}
-                  networkInfo={networkInfo}
-                  selectedTag={selectedTag}
-                  onSelectTag={(t) => {
-                    setSelectedTag(t)
-                    setCurrentPage(1)
-                  }}
-                  onResetFilters={() => {
-                    setSelectedEnv("All")
-                    setSelectedCategory("All")
-                    setSelectedTag("#all")
-                    setSearchQuery("")
-                    setCurrentPage(1)
-                  }}
+                  viewShape={gridConfig.viewShape}
                 />
               )}
 
@@ -370,6 +406,22 @@ export function ServicesDashboard({
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
           onToggleRightPanel={toggleRightPanel}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onSelectViewShape={(shape) =>
+            handleUpdateGridConfig({
+              ...gridConfig,
+              viewShape: shape,
+              viewMode: shape,
+            })
+          }
+        />
+
+        {/* Dashboard Layout & LocalStorage JSON Settings Dialog */}
+        <DashboardSettingsDialog
+          open={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+          config={gridConfig}
+          onSaveConfig={handleUpdateGridConfig}
         />
 
         {/* Frontend .env Generator Modal */}

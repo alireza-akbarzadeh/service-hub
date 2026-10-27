@@ -15,7 +15,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Clock, FileJson, PanelRight, PanelRightClose, Radio, Search } from "lucide-react"
+import { Clock, FileJson, Gamepad2, PanelRight, PanelRightClose, Radio, Search, Settings } from "lucide-react"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 
 interface DashboardHeaderProps {
@@ -25,6 +25,7 @@ interface DashboardHeaderProps {
   onOpenCommandPalette: () => void
   isRightPanelOpen: boolean
   onToggleRightPanel: () => void
+  onOpenSettings?: () => void
 }
 
 export function DashboardHeader({
@@ -34,6 +35,7 @@ export function DashboardHeader({
   onOpenCommandPalette,
   isRightPanelOpen,
   onToggleRightPanel,
+  onOpenSettings,
 }: DashboardHeaderProps) {
   // Live mini clock for Tehran time in the header toggle button
   const [tehranTimeMini, setTehranTimeMini] = React.useState<string>("")
@@ -115,6 +117,20 @@ export function DashboardHeader({
           </Button>
         </Link>
 
+        {/* Anonymous Chat Lounge Link */}
+        <Link href="/chat">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground hover:bg-muted shadow-2xs"
+            title="Open Anonymous Chat Lounge (#general, #game, etc.)"
+          >
+            <Gamepad2 className="size-3.5 text-pink-500" />
+            <span className="hidden sm:inline">Anon Chat</span>
+          </Button>
+        </Link>
+
         {/* Quick Search */}
         <button
           type="button"
@@ -157,6 +173,20 @@ export function DashboardHeader({
             <PanelRight className="size-3.5 opacity-80" />
           )}
         </Button>
+
+        {onOpenSettings && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onOpenSettings}
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground shadow-2xs"
+            title="Dashboard Settings & JSON Config Editor"
+          >
+            <Settings className="size-3.5 text-primary" />
+            <span className="hidden xl:inline">Settings</span>
+          </Button>
+        )}
 
         <Separator orientation="vertical" className="h-5" />
         <ThemeToggle />
