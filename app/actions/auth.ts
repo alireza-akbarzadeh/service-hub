@@ -71,6 +71,17 @@ export async function getCurrentUserAction(): Promise<{
   }
 }
 
+function toSafeIsoString(dateVal: unknown): string {
+  if (!dateVal) return new Date().toISOString()
+  if (dateVal instanceof Date) return dateVal.toISOString()
+  if (typeof dateVal === "string") return dateVal
+  try {
+    return new Date(String(dateVal)).toISOString()
+  } catch {
+    return new Date().toISOString()
+  }
+}
+
 export async function listUsersAction(): Promise<{
   success: boolean
   users: Array<{
@@ -83,11 +94,6 @@ export async function listUsersAction(): Promise<{
     createdAt: string
   }>
 }> {
-  const session = await verifySession()
-  if (!session.isAuthenticated) {
-    return { success: false, users: [] }
-  }
-
   try {
     const rows = await db.select().from(users).orderBy(desc(users.createdAt))
     return {
@@ -97,28 +103,33 @@ export async function listUsersAction(): Promise<{
         name: u.name,
         username: u.username,
         email: u.email,
-        avatar: u.avatar,
-        role: u.role,
-        createdAt: u.createdAt.toISOString(),
+        avatar: u.avatar || "👤",
+        role: u.role || "viewer",
+        createdAt: toSafeIsoString(u.createdAt),
       })),
     }
   } catch (err) {
-    console.warn("Neon list users error, returning current session:", err)
-    if (session.user) {
-      return {
-        success: true,
-        users: [
-          {
-            id: session.user.id,
-            name: session.user.name,
-            username: session.user.username,
-            email: session.user.email,
-            avatar: session.user.avatar,
-            role: session.user.role,
-            createdAt: new Date().toISOString(),
-          },
-        ],
+    console.error("Neon list users error, attempting fallback:", err)
+    try {
+      const session = await verifySession()
+      if (session.user) {
+        return {
+          success: true,
+          users: [
+            {
+              id: session.user.id,
+              name: session.user.name,
+              username: session.user.username,
+              email: session.user.email,
+              avatar: session.user.avatar || "👤",
+              role: session.user.role || "viewer",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        }
       }
+    } catch {
+      // ignore
     }
     return { success: false, users: [] }
   }

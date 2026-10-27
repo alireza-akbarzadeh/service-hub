@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Cs2WritebarBanner } from "@/components/cs2/cs2-writebar-banner"
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -372,6 +373,9 @@ export function IranClockCalendar() {
           )}
         </div>
       )}
+
+      {/* 5:10 PM (17:10) CS2 Squad Match Live Countdown & Server Connect Widget */}
+      <Cs2WritebarBanner />
 
       {/* Interactive Persian Monthly Calendar Grid */}
       <div className="rounded-xl border border-border bg-card p-3 shadow-xs">

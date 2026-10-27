@@ -130,3 +130,13 @@ export const users = pgTable("users", {
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 
+export const appSettings = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedBy: text("updated_by"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export type AppSetting = typeof appSettings.$inferSelect
+export type NewAppSetting = typeof appSettings.$inferInsert
+

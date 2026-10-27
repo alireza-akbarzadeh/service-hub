@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Cs2WritebarBanner } from "@/components/cs2/cs2-writebar-banner"
 
 interface ChatInputBarProps {
   channelName: string
@@ -151,6 +152,9 @@ export function ChatInputBar({
 
   return (
     <div className="border-t border-border bg-card/85 p-2.5 sm:p-3 backdrop-blur-md">
+      {/* Active CS2 5:10 PM Match & Editable Server IP Writebar Strip */}
+      <Cs2WritebarBanner className="mb-2" />
+
       {/* Telegram-style Replying To Bar */}
       {replyingTo && (
         <div className="mb-2 flex items-center justify-between gap-3 rounded-xl border-l-4 border-sky-500 bg-sky-500/10 px-3 py-2 text-xs backdrop-blur-xs animate-in fade-in-50 slide-in-from-bottom-2">

@@ -61,11 +61,12 @@ const AVATAR_OPTIONS = [
 
 interface UsersManagementViewProps {
   currentUser?: SessionUser
+  initialUsers?: UserRow[]
 }
 
-export function UsersManagementView({ currentUser }: UsersManagementViewProps) {
-  const [users, setUsers] = React.useState<UserRow[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
+export function UsersManagementView({ currentUser, initialUsers }: UsersManagementViewProps) {
+  const [users, setUsers] = React.useState<UserRow[]>(initialUsers || [])
+  const [isLoading, setIsLoading] = React.useState(!initialUsers || initialUsers.length === 0)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [roleFilter, setRoleFilter] = React.useState<string>("all")
   const [actionMessage, setActionMessage] = React.useState<{ text: string; isError?: boolean } | null>(null)
@@ -83,7 +84,6 @@ export function UsersManagementView({ currentUser }: UsersManagementViewProps) {
 
   // Load users from server
   const loadUsers = React.useCallback(async () => {
-    setIsLoading(true)
     try {
       const res = await listUsersAction()
       if (res.success && res.users) {
@@ -97,8 +97,10 @@ export function UsersManagementView({ currentUser }: UsersManagementViewProps) {
   }, [])
 
   React.useEffect(() => {
-    loadUsers()
-  }, [loadUsers])
+    if (!initialUsers || initialUsers.length === 0) {
+      loadUsers()
+    }
+  }, [initialUsers, loadUsers])
 
   const handleCopyUsername = (username: string, id: string) => {
     if (navigator?.clipboard) {
