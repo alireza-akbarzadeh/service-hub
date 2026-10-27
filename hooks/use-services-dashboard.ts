@@ -124,9 +124,7 @@ export function useServicesDashboard(initialServices: Service[]) {
 
   // Dialog and panel states
   const [isAddOpen, setIsAddOpen] = React.useState(false)
-  const [isOnboardingOpen, setIsOnboardingOpen] = React.useState(false)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false)
-  const [isEnvModalOpen, setIsEnvModalOpen] = React.useState(false)
   const [isRightPanelOpen, setIsRightPanelOpen] = React.useState<boolean>(() => {
     if (typeof window === "undefined") return true
     try {
@@ -489,12 +487,8 @@ export function useServicesDashboard(initialServices: Service[]) {
     // Modals & Panels
     isAddOpen,
     setIsAddOpen,
-    isOnboardingOpen,
-    setIsOnboardingOpen,
     isCommandPaletteOpen,
     setIsCommandPaletteOpen,
-    isEnvModalOpen,
-    setIsEnvModalOpen,
     isRightPanelOpen,
     setIsRightPanelOpen,
     toggleRightPanel,

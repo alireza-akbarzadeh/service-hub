@@ -7,8 +7,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ForeignVpnWarningBanner } from "@/components/network-status-indicator"
 import { AnnouncementBanner } from "@/components/announcement-banner"
 import { CommandPalette } from "@/components/command-palette"
-import { EnvGeneratorModal } from "@/components/env-generator-modal"
-import { OnboardingModal } from "@/components/onboarding-modal"
 import { ServiceDetailSheet } from "@/components/service-detail-sheet"
 import { RequestSubmitModal } from "@/components/requests/request-submit-modal"
 
@@ -83,12 +81,8 @@ export function ServicesDashboard({
     refreshNetwork,
     isAddOpen,
     setIsAddOpen,
-    isOnboardingOpen,
-    setIsOnboardingOpen,
     isCommandPaletteOpen,
     setIsCommandPaletteOpen,
-    isEnvModalOpen,
-    setIsEnvModalOpen,
     isRightPanelOpen,
     setIsRightPanelOpen,
     toggleRightPanel,
@@ -202,8 +196,6 @@ export function ServicesDashboard({
           networkInfo={networkInfo}
           isRefreshingNetwork={isRefreshingNetwork}
           onRefreshNetwork={refreshNetwork}
-          onOpenEnvModal={() => setIsEnvModalOpen(true)}
-          onOpenTour={() => setIsOnboardingOpen(true)}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           onPingVisibleServices={handleCheckAllVisibleHealth}
           isCheckingAllHealth={isCheckingAllHealth}
@@ -408,12 +400,6 @@ export function ServicesDashboard({
           onUpdateService={handleUpdateService}
         />
 
-        {/* Global Guided Tour Modal */}
-        <OnboardingModal
-          open={isOnboardingOpen}
-          onOpenChange={setIsOnboardingOpen}
-        />
-
         {/* Global Command Palette (Ctrl+K) */}
         <CommandPalette
           open={isCommandPaletteOpen}
@@ -439,13 +425,6 @@ export function ServicesDashboard({
           onOpenChange={setIsSettingsOpen}
           config={gridConfig}
           onSaveConfig={handleUpdateGridConfig}
-        />
-
-        {/* Frontend .env Generator Modal */}
-        <EnvGeneratorModal
-          open={isEnvModalOpen}
-          onOpenChange={setIsEnvModalOpen}
-          services={services}
         />
 
         {/* Service Quick-Inspect Slide-over Drawer */}

@@ -127,10 +127,7 @@ export async function listUsersAction(): Promise<{
 export async function updateUserRoleAction(userId: string, newRole: "admin" | "developer" | "viewer") {
   const session = await verifySession()
   if (!session.isAuthenticated) {
-    return { success: false, error: "Authentication required." }
-  }
-  if (session.user && session.user.role !== "admin") {
-    return { success: false, error: "Only administrators can change user roles." }
+    return { success: false, error: "Authentication required. Please log in first." }
   }
 
   try {

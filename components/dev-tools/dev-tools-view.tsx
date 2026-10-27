@@ -130,12 +130,6 @@ export function DevToolsView() {
             <span className="hidden lg:inline text-[11px]">
               Fast AST tree inspection, auto-repair, token decoding, and cURL analysis.
             </span>
-            <Link href="/onboarding">
-              <Button size="xs" variant="ghost" className="gap-1 text-[11px]">
-                <Compass className="size-3 text-amber-500" />
-                <span>Guide</span>
-              </Button>
-            </Link>
           </div>
         </div>
 

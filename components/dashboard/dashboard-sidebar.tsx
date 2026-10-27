@@ -19,16 +19,15 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { NetworkStatusPill } from "@/components/network-status-indicator"
+import { PwaSidebarInstallButton } from "@/components/pwa-installer"
 import { logoutAction } from "@/app/actions/services"
 import {
   Activity,
-  BookOpen,
   Building2,
   Code2,
-  Compass,
   Cpu,
   Database,
-  FileCode,
+  Download,
   FileJson,
   Gamepad2,
   GitPullRequest,
@@ -62,8 +61,6 @@ interface DashboardSidebarProps {
   networkInfo: any
   isRefreshingNetwork: boolean
   onRefreshNetwork: () => void
-  onOpenEnvModal: () => void
-  onOpenTour: () => void
   onOpenCommandPalette: () => void
   onPingVisibleServices: () => void
   isCheckingAllHealth: boolean
@@ -79,8 +76,6 @@ export function DashboardSidebar({
   networkInfo,
   isRefreshingNetwork,
   onRefreshNetwork,
-  onOpenEnvModal,
-  onOpenTour,
   onOpenCommandPalette,
   onPingVisibleServices,
   isCheckingAllHealth,
@@ -322,49 +317,6 @@ export function DashboardSidebar({
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
-
-              {/* .env Export Tool */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onOpenEnvModal}
-                  className="cursor-pointer"
-                  tooltip=".env Export Generator"
-                >
-                  <FileCode className="size-4 text-emerald-500" />
-                  <span>.env Export</span>
-                  <Badge
-                    variant="outline"
-                    className="ml-auto border-emerald-500/30 px-1 py-0 font-mono text-[9px] text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400"
-                  >
-                    Generator
-                  </Badge>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Interactive Tour */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onOpenTour}
-                  className="cursor-pointer"
-                  tooltip="Guided Tour"
-                >
-                  <Compass className="size-4 text-sky-500" />
-                  <span>Interactive Tour</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Documentation Hub */}
-              <SidebarMenuItem>
-                <Link href="/onboarding" className="w-full">
-                  <SidebarMenuButton
-                    tooltip="Documentation"
-                    className="w-full cursor-pointer"
-                  >
-                    <BookOpen className="size-4 text-amber-500" />
-                    <span>Documentation</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -436,8 +388,13 @@ export function DashboardSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer: Network Status & Team Logout */}
+      {/* Footer: Network Status, PWA Install & Team Logout */}
       <SidebarFooter className="space-y-2 border-t border-border p-3">
+        {/* Windows PWA Install Button */}
+        <div>
+          <PwaSidebarInstallButton />
+        </div>
+
         {/* Network Location Pill */}
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <div className="group-data-[collapsible=icon]:hidden">

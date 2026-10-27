@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
+import { PwaInstaller } from "@/components/pwa-installer"
+
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
@@ -14,9 +16,59 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Services Catalog & Portal | Neon Postgres + Drizzle",
+  applicationName: "Service Hub",
+  title: {
+    default: "Service Hub · Enterprise Services Catalog",
+    template: "%s | Service Hub",
+  },
   description:
-    "Enterprise Service Catalog Dashboard powered by Neon Serverless Postgres and Drizzle ORM",
+    "Enterprise Services Catalog & Developer Portal. Real-time health observability, anonymous squad chat, Azure DevOps WIQL explorer, and RBAC access management.",
+  keywords: [
+    "service catalog",
+    "developer portal",
+    "microservices",
+    "devops explorer",
+    "neon postgres",
+    "api hub",
+    "pwa",
+    "windows app",
+  ],
+  authors: [{ name: "Service Hub Team" }],
+  creator: "Service Hub",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon.svg",
+    shortcut: "/favicon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Service Hub",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Service Hub",
+    title: "Service Hub · Enterprise Services Catalog",
+    description:
+      "Enterprise Services Catalog & Developer Portal with real-time health checks, team chat, and DevOps explorer.",
+  },
+}
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f97316" },
+    { media: "(prefers-color-scheme: dark)", color: "#090d16" },
+  ],
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -40,7 +92,10 @@ export default function RootLayout({
         className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20"
       >
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {children}
+            <PwaInstaller />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

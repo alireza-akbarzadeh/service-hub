@@ -5,6 +5,7 @@ import { loginUserAction, registerAction, googleLoginAction } from "@/app/action
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   ShieldCheck,
   Lock,
@@ -38,7 +39,7 @@ export function TeamLoginView() {
   const [regEmail, setRegEmail] = React.useState("")
   const [regPassword, setRegPassword] = React.useState("")
   const [regAvatar, setRegAvatar] = React.useState("👨‍💻")
-  const [regRole, setRegRole] = React.useState<"admin" | "developer" | "viewer">("developer")
+  const [regRole, setRegRole] = React.useState<"admin" | "developer" | "viewer">("viewer")
 
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -436,33 +437,17 @@ export function TeamLoginView() {
                     </div>
                   </div>
 
-                  {/* Role Selection */}
-                  <div className="space-y-1 text-xs">
-                    <label className="font-medium text-foreground">
-                      Access Role
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {[
-                        { id: "developer", label: "Developer", desc: "Full hub access" },
-                        { id: "admin", label: "Admin", desc: "Manage access" },
-                        { id: "viewer", label: "Viewer", desc: "Read only" },
-                      ].map((r) => (
-                        <button
-                          key={r.id}
-                          type="button"
-                          onClick={() => setRegRole(r.id as any)}
-                          className={cn(
-                            "flex flex-col items-center rounded-xl border p-2 text-center text-xs transition-all cursor-pointer",
-                            regRole === r.id
-                              ? "border-primary bg-primary/10 font-bold text-primary shadow-2xs"
-                              : "border-border bg-background text-muted-foreground hover:bg-muted"
-                          )}
-                        >
-                          <span>{r.label}</span>
-                          <span className="text-[9px] opacity-70 font-normal">{r.desc}</span>
-                        </button>
-                      ))}
+                  {/* Initial Access Notice */}
+                  <div className="rounded-xl border border-border/80 bg-muted/40 p-3 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">Initial Access Level</span>
+                      <Badge variant="outline" className="font-mono text-[10px] bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30">
+                        Basic Member (Viewer)
+                      </Badge>
                     </div>
+                    <p className="text-[11px] text-muted-foreground leading-normal">
+                      New accounts are provisioned with standard member access. Administrators can grant Developer or Admin access at <code className="text-primary font-mono text-[10px]">/users</code>.
+                    </p>
                   </div>
 
                   <Button

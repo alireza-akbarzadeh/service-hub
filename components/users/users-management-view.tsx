@@ -109,19 +109,22 @@ export function UsersManagementView({ currentUser }: UsersManagementViewProps) {
   }
 
   const handleRoleChange = async (userId: string, newRole: "admin" | "developer" | "viewer") => {
+    const previousUsers = [...users]
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+    )
     try {
       const res = await updateUserRoleAction(userId, newRole)
       if (res.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-        )
-        setActionMessage({ text: "User role updated successfully!" })
+        setActionMessage({ text: `Access role updated to ${newRole.toUpperCase()} successfully!` })
         setTimeout(() => setActionMessage(null), 3000)
       } else {
+        setUsers(previousUsers)
         setActionMessage({ text: res.error || "Failed to update role", isError: true })
         setTimeout(() => setActionMessage(null), 3500)
       }
     } catch {
+      setUsers(previousUsers)
       setActionMessage({ text: "Network error updating role", isError: true })
     }
   }
