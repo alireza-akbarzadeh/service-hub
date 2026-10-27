@@ -10,6 +10,7 @@ import { CommandPalette } from "@/components/command-palette"
 import { EnvGeneratorModal } from "@/components/env-generator-modal"
 import { OnboardingModal } from "@/components/onboarding-modal"
 import { ServiceDetailSheet } from "@/components/service-detail-sheet"
+import { RequestSubmitModal } from "@/components/requests/request-submit-modal"
 
 // Modular Dashboard Components & Custom Hook
 import { useServicesDashboard, getServiceTags } from "@/hooks/use-services-dashboard"
@@ -129,6 +130,20 @@ export function ServicesDashboard({
   // Dashboard Settings & JSON Config Modal State
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false)
 
+  // Coworker Feature Request & Bug Fix PR Modal State
+  const [isSubmitRequestOpen, setIsSubmitRequestOpen] = React.useState(false)
+  const [submitRequestType, setSubmitRequestType] = React.useState<"feature" | "bug" | "pull_request">("feature")
+  const [submitRequestTargetService, setSubmitRequestTargetService] = React.useState<string | undefined>(undefined)
+
+  const handleOpenSubmitRequest = React.useCallback(
+    (type: "feature" | "bug" | "pull_request" = "feature", serviceName?: string) => {
+      setSubmitRequestType(type)
+      setSubmitRequestTargetService(serviceName)
+      setIsSubmitRequestOpen(true)
+    },
+    []
+  )
+
   // 3-Shape Display Mode & Preferences stored in localStorage
   const [gridConfig, setGridConfig] = React.useState<GridConfig>(() => loadGridConfig())
 
@@ -212,6 +227,7 @@ export function ServicesDashboard({
             isRightPanelOpen={isRightPanelOpen}
             onToggleRightPanel={handleTogglePanel}
             onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenSubmitRequest={handleOpenSubmitRequest}
           />
 
           {/* Body: Split View with Right-Side Iran Calendar & Meetings Panel */}
@@ -414,6 +430,7 @@ export function ServicesDashboard({
               viewMode: shape,
             })
           }
+          onOpenSubmitRequest={handleOpenSubmitRequest}
         />
 
         {/* Dashboard Layout & LocalStorage JSON Settings Dialog */}
@@ -439,6 +456,16 @@ export function ServicesDashboard({
           mirrors={
             inspectingService ? mirrorMap.get(inspectingService.id) || [] : []
           }
+          onOpenSubmitRequest={handleOpenSubmitRequest}
+        />
+
+        {/* Coworker Feature Request & Bug Fix PR Submission Modal */}
+        <RequestSubmitModal
+          isOpen={isSubmitRequestOpen}
+          onOpenChange={setIsSubmitRequestOpen}
+          defaultType={submitRequestType}
+          defaultService={submitRequestTargetService}
+          servicesList={services.map((s) => s.name)}
         />
       </div>
     </SidebarProvider>

@@ -15,7 +15,16 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Clock, FileJson, Gamepad2, PanelRight, PanelRightClose, Radio, Search, Settings } from "lucide-react"
+import {
+  Clock,
+  FileJson,
+  Gamepad2,
+  GitPullRequest,
+  PanelRight,
+  PanelRightClose,
+  Radio,
+  Settings,
+} from "lucide-react"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 
 interface DashboardHeaderProps {
@@ -26,16 +35,17 @@ interface DashboardHeaderProps {
   isRightPanelOpen: boolean
   onToggleRightPanel: () => void
   onOpenSettings?: () => void
+  onOpenSubmitRequest?: (type?: "feature" | "bug" | "pull_request") => void
 }
 
 export function DashboardHeader({
   selectedEnv,
   selectedCategory,
   onResetFilters,
-  onOpenCommandPalette,
   isRightPanelOpen,
   onToggleRightPanel,
   onOpenSettings,
+  onOpenSubmitRequest,
 }: DashboardHeaderProps) {
   // Live mini clock for Tehran time in the header toggle button
   const [tehranTimeMini, setTehranTimeMini] = React.useState<string>("")
@@ -101,7 +111,7 @@ export function DashboardHeader({
         {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
         <HeaderMarketSection />
 
-        <Separator orientation="vertical" className="hidden sm:block h-5" />
+        <Separator orientation="vertical" className="hidden h-5 sm:block" />
 
         {/* Developer Tools Link */}
         <Link href="/tools">
@@ -109,7 +119,7 @@ export function DashboardHeader({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground hover:bg-muted shadow-2xs"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
             title="Open Developer Tools Suite (JSON Formatter, JWT, Encoders)"
           >
             <FileJson className="size-3.5 text-violet-500" />
@@ -123,7 +133,7 @@ export function DashboardHeader({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground hover:bg-muted shadow-2xs"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
             title="Open Anonymous Chat Lounge (#general, #game, etc.)"
           >
             <Gamepad2 className="size-3.5 text-pink-500" />
@@ -131,20 +141,19 @@ export function DashboardHeader({
           </Button>
         </Link>
 
-        {/* Quick Search */}
-        <button
-          type="button"
-          onClick={onOpenCommandPalette}
-          className="hidden cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground shadow-2xs transition-all hover:bg-muted hover:text-foreground md:flex"
-          title="Quick Search & Launcher (Ctrl + K)"
-        >
-          <Search className="size-3.5 text-primary" />
-          <span>Quick search...</span>
-          <kbd className="pointer-events-none inline-flex h-5 items-center gap-1 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-2xs select-none">
-            <span className="text-xs">⌘</span>K
-          </kbd>
-        </button>
-
+        {/* Requests & Bug Fix PRs Link */}
+        <Link href="/requests">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-semibold border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 shadow-2xs"
+            title="Open Feature Requests & Coworker Bug Fix PRs Hub"
+          >
+            <GitPullRequest className="size-3.5 text-purple-500" />
+            <span className="hidden sm:inline">Requests & PRs</span>
+          </Button>
+        </Link>
         {/* Iranian Timezone & Meeting Panel Toggle Pill */}
         <Button
           type="button"
@@ -180,7 +189,7 @@ export function DashboardHeader({
             variant="outline"
             size="sm"
             onClick={onOpenSettings}
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground shadow-2xs"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground"
             title="Dashboard Settings & JSON Config Editor"
           >
             <Settings className="size-3.5 text-primary" />

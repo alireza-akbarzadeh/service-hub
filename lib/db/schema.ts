@@ -76,3 +76,38 @@ export const chatMessages = pgTable("chat_messages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+
+export const feedbackRequests = pgTable("feedback_requests", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(), // "feature" | "bug" | "pull_request"
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  targetService: text("target_service").notNull().default("General"),
+  priority: text("priority").notNull().default("medium"), // "low" | "medium" | "high" | "critical"
+  status: text("status").notNull().default("open"), // "open" | "under_review" | "in_progress" | "merged" | "closed"
+  authorName: text("author_name").notNull(),
+  authorRole: text("author_role").notNull().default("Coworker"),
+  authorEmail: text("author_email"),
+  authorAvatar: text("author_avatar"),
+  severity: text("severity"),
+  environment: text("environment"),
+  stepsToReproduce: text("steps_to_reproduce"),
+  expectedBehavior: text("expected_behavior"),
+  actualBehavior: text("actual_behavior"),
+  branchName: text("branch_name"),
+  prUrl: text("pr_url"),
+  diffContent: text("diff_content"),
+  testNotes: text("test_notes"),
+  assignedTo: text("assigned_to"),
+  reviewNotes: text("review_notes"),
+  resolutionSummary: text("resolution_summary"),
+  upvotes: integer("upvotes").notNull().default(0),
+  upvotedBy: text("upvoted_by").notNull().default("[]"),
+  tags: text("tags").notNull().default("[]"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+
+export type FeedbackRequest = typeof feedbackRequests.$inferSelect
+export type NewFeedbackRequest = typeof feedbackRequests.$inferInsert
+

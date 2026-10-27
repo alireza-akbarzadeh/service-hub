@@ -106,7 +106,45 @@ export function DashboardSidebar({
 
       {/* Scrollable Content Divided into Shadcn Sidebar Groups */}
       <SidebarContent className="overflow-y-auto">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold">
+            Quick actions
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={onOpenCommandPalette}
+                className="cursor-pointer"
+                tooltip="Search & Commands (Ctrl+K)"
+              >
+                <Search className="size-4 text-primary" />
+                <span>Quick Search</span>
+                <kbd className="ml-auto rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+                  ⌘K
+                </kbd>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/chat" className="w-full">
+                <SidebarMenuButton
+                  tooltip="Anonymous Chat Lounge (#general, #game)"
+                  className="w-full cursor-pointer"
+                >
+                  <Gamepad2 className="size-4 text-pink-500" />
+                  <span>Anon Chat Lounge</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto border-pink-500/30 px-1 py-0 font-mono text-[9px] text-pink-600 group-data-[collapsible=icon]:hidden dark:text-pink-400"
+                  >
+                    Fun
+                  </Badge>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {/* Section 1: Environments Navigation */}
+
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold">
             Environments
@@ -152,13 +190,13 @@ export function DashboardSidebar({
                 <Link href="/tools" className="w-full">
                   <SidebarMenuButton
                     tooltip="cURL Command Inspector"
-                    className="cursor-pointer w-full"
+                    className="w-full cursor-pointer"
                   >
                     <Terminal className="size-4 text-emerald-500" />
                     <span>cURL Inspector</span>
                     <Badge
                       variant="outline"
-                      className="ml-auto px-1 py-0 text-[9px] font-mono border-emerald-500/30 text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                      className="ml-auto border-emerald-500/30 px-1 py-0 font-mono text-[9px] text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400"
                     >
                       New
                     </Badge>
@@ -171,50 +209,18 @@ export function DashboardSidebar({
                 <Link href="/tools" className="w-full">
                   <SidebarMenuButton
                     tooltip="JSON Formatter & Dev Tools"
-                    className="cursor-pointer w-full"
+                    className="w-full cursor-pointer"
                   >
                     <FileJson className="size-4 text-violet-500" />
                     <span>JSON Formatter</span>
                     <Badge
                       variant="outline"
-                      className="ml-auto px-1 py-0 text-[9px] font-mono border-violet-500/30 text-violet-600 dark:text-violet-400 group-data-[collapsible=icon]:hidden"
+                      className="ml-auto border-violet-500/30 px-1 py-0 font-mono text-[9px] text-violet-600 group-data-[collapsible=icon]:hidden dark:text-violet-400"
                     >
                       Viewer
                     </Badge>
                   </SidebarMenuButton>
                 </Link>
-              </SidebarMenuItem>
-
-              {/* Anonymous Chat Lounge */}
-              <SidebarMenuItem>
-                <Link href="/chat" className="w-full">
-                  <SidebarMenuButton
-                    tooltip="Anonymous Chat Lounge (#general, #game)"
-                    className="cursor-pointer w-full"
-                  >
-                    <Gamepad2 className="size-4 text-pink-500" />
-                    <span>Anon Chat Lounge</span>
-                    <Badge
-                      variant="outline"
-                      className="ml-auto px-1 py-0 text-[9px] font-mono border-pink-500/30 text-pink-600 dark:text-pink-400 group-data-[collapsible=icon]:hidden"
-                    >
-                      Fun
-                    </Badge>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onOpenCommandPalette}
-                  className="cursor-pointer"
-                  tooltip="Search & Commands (Ctrl+K)"
-                >
-                  <Search className="size-4 text-primary" />
-                  <span>Quick Search</span>
-                  <kbd className="ml-auto rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
-                    ⌘K
-                  </kbd>
-                </SidebarMenuButton>
               </SidebarMenuItem>
 
               {/* .env Export Tool */}
@@ -228,7 +234,7 @@ export function DashboardSidebar({
                   <span>.env Export</span>
                   <Badge
                     variant="outline"
-                    className="ml-auto px-1 py-0 text-[9px] font-mono border-emerald-500/30 text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    className="ml-auto border-emerald-500/30 px-1 py-0 font-mono text-[9px] text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400"
                   >
                     Generator
                   </Badge>
@@ -252,7 +258,7 @@ export function DashboardSidebar({
                 <Link href="/onboarding" className="w-full">
                   <SidebarMenuButton
                     tooltip="Documentation"
-                    className="cursor-pointer w-full"
+                    className="w-full cursor-pointer"
                   >
                     <BookOpen className="size-4 text-amber-500" />
                     <span>Documentation</span>
@@ -275,12 +281,12 @@ export function DashboardSidebar({
                 size="sm"
                 onClick={onPingVisibleServices}
                 disabled={isCheckingAllHealth || visibleServicesCount === 0}
-                className="w-full justify-start gap-2 text-xs font-medium cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+                className="w-full cursor-pointer justify-start gap-2 text-xs font-medium group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
                 title="Ping all visible service endpoints"
               >
                 <Activity
                   className={cn(
-                    "size-3.5 text-primary shrink-0",
+                    "size-3.5 shrink-0 text-primary",
                     isCheckingAllHealth && "animate-spin"
                   )}
                 />
@@ -331,7 +337,7 @@ export function DashboardSidebar({
       </SidebarContent>
 
       {/* Footer: Network Status & Team Logout */}
-      <SidebarFooter className="border-t border-border p-3 space-y-2">
+      <SidebarFooter className="space-y-2 border-t border-border p-3">
         {/* Network Location Pill */}
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <div className="group-data-[collapsible=icon]:hidden">
@@ -351,10 +357,12 @@ export function DashboardSidebar({
                 <Users className="size-3.5" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-semibold leading-tight text-foreground truncate max-w-[120px]">
+                <span className="max-w-[120px] truncate text-xs leading-tight font-semibold text-foreground">
                   {teamName}
                 </span>
-                <span className="text-[10px] text-muted-foreground">Team Member</span>
+                <span className="text-[10px] text-muted-foreground">
+                  Team Member
+                </span>
               </div>
             </div>
 

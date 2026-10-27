@@ -21,6 +21,7 @@ import type { Service } from "@/lib/db/schema"
 import { cn } from "@/lib/utils"
 import {
   Activity,
+  Bug,
   Check,
   ChevronDown,
   ChevronUp,
@@ -28,6 +29,7 @@ import {
   Compass,
   Copy,
   ExternalLink,
+  GitPullRequest,
   Globe,
   Play,
   RefreshCw,
@@ -43,6 +45,7 @@ interface ServiceDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mirrors: Service[]
+  onOpenSubmitRequest?: (type: "feature" | "bug" | "pull_request", serviceName: string) => void
 }
 
 interface PingRecord {
@@ -56,6 +59,7 @@ export function ServiceDetailSheet({
   open,
   onOpenChange,
   mirrors,
+  onOpenSubmitRequest,
 }: ServiceDetailSheetProps) {
   const [activeTab, setActiveTab] = React.useState<"overview" | "tester">(
     "overview"
@@ -639,6 +643,47 @@ export function ServiceDetailSheet({
                   </div>
                 )}
               </div>
+
+              {/* Coworker Contribution Quick Action */}
+              {onOpenSubmitRequest && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-purple-500/30 bg-purple-500/5 p-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                      <GitPullRequest className="size-3.5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-foreground">
+                        Report Issue or Propose Fix PR
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Submit a bug report or pull request specifically for {service.name}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onOpenSubmitRequest("bug", service.name)}
+                      className="h-7 cursor-pointer gap-1 border-rose-500/30 px-2 text-[11px] font-medium text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+                    >
+                      <Bug className="size-3" />
+                      <span>Bug Report</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onOpenSubmitRequest("pull_request", service.name)}
+                      className="h-7 cursor-pointer gap-1 border-purple-500/30 bg-purple-500/10 px-2 text-[11px] font-semibold text-purple-600 hover:bg-purple-500/20 dark:text-purple-300"
+                    >
+                      <GitPullRequest className="size-3" />
+                      <span>Propose PR</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 gap-3 text-xs">

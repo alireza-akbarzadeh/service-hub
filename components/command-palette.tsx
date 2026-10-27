@@ -23,7 +23,9 @@ import {
   Cpu,
   Network,
   Building2,
+  Bug,
   Globe,
+  GitPullRequest,
   Hash,
   ArrowRight,
   Video,
@@ -33,6 +35,7 @@ import {
   Radio,
   Sparkles,
   Gamepad2,
+  Lightbulb,
   AlignJustify,
   LayoutGrid,
   Rows3,
@@ -50,6 +53,7 @@ interface CommandPaletteProps {
   onToggleRightPanel?: () => void
   onOpenSettings?: () => void
   onSelectViewShape?: (shape: "table" | "row-card" | "square-card") => void
+  onOpenSubmitRequest?: (type?: "feature" | "bug" | "pull_request") => void
 }
 
 const ENV_ICONS: Record<string, React.ElementType> = {
@@ -94,6 +98,7 @@ export function CommandPalette({
   onToggleRightPanel,
   onOpenSettings,
   onSelectViewShape,
+  onOpenSubmitRequest,
 }: CommandPaletteProps) {
   const { meetings, addMeeting } = useMeetings()
 
@@ -149,7 +154,8 @@ export function CommandPalette({
         type: "action",
         id: "act-dashboard-settings",
         title: "Dashboard View & Layout Settings",
-        subtitle: "Customize 3 shapes (Table, Row Cards, Squared Cards), density, and edit raw JSON config",
+        subtitle:
+          "Customize 3 shapes (Table, Row Cards, Squared Cards), density, and edit raw JSON config",
         badge: "Layout Config",
         icon: SlidersHorizontal,
         iconColor: "text-primary bg-primary/15 border-primary/30",
@@ -162,7 +168,8 @@ export function CommandPalette({
         type: "action",
         id: "act-shape-table",
         title: "Switch View to Table Mode",
-        subtitle: "Dense tabular list with sorting, columns, and inline telemetry status",
+        subtitle:
+          "Dense tabular list with sorting, columns, and inline telemetry status",
         badge: "Shape 1",
         icon: Rows3,
         iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
@@ -175,7 +182,8 @@ export function CommandPalette({
         type: "action",
         id: "act-shape-row-card",
         title: "Switch View to Row Cards Mode",
-        subtitle: "Horizontal expansive cards spanning the full width for modern catalog scanning",
+        subtitle:
+          "Horizontal expansive cards spanning the full width for modern catalog scanning",
         badge: "Shape 2",
         icon: AlignJustify,
         iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
@@ -188,7 +196,8 @@ export function CommandPalette({
         type: "action",
         id: "act-shape-square-card",
         title: "Switch View to Squared Cards Mode",
-        subtitle: "Modular square box cards in a multi-column responsive grid layout",
+        subtitle:
+          "Modular square box cards in a multi-column responsive grid layout",
         badge: "Shape 3",
         icon: LayoutGrid,
         iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
@@ -201,7 +210,8 @@ export function CommandPalette({
         type: "action",
         id: "act-curl-inspector",
         title: "cURL Command Inspector",
-        subtitle: "Parse cURL to extract URL, headers, Bearer tokens, JSON payload, and client device",
+        subtitle:
+          "Parse cURL to extract URL, headers, Bearer tokens, JSON payload, and client device",
         badge: "New Tool",
         icon: Terminal,
         iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
@@ -214,7 +224,8 @@ export function CommandPalette({
         type: "action",
         id: "act-dev-tools",
         title: "Developer Tools & JSON Formatter",
-        subtitle: "Launch interactive JSON formatter, tree inspector, JWT debugger, and encoders",
+        subtitle:
+          "Launch interactive JSON formatter, tree inspector, JWT debugger, and encoders",
         badge: "Dev Suite",
         icon: FileJson,
         iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
@@ -227,7 +238,8 @@ export function CommandPalette({
         type: "action",
         id: "act-anon-chat",
         title: "Anonymous Chat Lounge & Channels",
-        subtitle: "Chat anonymously with randomized avatar, dice rolls, sound notifications & channels (#game, #general)",
+        subtitle:
+          "Chat anonymously with randomized avatar, dice rolls, sound notifications & channels (#game, #general)",
         badge: "Fun Lounge",
         icon: Gamepad2,
         iconColor: "text-pink-500 bg-pink-500/15 border-pink-500/30",
@@ -240,7 +252,8 @@ export function CommandPalette({
         type: "action",
         id: "act-instant-meet",
         title: "Start Instant Google Meet",
-        subtitle: "Launch a new Google Meet call in a new tab (meet.google.com/new)",
+        subtitle:
+          "Launch a new Google Meet call in a new tab (meet.google.com/new)",
         badge: "Fast Launch",
         icon: Video,
         iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
@@ -252,12 +265,81 @@ export function CommandPalette({
         type: "action",
         id: "act-schedule-meet",
         title: "Schedule New Frontend Meeting",
-        subtitle: "Add a new sync to the schedule with push reminders and Tehran time",
+        subtitle:
+          "Add a new sync to the schedule with push reminders and Tehran time",
         badge: "+ New Sync",
         icon: Plus,
         iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
         onSelect: () => {
           setIsQuickCreateOpen(true)
+        },
+      },
+      {
+        type: "action",
+        id: "act-submit-feature",
+        title: "Submit Feature Request",
+        subtitle:
+          "Propose a new feature, endpoint, or developer workflow enhancement",
+        badge: "💡 Feature",
+        icon: Lightbulb,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          onOpenChange(false)
+          if (onOpenSubmitRequest) {
+            onOpenSubmitRequest("feature")
+          } else {
+            window.location.href = "/requests"
+          }
+        },
+      },
+      {
+        type: "action",
+        id: "act-report-bug",
+        title: "Report Bug or Outage",
+        subtitle:
+          "Report broken endpoint, 504 gateway timeout, CORS error, or Swagger issue",
+        badge: "🐞 Bug",
+        icon: Bug,
+        iconColor: "text-rose-500 bg-rose-500/15 border-rose-500/30",
+        onSelect: () => {
+          onOpenChange(false)
+          if (onOpenSubmitRequest) {
+            onOpenSubmitRequest("bug")
+          } else {
+            window.location.href = "/requests"
+          }
+        },
+      },
+      {
+        type: "action",
+        id: "act-submit-pr",
+        title: "Propose Bug Fix / Pull Request (PR)",
+        subtitle:
+          "Submit unified code diff patch, git branch, and test notes for maintainer review",
+        badge: "🔀 Code PR",
+        icon: GitPullRequest,
+        iconColor: "text-purple-500 bg-purple-500/15 border-purple-500/30",
+        onSelect: () => {
+          onOpenChange(false)
+          if (onOpenSubmitRequest) {
+            onOpenSubmitRequest("pull_request")
+          } else {
+            window.location.href = "/requests"
+          }
+        },
+      },
+      {
+        type: "action",
+        id: "act-requests-hub",
+        title: "Requests & Coworker PRs Hub",
+        subtitle:
+          "Open Kanban triage board with all community feature requests, bug reports, and PRs",
+        badge: "Triage Hub",
+        icon: GitPullRequest,
+        iconColor: "text-purple-500 bg-purple-500/15 border-purple-500/30",
+        onSelect: () => {
+          window.location.href = "/requests"
+          onOpenChange(false)
         },
       },
     ]
@@ -267,7 +349,8 @@ export function CommandPalette({
         type: "action",
         id: "act-toggle-calendar",
         title: "Toggle Iran Timezone & Calendar Panel",
-        subtitle: "Open/close the exact Tehran digital clock and Jalali calendar dock",
+        subtitle:
+          "Open/close the exact Tehran digital clock and Jalali calendar dock",
         badge: "IRST Dock",
         icon: Clock,
         iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
@@ -279,7 +362,7 @@ export function CommandPalette({
     }
 
     return actions
-  }, [openUrl, onToggleRightPanel, onOpenChange])
+  }, [openUrl, onToggleRightPanel, onOpenChange, onOpenSubmitRequest])
 
   // Compute unified list of matching items
   const unifiedItems: PaletteItem[] = React.useMemo(() => {
@@ -293,7 +376,7 @@ export function CommandPalette({
         return (
           act.title.toLowerCase().includes(q) ||
           act.subtitle.toLowerCase().includes(q) ||
-          "meeting meet call video schedule google".includes(q)
+          "meeting meet call video schedule google feature request bug fix pr pull issue code triage".includes(q)
         )
       })
       items.push(...matchingActions)
@@ -312,7 +395,13 @@ export function CommandPalette({
           "meeting standup sync meet".includes(q)
         )
       })
-      items.push(...matchingMeetings.map((m) => ({ type: "meeting" as const, id: m.id, meeting: m })))
+      items.push(
+        ...matchingMeetings.map((m) => ({
+          type: "meeting" as const,
+          id: m.id,
+          meeting: m,
+        }))
+      )
     }
 
     // 3. Services filter
@@ -341,7 +430,13 @@ export function CommandPalette({
           matchesTag
         )
       })
-      items.push(...matchingServices.map((svc) => ({ type: "service" as const, id: svc.id, service: svc })))
+      items.push(
+        ...matchingServices.map((svc) => ({
+          type: "service" as const,
+          id: svc.id,
+          service: svc,
+        }))
+      )
     }
 
     return items
@@ -366,7 +461,11 @@ export function CommandPalette({
     }
   }, [selectedIndex])
 
-  const copyText = (text: string, id: number | string, e?: React.MouseEvent) => {
+  const copyText = (
+    text: string,
+    id: number | string,
+    e?: React.MouseEvent
+  ) => {
     if (e) e.stopPropagation()
     navigator.clipboard.writeText(text)
     setCopiedId(id)
@@ -434,7 +533,14 @@ export function CommandPalette({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [open, onOpenChange, unifiedItems, selectedIndex, executeItem, isQuickCreateOpen])
+  }, [
+    open,
+    onOpenChange,
+    unifiedItems,
+    selectedIndex,
+    executeItem,
+    isQuickCreateOpen,
+  ])
 
   // Quick Create Meeting Submit Handler
   function handleQuickCreateSubmit(e: React.FormEvent) {
@@ -469,7 +575,7 @@ export function CommandPalette({
       />
 
       {/* Palette Modal Box */}
-      <div className="relative z-50 flex w-full max-w-2xl animate-in flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl duration-150 fade-in-0 zoom-in-95">
+      <div className="relative z-50 flex w-full max-w-4xl animate-in flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl duration-150 fade-in-0 zoom-in-95">
         {/* Search Input Bar */}
         <div className="relative flex items-center border-b border-border px-4 py-3">
           <Search className="mr-3 size-5 shrink-0 text-muted-foreground" />
@@ -502,8 +608,18 @@ export function CommandPalette({
         <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto border-b border-border/60 bg-muted/20 px-4 py-2 text-xs">
           {[
             { id: "All", label: "All", icon: Layers },
-            { id: "Meetings", label: "Meetings", icon: Video, count: meetings.length },
-            { id: "Favorites", label: "Favorites", icon: Star, count: favorites.length },
+            {
+              id: "Meetings",
+              label: "Meetings",
+              icon: Video,
+              count: meetings.length,
+            },
+            {
+              id: "Favorites",
+              label: "Favorites",
+              icon: Star,
+              count: favorites.length,
+            },
             { id: "Develop", label: "Develop", icon: Code2 },
             { id: "Test", label: "Test", icon: MonitorCheck },
             { id: "Stage", label: "Stage", icon: Cpu },
@@ -531,7 +647,9 @@ export function CommandPalette({
                 <Icon
                   className={cn(
                     "size-3",
-                    tab.id === "Favorites" && !isActive && "fill-amber-500 text-amber-500",
+                    tab.id === "Favorites" &&
+                      !isActive &&
+                      "fill-amber-500 text-amber-500",
                     tab.id === "Meetings" && !isActive && "text-sky-500"
                   )}
                 />
@@ -539,7 +657,7 @@ export function CommandPalette({
                 {tab.count !== undefined && tab.count > 0 && (
                   <span
                     className={cn(
-                      "py-0.2 ml-0.5 rounded-full px-1 text-[10px] font-mono",
+                      "py-0.2 ml-0.5 rounded-full px-1 font-mono text-[10px]",
                       isActive
                         ? "bg-primary-foreground/20 text-primary-foreground"
                         : "bg-muted text-muted-foreground"
@@ -555,7 +673,10 @@ export function CommandPalette({
 
         {/* Fast Meeting Creation Drawer inside Palette */}
         {isQuickCreateOpen ? (
-          <form onSubmit={handleQuickCreateSubmit} className="p-4 bg-muted/20 space-y-3">
+          <form
+            onSubmit={handleQuickCreateSubmit}
+            className="space-y-3 bg-muted/20 p-4"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-md bg-sky-500/20 text-sky-500">
@@ -577,7 +698,7 @@ export function CommandPalette({
             </div>
 
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground block mb-1">
+              <label className="mb-1 block text-[10px] font-medium text-muted-foreground">
                 Meeting Title *
               </label>
               <Input
@@ -586,13 +707,13 @@ export function CommandPalette({
                 value={quickTitle}
                 onChange={(e) => setQuickTitle(e.target.value)}
                 placeholder="e.g. Daily Standup or PR Review"
-                className="h-8 text-xs bg-background"
+                className="h-8 bg-background text-xs"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-medium text-muted-foreground block mb-1">
+                <label className="mb-1 block text-[10px] font-medium text-muted-foreground">
                   Tehran Time (IRST) *
                 </label>
                 <Input
@@ -600,11 +721,11 @@ export function CommandPalette({
                   required
                   value={quickTime}
                   onChange={(e) => setQuickTime(e.target.value)}
-                  className="h-8 text-xs bg-background"
+                  className="h-8 bg-background text-xs"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-medium text-muted-foreground block mb-1">
+                <label className="mb-1 block text-[10px] font-medium text-muted-foreground">
                   Duration (mins)
                 </label>
                 <Input
@@ -613,13 +734,13 @@ export function CommandPalette({
                   max={240}
                   value={quickDuration}
                   onChange={(e) => setQuickDuration(Number(e.target.value))}
-                  className="h-8 text-xs bg-background"
+                  className="h-8 bg-background text-xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-medium text-muted-foreground block mb-1">
+              <label className="mb-1 block text-[10px] font-medium text-muted-foreground">
                 Meet URL
               </label>
               <Input
@@ -628,7 +749,7 @@ export function CommandPalette({
                 value={quickUrl}
                 onChange={(e) => setQuickUrl(e.target.value)}
                 placeholder="https://meet.google.com/new"
-                className="h-8 text-xs font-mono bg-background"
+                className="h-8 bg-background font-mono text-xs"
               />
             </div>
 
@@ -642,7 +763,7 @@ export function CommandPalette({
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" className="h-7 text-xs gap-1">
+              <Button type="submit" size="sm" className="h-7 gap-1 text-xs">
                 <Check className="size-3.5" />
                 <span>Save & Schedule</span>
               </Button>
@@ -650,13 +771,19 @@ export function CommandPalette({
           </form>
         ) : (
           /* Results List */
-          <div ref={listRef} className="max-h-[380px] min-h-[180px] overflow-y-auto p-2">
+          <div
+            ref={listRef}
+            className="max-h-[380px] min-h-[180px] overflow-y-auto p-2"
+          >
             {unifiedItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <Search className="mb-2 size-8 stroke-1 opacity-40" />
-                <p className="text-sm font-medium">No results matching &ldquo;{query}&rdquo;</p>
+                <p className="text-sm font-medium">
+                  No results matching &ldquo;{query}&rdquo;
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Try searching for &ldquo;meet&rdquo;, &ldquo;standup&rdquo;, or &ldquo;swagger&rdquo;
+                  Try searching for &ldquo;meet&rdquo;, &ldquo;standup&rdquo;,
+                  or &ldquo;swagger&rdquo;
                 </p>
                 <Button
                   variant="outline"
@@ -683,10 +810,14 @@ export function CommandPalette({
                         onClick={() => executeItem(item)}
                         onMouseMove={(e) => {
                           if (
-                            Math.abs(e.clientX - lastMousePosRef.current.x) > 3 ||
+                            Math.abs(e.clientX - lastMousePosRef.current.x) >
+                              3 ||
                             Math.abs(e.clientY - lastMousePosRef.current.y) > 3
                           ) {
-                            lastMousePosRef.current = { x: e.clientX, y: e.clientY }
+                            lastMousePosRef.current = {
+                              x: e.clientX,
+                              y: e.clientY,
+                            }
                             if (selectedIndex !== index) setSelectedIndex(index)
                           }
                         }}
@@ -718,7 +849,9 @@ export function CommandPalette({
                               <span
                                 className={cn(
                                   "truncate font-semibold",
-                                  isSelected ? "text-primary" : "text-foreground"
+                                  isSelected
+                                    ? "text-primary"
+                                    : "text-foreground"
                                 )}
                               >
                                 {item.title}
@@ -726,7 +859,7 @@ export function CommandPalette({
                               {item.badge && (
                                 <Badge
                                   variant="outline"
-                                  className="px-1.5 py-0 text-[10px] font-semibold border-primary/30 text-primary"
+                                  className="border-primary/30 px-1.5 py-0 text-[10px] font-semibold text-primary"
                                 >
                                   {item.badge}
                                 </Badge>
@@ -763,10 +896,14 @@ export function CommandPalette({
                         onClick={() => executeItem(item)}
                         onMouseMove={(e) => {
                           if (
-                            Math.abs(e.clientX - lastMousePosRef.current.x) > 3 ||
+                            Math.abs(e.clientX - lastMousePosRef.current.x) >
+                              3 ||
                             Math.abs(e.clientY - lastMousePosRef.current.y) > 3
                           ) {
-                            lastMousePosRef.current = { x: e.clientX, y: e.clientY }
+                            lastMousePosRef.current = {
+                              x: e.clientX,
+                              y: e.clientY,
+                            }
                             if (selectedIndex !== index) setSelectedIndex(index)
                           }
                         }}
@@ -784,7 +921,7 @@ export function CommandPalette({
                             ) : null}
                           </div>
 
-                          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-sky-500/40 bg-sky-500/15 text-sky-500 font-semibold">
+                          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-sky-500/40 bg-sky-500/15 font-semibold text-sky-500">
                             <Video className="size-3.5" />
                           </div>
 
@@ -793,7 +930,9 @@ export function CommandPalette({
                               <span
                                 className={cn(
                                   "truncate font-semibold",
-                                  isSelected ? "text-sky-600 dark:text-sky-400" : "text-foreground"
+                                  isSelected
+                                    ? "text-sky-600 dark:text-sky-400"
+                                    : "text-foreground"
                                 )}
                               >
                                 {m.title}
@@ -804,12 +943,16 @@ export function CommandPalette({
                               >
                                 {m.tehranTime} IRST
                               </Badge>
-                              <Badge variant="secondary" className="px-1 py-0 text-[10px]">
+                              <Badge
+                                variant="secondary"
+                                className="px-1 py-0 text-[10px]"
+                              >
                                 {m.platform}
                               </Badge>
                             </div>
                             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                              {m.agenda || `${m.durationMins} minutes • ${m.attendees}`}
+                              {m.agenda ||
+                                `${m.durationMins} minutes • ${m.attendees}`}
                             </p>
                           </div>
                         </div>
@@ -859,7 +1002,10 @@ export function CommandPalette({
                           Math.abs(e.clientX - lastMousePosRef.current.x) > 3 ||
                           Math.abs(e.clientY - lastMousePosRef.current.y) > 3
                         ) {
-                          lastMousePosRef.current = { x: e.clientX, y: e.clientY }
+                          lastMousePosRef.current = {
+                            x: e.clientX,
+                            y: e.clientY,
+                          }
                           if (selectedIndex !== index) setSelectedIndex(index)
                         }
                       }}
@@ -910,14 +1056,16 @@ export function CommandPalette({
                             >
                               {svc.category}
                             </Badge>
-                            {getServiceTags(svc).slice(0, 2).map((tag: string) => (
-                              <span
-                                key={tag}
-                                className="hidden md:inline-flex rounded bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                            {getServiceTags(svc)
+                              .slice(0, 2)
+                              .map((tag: string) => (
+                                <span
+                                  key={tag}
+                                  className="hidden rounded bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground md:inline-flex"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
                           </div>
                           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
                             {svc.description}
@@ -938,9 +1086,16 @@ export function CommandPalette({
                               ? "text-amber-500"
                               : "text-muted-foreground hover:text-amber-500"
                           )}
-                          title={isFavorite ? "Unpin service" : "Pin to favorites"}
+                          title={
+                            isFavorite ? "Unpin service" : "Pin to favorites"
+                          }
                         >
-                          <Star className={cn("size-3.5", isFavorite && "fill-amber-400")} />
+                          <Star
+                            className={cn(
+                              "size-3.5",
+                              isFavorite && "fill-amber-400"
+                            )}
+                          />
                         </button>
 
                         <button
@@ -1003,7 +1158,8 @@ export function CommandPalette({
           </div>
 
           <div className="text-[11px] font-medium text-muted-foreground">
-            {unifiedItems.length} {unifiedItems.length === 1 ? "result" : "results"}
+            {unifiedItems.length}{" "}
+            {unifiedItems.length === 1 ? "result" : "results"}
           </div>
         </div>
       </div>
