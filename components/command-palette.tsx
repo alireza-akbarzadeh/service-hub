@@ -251,10 +251,10 @@ export function CommandPalette({
       {
         type: "action",
         id: "act-devops-explorer",
-        title: "Azure DevOps Explorer (WIQL & Delivery Reports)",
+        title: "Workspace Query / Azure DevOps Explorer",
         subtitle:
-          "Run WIQL queries, inspect work items, and generate iteration delivery and bug metrics for HIT / Hastim",
-        badge: "DevOps Tool",
+          "Launch /workspace-query tool: WIQL queries, work items, and sprint delivery reports for Hastim",
+        badge: "/workspace-query",
         icon: Terminal,
         iconColor: "text-blue-500 bg-blue-500/15 border-blue-500/30",
         onSelect: () => {

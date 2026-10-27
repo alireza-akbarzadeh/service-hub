@@ -183,6 +183,25 @@ export function DashboardSidebar({
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+
+              {/* Workspace Query (/workspace-query) */}
+              <SidebarMenuItem>
+                <Link href="/workspace-query" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="DevOps Workspace Query & Reports (/workspace-query)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Layers className="size-4 text-blue-500" />
+                    <span>Workspace Query</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-blue-500/30 px-1 py-0 font-mono text-[9px] text-blue-600 group-data-[collapsible=icon]:hidden dark:text-blue-400"
+                    >
+                      WIQL
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
