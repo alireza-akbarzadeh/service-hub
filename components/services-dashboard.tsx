@@ -1,38 +1,44 @@
 "use client"
 
-import * as React from "react"
-import type { Service } from "@/lib/db/schema"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { ForeignVpnWarningBanner } from "@/components/network-status-indicator"
 import { AnnouncementBanner } from "@/components/announcement-banner"
 import { CommandPalette } from "@/components/command-palette"
-import { ServiceDetailSheet } from "@/components/service-detail-sheet"
+import { ForeignVpnWarningBanner } from "@/components/network-status-indicator"
 import { RequestSubmitModal } from "@/components/requests/request-submit-modal"
+import { ServiceDetailSheet } from "@/components/service-detail-sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import type { Service } from "@/lib/db/schema"
+import * as React from "react"
 
 // Modular Dashboard Components & Custom Hook
-import { useServicesDashboard, getServiceTags } from "@/hooks/use-services-dashboard"
+import {
+  getServiceTags,
+  useServicesDashboard,
+} from "@/hooks/use-services-dashboard"
 export { getServiceTags }
 
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { StatsOverview } from "@/components/dashboard/stats-overview"
-import { PinnedServices } from "@/components/dashboard/pinned-services"
-import { ServicesFilterBar } from "@/components/dashboard/services-filter-bar"
-import { ServicesTable } from "@/components/dashboard/services-table"
-import { ServicesCardsGrid } from "@/components/dashboard/services-cards-grid"
+import { DashboardSettingsDialog } from "@/components/dashboard/dashboard-settings-dialog"
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import {
+  CONFIG_CHANGED_EVENT,
+  decodeConfigFromUrlHash,
   GridConfig,
-  ViewShape,
-  DEFAULT_GRID_CONFIG,
   loadGridConfig,
   saveGridConfig,
-  decodeConfigFromUrlHash,
-  CONFIG_CHANGED_EVENT,
 } from "@/components/dashboard/grid-view-config"
-import { DashboardSettingsDialog } from "@/components/dashboard/dashboard-settings-dialog"
-import { ServicesPagination } from "@/components/dashboard/services-pagination"
+import { PinnedServices } from "@/components/dashboard/pinned-services"
 import { ServiceFormDialogs } from "@/components/dashboard/service-form-dialogs"
+import { ServicesCardsGrid } from "@/components/dashboard/services-cards-grid"
+import { ServicesFilterBar } from "@/components/dashboard/services-filter-bar"
+import { ServicesPagination } from "@/components/dashboard/services-pagination"
+import { ServicesTable } from "@/components/dashboard/services-table"
+import { StatsOverview } from "@/components/dashboard/stats-overview"
 import { IranCalendarPanel } from "@/components/iran-calendar/iran-calendar-panel"
 
 interface ServicesDashboardProps {
@@ -126,11 +132,17 @@ export function ServicesDashboard({
 
   // Coworker Feature Request & Bug Fix PR Modal State
   const [isSubmitRequestOpen, setIsSubmitRequestOpen] = React.useState(false)
-  const [submitRequestType, setSubmitRequestType] = React.useState<"feature" | "bug" | "pull_request">("feature")
-  const [submitRequestTargetService, setSubmitRequestTargetService] = React.useState<string | undefined>(undefined)
+  const [submitRequestType, setSubmitRequestType] = React.useState<
+    "feature" | "bug" | "pull_request"
+  >("feature")
+  const [submitRequestTargetService, setSubmitRequestTargetService] =
+    React.useState<string | undefined>(undefined)
 
   const handleOpenSubmitRequest = React.useCallback(
-    (type: "feature" | "bug" | "pull_request" = "feature", serviceName?: string) => {
+    (
+      type: "feature" | "bug" | "pull_request" = "feature",
+      serviceName?: string
+    ) => {
       setSubmitRequestType(type)
       setSubmitRequestTargetService(serviceName)
       setIsSubmitRequestOpen(true)
@@ -139,7 +151,9 @@ export function ServicesDashboard({
   )
 
   // 3-Shape Display Mode & Preferences stored in localStorage
-  const [gridConfig, setGridConfig] = React.useState<GridConfig>(() => loadGridConfig())
+  const [gridConfig, setGridConfig] = React.useState<GridConfig>(() =>
+    loadGridConfig()
+  )
 
   const handleUpdateGridConfig = React.useCallback((newConfig: GridConfig) => {
     setGridConfig(newConfig)
@@ -223,7 +237,7 @@ export function ServicesDashboard({
           />
 
           {/* Body: Split View with Right-Side Iran Calendar & Meetings Panel */}
-          <div className="flex flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1">
             {/* Center/Left Content Area */}
             <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6">
               {/* Foreign Network / VPN Notice */}
@@ -231,9 +245,6 @@ export function ServicesDashboard({
 
               {/* Team Announcement & Maintenance Banner */}
               <AnnouncementBanner teamName={teamName} />
-
-              {/* Service Status Overview Metric Cards */}
-              <StatsOverview stats={stats} />
 
               {/* Pinned Quick Launch Strip */}
               <PinnedServices
@@ -353,7 +364,7 @@ export function ServicesDashboard({
             {/* Right Side: Iran Timezone & Calendar + Frontend Meeting Push Panel */}
             {isRightPanelOpen && (
               <IranCalendarPanel
-                className="hidden xl:flex w-84 2xl:w-[410px] shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] shadow-lg"
+                className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-84 shrink-0 shadow-lg xl:flex 2xl:w-[410px]"
                 onClose={() => setIsRightPanelOpen(false)}
                 isCollapsible={true}
               />
@@ -363,7 +374,7 @@ export function ServicesDashboard({
 
         {/* Mobile / Tablet Drawer for Iran Calendar & Meetings Panel */}
         <Sheet open={isMobilePanelOpen} onOpenChange={setIsMobilePanelOpen}>
-          <SheetContent side="right" className="w-[340px] sm:w-[400px] p-0">
+          <SheetContent side="right" className="w-[340px] p-0 sm:w-[400px]">
             <SheetHeader className="sr-only">
               <SheetTitle>Iranian Calendar & Frontend Meeting</SheetTitle>
             </SheetHeader>

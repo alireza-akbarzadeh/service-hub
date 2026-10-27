@@ -23,6 +23,11 @@ import { ChannelSidebar } from "./channel-sidebar"
 import { ChatMessageItem } from "./chat-message-item"
 import { ChatInputBar } from "./chat-input-bar"
 import { CreateChannelDialog } from "./create-channel-dialog"
+import { WallpaperPickerDialog } from "./wallpaper-picker-dialog"
+import {
+  getSavedChatWallpaper,
+  ChatWallpaper,
+} from "./chat-wallpapers"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -31,6 +36,7 @@ import {
   ChevronDown,
   LogIn,
   Menu,
+  Palette,
   ShieldCheck,
   Sparkles,
   User,
@@ -107,6 +113,10 @@ export function AnonChatView() {
   const chatScrollContainerRef = React.useRef<HTMLDivElement>(null)
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null)
   const latestMessageTimeRef = React.useRef<string | null>(null)
+
+  // 5. Chat Wallpaper / Background Theme State
+  const [currentWallpaper, setCurrentWallpaper] = React.useState<ChatWallpaper>(getSavedChatWallpaper)
+  const [isWallpaperPickerOpen, setIsWallpaperPickerOpen] = React.useState(false)
 
   // Real Account & Anonymous Mode
   const [accountUser, setAccountUser] = React.useState<SessionUser | null>(null)
@@ -682,6 +692,18 @@ export function AnonChatView() {
             </Link>
           )}
 
+          {/* Wallpaper Theme Picker Toggle */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsWallpaperPickerOpen(true)}
+            className="size-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted"
+            title={`Wallpaper: ${currentWallpaper.name} (Click to change background & feel)`}
+          >
+            <Palette className="size-4 text-amber-500" />
+          </Button>
+
           {/* Quick Sound Toggle */}
           <Button
             type="button"
@@ -754,8 +776,13 @@ export function AnonChatView() {
           </div>
         )}
 
-        {/* Center Chat Content Area - Telegram Style Pattern */}
-        <main className="relative flex flex-1 flex-col overflow-hidden bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] bg-slate-50/70 dark:bg-slate-950/60">
+        {/* Center Chat Content Area - Dynamic Wallpaper Background */}
+        <main
+          className={cn(
+            "relative flex flex-1 flex-col overflow-hidden transition-colors duration-300",
+            currentWallpaper.className
+          )}
+        >
           {/* Channel banner info pill */}
           {activeChannel?.description && (
             <div className="border-b border-border/60 bg-background/80 px-4 py-1.5 text-xs text-muted-foreground flex items-center justify-between backdrop-blur-xs z-10">
@@ -870,6 +897,14 @@ export function AnonChatView() {
         open={isCreateChannelOpen}
         onOpenChange={setIsCreateChannelOpen}
         onChannelCreated={handleChannelCreated}
+      />
+
+      {/* Wallpaper Picker Dialog */}
+      <WallpaperPickerDialog
+        open={isWallpaperPickerOpen}
+        onOpenChange={setIsWallpaperPickerOpen}
+        currentWallpaper={currentWallpaper}
+        onSelectWallpaper={setCurrentWallpaper}
       />
     </div>
   )

@@ -53,9 +53,9 @@ const ENVIRONMENTS = [
 ]
 
 interface DashboardSidebarProps {
-  selectedEnv: string
-  onSelectEnv: (envId: string) => void
-  envCounts: Record<string, number>
+  selectedEnv?: string
+  onSelectEnv?: (envId: string) => void
+  envCounts?: Record<string, number>
   branchName: string
   teamName?: string
   networkInfo: any
@@ -219,42 +219,8 @@ export function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {/* Section 1: Environments Navigation */}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold">
-            Environments
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {ENVIRONMENTS.map((env) => {
-                const Icon = env.icon
-                const isActive = selectedEnv === env.id
-                const count = envCounts[env.id] || 0
-                return (
-                  <SidebarMenuItem key={env.id}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => onSelectEnv(env.id)}
-                      className="cursor-pointer justify-between"
-                      tooltip={env.name}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon className="size-4" />
-                        <span>{env.name}</span>
-                      </div>
-                      <span className="ml-auto font-mono text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-                        {count}
-                      </span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Section 2: Developer Tools (Moved from crowded header) */}
+        {/* Section 2: Developer Tools */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold">
             Developer Tools
