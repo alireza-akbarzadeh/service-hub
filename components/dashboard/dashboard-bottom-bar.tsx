@@ -84,33 +84,46 @@ export function DashboardBottomBar({
 
         <Separator orientation="vertical" className="h-4 hidden md:block" />
 
-        {/* Live Cluster Health Status Pill */}
-        <Link href="/status" className="hidden lg:inline-flex">
-          <Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            className="h-7 cursor-pointer gap-1.5 px-2 text-[11px] font-medium hover:bg-muted/80"
-            title="System Status Page & 30-Day SLA (/status)"
+        {/* Live Cluster Health Status Pill - Sleek Unified Beacon */}
+        <Link href="/status" className="hidden lg:inline-flex items-center">
+          <div
+            className={cn(
+              "group inline-flex items-center gap-2 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-all duration-150 cursor-pointer select-none",
+              degradedCount === 0
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500/50 hover:bg-emerald-500/15"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:border-amber-500/50 hover:bg-amber-500/15"
+            )}
+            title="View Live System Health & 30-Day SLA (/status)"
           >
-            <Activity
-              className={cn(
-                "size-3",
-                degradedCount === 0 ? "text-emerald-500" : "text-amber-500 animate-pulse"
-              )}
-            />
-            <span className="text-foreground">
-              {degradedCount === 0
-                ? "All Systems Operational"
-                : `${degradedCount} Degraded`}
+            {/* Live Pulsing Beacon Dot */}
+            <span className="relative flex size-2 shrink-0">
+              <span
+                className={cn(
+                  "absolute inline-flex h-full w-full rounded-full opacity-75",
+                  degradedCount === 0
+                    ? "animate-ping bg-emerald-400 duration-1000"
+                    : "animate-ping bg-amber-400 duration-700"
+                )}
+              />
+              <span
+                className={cn(
+                  "relative inline-flex size-2 rounded-full",
+                  degradedCount === 0 ? "bg-emerald-500" : "bg-amber-500"
+                )}
+              />
             </span>
-            <Badge
-              variant="outline"
-              className="text-[9px] font-mono px-1 py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hidden xl:inline-block"
-            >
-              99.9% SLA
-            </Badge>
-          </Button>
+
+            {/* Status Label */}
+            <span className="font-semibold tracking-tight">
+              {degradedCount === 0 ? "All Systems Operational" : `${degradedCount} Degraded`}
+            </span>
+
+            {/* Seamless Inline SLA Indicator */}
+            <span className="opacity-40 font-mono text-[9px]">•</span>
+            <span className="font-mono text-[10px] font-medium opacity-85">
+              99.98% SLA
+            </span>
+          </div>
         </Link>
       </div>
 
@@ -201,3 +214,4 @@ export function DashboardBottomBar({
     </footer>
   )
 }
+

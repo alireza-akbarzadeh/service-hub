@@ -44,9 +44,9 @@ export function DashboardHeader({
   onInspectServiceByName,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-md sm:px-6 select-none">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-md select-none sm:px-6">
       {/* Left: Sidebar trigger & Navigation Breadcrumb */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger className="shrink-0 cursor-pointer" />
         <Separator orientation="vertical" className="h-5 shrink-0" />
         <Breadcrumb className="truncate">
@@ -73,7 +73,7 @@ export function DashboardHeader({
               <>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-xs font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
+                  <BreadcrumbPage className="max-w-[120px] truncate text-xs font-medium text-muted-foreground sm:max-w-none">
                     {selectedCategory}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -84,7 +84,7 @@ export function DashboardHeader({
       </div>
 
       {/* Right: Core Quick Actions (Search, Meet, Alerts, Settings, Theme) */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         {/* Universal Search (Ctrl+K) */}
         <Button
           type="button"
