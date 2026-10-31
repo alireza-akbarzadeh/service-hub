@@ -50,7 +50,13 @@
 - **Advanced Tools**: Client-side Image Compressor & WebP Converter, RegEx Evaluator, Git-style Diff Checker, Cron Explainer, Color & Tailwind Palette Generator, SQL Beautifier, QR Code Generator.
 - **Internet Launchpad**: 24+ categorized dev tool shortcuts (Transform.tools, Ray.so, CyberChef), Epoch/Unix Clock, URL/UTM Builder, UUID/NanoID Generator, and HTTP Status Codes reference.
 
-### 8. 🤝 Coworker Collaboration, PRs & Community
+### 8. 🔐 Environment Variables & Secrets Studio (`/env`)
+- **Split-Pane .env Workbench**: Raw `.env` text synchronized live with structured key-value table and secret masking (`••••••••`).
+- **Multi-Environment Diff Matrix**: Compare `Development`, `Staging`, and `Production` side-by-side to catch missing keys or value drift.
+- **Kubernetes & Docker Generator**: 1-click serialization to **Docker Compose** (`environment:` YAML), **Kubernetes ConfigMap**, **Kubernetes Secret** (Base64 encoded), and JSON.
+- **100% In-Memory Privacy**: Zero-leakage architecture ensures no environment variables or credentials leave local memory.
+
+### 9. 🤝 Coworker Collaboration, PRs & Community
 - **Requests & PRs Kanban Board (`/requests`)**: Triage feature requests, bug reports, and coworker PR reviews with diff previews and upvoting.
 - **Access Management & Users (`/users`)**: Role-based access control (`Admin`, `Manager`, `Developer`, `Viewer`) and squad directories.
 - **Iran Time & Calendar Sync (`/calendar`)**: Real-time Tehran local time (IRST) converter, meeting reminders, and instant Google Meet launcher.
@@ -93,6 +99,7 @@ graph TD
 | `/status` | System Status Page, 30-Day SLA Heatmaps & Incident Triage | Authenticated |
 | `/topology` | Microservice Architecture & Dependency Call Graph | Authenticated |
 | `/activity` | Enterprise Activity Stream & Compliance Audit Trail | Authenticated |
+| `/env` | Environment Variables Studio, Multi-Env Diff & K8s Generator | Authenticated |
 | `/tools` | Standard Dev Tools (JSON, JWT, cURL, Base64, Hash) | Authenticated |
 | `/tools/advanced` | Advanced Tools (Image, RegEx, Diff, Cron, SQL, QR) | Authenticated |
 | `/tools/web` | Internet Launchpad, Unix Epoch, URL/UTM, UUID, Markdown | Authenticated |
