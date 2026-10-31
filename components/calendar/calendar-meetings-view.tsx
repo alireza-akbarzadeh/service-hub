@@ -2,215 +2,344 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useMeetings } from "@/hooks/use-meetings"
-import type { FrontendMeeting } from "@/lib/meetings-data"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { IranClockCalendar } from "@/components/iran-calendar/iran-clock-calendar"
-import { Cs2WritebarBanner } from "@/components/cs2/cs2-writebar-banner"
-import { NotificationCenter } from "@/components/notifications/notification-center"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationCenter } from "@/components/notifications/notification-center"
+import { DashboardBottomBar } from "@/components/dashboard/dashboard-bottom-bar"
+import {
+  type CalendarEvent,
+  type CalendarEventType,
+  EVENT_TYPE_CONFIG,
+  GREGORIAN_MONTH_NAMES,
+  INITIAL_CALENDAR_EVENTS,
+  generateMonthGrid,
+  formatDateKey,
+} from "@/lib/calendar-events-data"
+import { gregorianToJalali } from "@/components/iran-calendar/jalali-utils"
+import { MonthView } from "@/components/calendar/month-view"
+import { WeekView } from "@/components/calendar/week-view"
+import { AgendaView } from "@/components/calendar/agenda-view"
+import { CreateEditEventDialog, EventDetailDialog } from "@/components/calendar/event-dialogs"
 import {
   ArrowLeft,
   Bell,
-  BellOff,
   BellRing,
   Calendar,
   CalendarDays,
   Check,
-  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
-  Copy,
-  Edit2,
   ExternalLink,
   Flame,
-  Gamepad2,
-  Globe2,
+  Globe,
+  Layers,
   Plus,
   Radio,
   Search,
-  Send,
-  Share2,
   Sparkles,
-  Trash2,
   Users,
   Video,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+const STORAGE_KEY = "frontend_squad_calendar_events_v2"
+
 export function CalendarMeetingsView() {
-  const {
-    meetings,
-    activeMeetingId,
-    setActiveMeetingId,
-    selectedMeeting,
-    permission,
-    requestPermission,
-    soundEnabled,
-    setSoundEnabled,
-    countdownText,
-    isLiveNow,
-    sendPushNotification,
-    addMeeting,
-    updateMeeting,
-    deleteMeeting,
-    toggleMeetingActive,
-  } = useMeetings()
+  // Calendar state: Year and Month (1-indexed)
+  const [currentYear, setCurrentYear] = React.useState<number>(2026)
+  const [currentMonth, setCurrentMonth] = React.useState<number>(10) // October
+  const [activeDateKey, setActiveDateKey] = React.useState<string>("2026-10-31")
 
-  const [copiedId, setCopiedId] = React.useState<string | null>(null)
-  const [copiedInviteId, setCopiedInviteId] = React.useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [platformFilter, setPlatformFilter] = React.useState<string>("all")
-  const [testNotificationSent, setTestNotificationSent] = React.useState(false)
+  // Views: month | week | agenda
+  const [activeView, setActiveView] = React.useState<"month" | "week" | "agenda">("month")
 
-  // Dialog states for Create and Edit
-  const [isCreateOpen, setIsCreateOpen] = React.useState(false)
-  const [editingMeeting, setEditingMeeting] = React.useState<FrontendMeeting | null>(null)
+  // Dual Calendar mode toggle (English + Jalali vs English only)
+  const [showDualCalendar, setShowDualCalendar] = React.useState<boolean>(true)
 
-  // Form states
-  const [formTitle, setFormTitle] = React.useState("")
-  const [formTime, setFormTime] = React.useState("10:30")
-  const [formDuration, setFormDuration] = React.useState(30)
-  const [formPlatform, setFormPlatform] = React.useState<"Google Meet" | "Zoom" | "Teams" | "Custom">("Google Meet")
-  const [formMeetUrl, setFormMeetUrl] = React.useState("https://meet.google.com/new")
-  const [formAgenda, setFormAgenda] = React.useState("")
-  const [formAttendees, setFormAttendees] = React.useState("Frontend Squad & QA")
-  const [formNotifyBeforeMins, setFormNotifyBeforeMins] = React.useState(5)
+  // Events state with localStorage persistence
+  const [events, setEvents] = React.useState<CalendarEvent[]>(() => {
+    if (typeof window === "undefined") return INITIAL_CALENDAR_EVENTS
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch {}
+    return INITIAL_CALENDAR_EVENTS
+  })
 
-  // Quick Instant Google Meet
+  // Selected event for detail dialog
+  const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = React.useState<boolean>(false)
+
+  // Create / Edit modal state
+  const [isCreateOpen, setIsCreateOpen] = React.useState<boolean>(false)
+  const [createInitialDate, setCreateInitialDate] = React.useState<string>("2026-10-31")
+  const [createInitialTime, setCreateInitialTime] = React.useState<string>("10:30")
+  const [editingEvent, setEditingEvent] = React.useState<CalendarEvent | null>(null)
+
+  // Search & Filters
+  const [searchQuery, setSearchQuery] = React.useState<string>("")
+  const [selectedTypes, setSelectedTypes] = React.useState<Set<CalendarEventType>>(
+    new Set(["meeting", "deployment", "sprint", "oncall", "gaming"])
+  )
+
+  // Audio chimes & Push notifications
+  const [soundEnabled, setSoundEnabled] = React.useState<boolean>(true)
+  const [hasNotifPermission, setHasNotifPermission] = React.useState<boolean>(false)
+
+  // World Clocks state (updates every second)
+  const [worldTimes, setWorldTimes] = React.useState({
+    tehran: "15:35",
+    utc: "12:05",
+    newYork: "08:05",
+    tokyo: "21:05",
+  })
+
+  React.useEffect(() => {
+    const updateTimes = () => {
+      const now = new Date()
+      const formatTime = (timeZone: string) =>
+        now.toLocaleTimeString("en-GB", { timeZone, hour: "2-digit", minute: "2-digit" })
+
+      setWorldTimes({
+        tehran: formatTime("Asia/Tehran"),
+        utc: formatTime("UTC"),
+        newYork: formatTime("America/New_York"),
+        tokyo: formatTime("Asia/Tokyo"),
+      })
+    }
+    updateTimes()
+    const interval = setInterval(updateTimes, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Persist events to localStorage
+  const saveEvents = (newEvents: CalendarEvent[]) => {
+    setEvents(newEvents)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newEvents))
+      } catch {}
+    }
+  }
+
+  // Navigation handlers
+  const handlePrev = () => {
+    if (activeView === "month" || activeView === "agenda") {
+      if (currentMonth === 1) {
+        setCurrentMonth(12)
+        setCurrentYear((y) => y - 1)
+      } else {
+        setCurrentMonth((m) => m - 1)
+      }
+    } else {
+      // Week view: move 7 days back
+      const [y, m, d] = activeDateKey.split("-").map(Number)
+      const prevDate = new Date(y, m - 1, d - 7)
+      const newKey = formatDateKey(
+        prevDate.getFullYear(),
+        prevDate.getMonth() + 1,
+        prevDate.getDate()
+      )
+      setActiveDateKey(newKey)
+      setCurrentYear(prevDate.getFullYear())
+      setCurrentMonth(prevDate.getMonth() + 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (activeView === "month" || activeView === "agenda") {
+      if (currentMonth === 12) {
+        setCurrentMonth(1)
+        setCurrentYear((y) => y + 1)
+      } else {
+        setCurrentMonth((m) => m + 1)
+      }
+    } else {
+      // Week view: move 7 days forward
+      const [y, m, d] = activeDateKey.split("-").map(Number)
+      const nextDate = new Date(y, m - 1, d + 7)
+      const newKey = formatDateKey(
+        nextDate.getFullYear(),
+        nextDate.getMonth() + 1,
+        nextDate.getDate()
+      )
+      setActiveDateKey(newKey)
+      setCurrentYear(nextDate.getFullYear())
+      setCurrentMonth(nextDate.getMonth() + 1)
+    }
+  }
+
+  const handleToday = () => {
+    const today = new Date()
+    setCurrentYear(today.getFullYear())
+    setCurrentMonth(today.getMonth() + 1)
+    setActiveDateKey(
+      formatDateKey(today.getFullYear(), today.getMonth() + 1, today.getDate())
+    )
+  }
+
+  // Toggle category filters
+  const toggleTypeFilter = (type: CalendarEventType) => {
+    setSelectedTypes((prev) => {
+      const next = new Set(prev)
+      if (next.has(type)) {
+        if (next.size > 1) next.delete(type) // Don't allow empty
+      } else {
+        next.add(type)
+      }
+      return next
+    })
+  }
+
+  // Filtered Events
+  const filteredEvents = React.useMemo(() => {
+    return events.filter((ev) => {
+      const matchesType = selectedTypes.has(ev.type)
+      const matchesSearch =
+        !searchQuery.trim() ||
+        ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ev.agenda.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ev.attendees.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesType && matchesSearch
+    })
+  }, [events, selectedTypes, searchQuery])
+
+  // Generate Month Grid
+  const monthGrid = React.useMemo(() => {
+    return generateMonthGrid(currentYear, currentMonth, true)
+  }, [currentYear, currentMonth])
+
+  // Generate Week Days for activeDateKey
+  const weekDays = React.useMemo(() => {
+    const [y, m, d] = activeDateKey.split("-").map(Number)
+    const activeDate = new Date(y, m - 1, d)
+    let dayOfWeek = activeDate.getDay() // 0=Sun..6=Sat
+    // Convert to Monday start
+    const mondayOffset = (dayOfWeek + 6) % 7
+    const mondayDate = new Date(y, m - 1, d - mondayOffset)
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const cur = new Date(
+        mondayDate.getFullYear(),
+        mondayDate.getMonth(),
+        mondayDate.getDate() + i
+      )
+      const key = formatDateKey(cur.getFullYear(), cur.getMonth() + 1, cur.getDate())
+      const today = new Date()
+      const isToday =
+        today.getFullYear() === cur.getFullYear() &&
+        today.getMonth() === cur.getMonth() &&
+        today.getDate() === cur.getDate()
+
+      return {
+        dateKey: key,
+        day: cur.getDate(),
+        month: cur.getMonth() + 1,
+        year: cur.getFullYear(),
+        isCurrentMonth: cur.getMonth() + 1 === currentMonth,
+        isToday,
+        dayOfWeek: cur.getDay(),
+        jalali: gregorianToJalali(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()),
+      }
+    })
+  }, [activeDateKey, currentMonth])
+
+  // Current Jalali header reference
+  const currentJalali = React.useMemo(() => {
+    return gregorianToJalali(currentYear, currentMonth, 15)
+  }, [currentYear, currentMonth])
+
+  // Next upcoming meeting / live meeting
+  const upcomingNextEvent = React.useMemo(() => {
+    return (
+      events.find((e) => e.type === "meeting" || e.type === "sprint") ||
+      events[0]
+    )
+  }, [events])
+
+  // Instant Google Meet launcher
   const handleLaunchInstantMeet = () => {
     if (typeof window !== "undefined") {
       window.open("https://meet.google.com/new", "_blank", "noopener,noreferrer")
     }
   }
 
-  function openCreateDialog() {
-    setFormTitle("")
-    setFormTime("10:30")
-    setFormDuration(30)
-    setFormPlatform("Google Meet")
-    setFormMeetUrl("https://meet.google.com/new")
-    setFormAgenda("")
-    setFormAttendees("Frontend Squad & QA")
-    setFormNotifyBeforeMins(5)
-    setIsCreateOpen(true)
-  }
-
-  function openEditDialog(m: FrontendMeeting) {
-    setEditingMeeting(m)
-    setFormTitle(m.title)
-    setFormTime(m.tehranTime)
-    setFormDuration(m.durationMins)
-    setFormPlatform(m.platform)
-    setFormMeetUrl(m.meetUrl)
-    setFormAgenda(m.agenda)
-    setFormAttendees(m.attendees)
-    setFormNotifyBeforeMins(m.notifyBeforeMins || 5)
-  }
-
-  function handleCreateSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!formTitle.trim()) return
-
-    addMeeting({
-      title: formTitle.trim(),
-      tehranTime: formTime,
-      durationMins: Number(formDuration) || 30,
-      platform: formPlatform,
-      meetUrl: formMeetUrl.trim() || "https://meet.google.com/new",
-      agenda: formAgenda.trim(),
-      attendees: formAttendees.trim(),
-      notifyBeforeMins: Number(formNotifyBeforeMins) || 5,
-      isActive: true,
-    })
-
-    setIsCreateOpen(false)
-  }
-
-  function handleEditSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!editingMeeting || !formTitle.trim()) return
-
-    updateMeeting(editingMeeting.id, {
-      title: formTitle.trim(),
-      tehranTime: formTime,
-      durationMins: Number(formDuration) || 30,
-      platform: formPlatform,
-      meetUrl: formMeetUrl.trim() || "https://meet.google.com/new",
-      agenda: formAgenda.trim(),
-      attendees: formAttendees.trim(),
-      notifyBeforeMins: Number(formNotifyBeforeMins) || 5,
-    })
-
-    setEditingMeeting(null)
-  }
-
-  function handleCopyMeetLink(id: string, url: string) {
-    if (navigator?.clipboard) {
-      navigator.clipboard.writeText(url)
-      setCopiedId(id)
-      setTimeout(() => setCopiedId(null), 1500)
+  // Handle save from dialog
+  const handleSaveEvent = (saved: CalendarEvent) => {
+    const exists = events.some((e) => e.id === saved.id)
+    if (exists) {
+      saveEvents(events.map((e) => (e.id === saved.id ? saved : e)))
+    } else {
+      saveEvents([saved, ...events])
     }
   }
 
-  function handleCopyInvite(m: FrontendMeeting) {
-    if (navigator?.clipboard) {
-      const invite = `📅 **${m.title}**\n⏰ Time: ${m.tehranTime} (Tehran Time / IRST)\n⏳ Duration: ${m.durationMins} mins\n👥 Attendees: ${m.attendees}\n🔗 Link: ${m.meetUrl}\n📝 Agenda: ${m.agenda || "Discussion & alignment"}`
-      navigator.clipboard.writeText(invite)
-      setCopiedInviteId(m.id)
-      setTimeout(() => setCopiedInviteId(null), 1500)
-    }
+  const handleDeleteEvent = (id: string) => {
+    saveEvents(events.filter((e) => e.id !== id))
   }
-
-  // Filter meetings
-  const filteredMeetings = React.useMemo(() => {
-    return meetings.filter((m) => {
-      const matchesSearch =
-        m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.agenda.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.attendees.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesPlatform =
-        platformFilter === "all" || m.platform.toLowerCase() === platformFilter.toLowerCase()
-      return matchesSearch && matchesPlatform
-    })
-  }, [meetings, searchQuery, platformFilter])
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/85 px-4 backdrop-blur-md sm:px-6">
+    <div className="min-h-screen bg-background text-foreground flex flex-col select-none selection:bg-primary/20 overflow-x-clip">
+      {/* Sticky Top Header */}
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ArrowLeft className="size-4" />
-            <span className="hidden sm:inline">Back to Catalog</span>
+            <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="hidden sm:inline">Back to Hub</span>
           </Link>
-          <span className="text-muted-foreground/50">/</span>
+
+          <Separator orientation="vertical" className="h-4" />
+
+          {/* Page Title & Breadcrumb */}
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-              <CalendarDays className="size-4" />
+            <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs">
+              <CalendarDays className="size-3.5" />
             </div>
-            <h1 className="text-sm font-bold tracking-tight">
-              Calendar, Meetings & Iran Sync Hub
-            </h1>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-sm font-bold tracking-tight">
+                Team Calendar & Sprints
+              </h1>
+              <Badge
+                variant="outline"
+                className="hidden sm:inline-flex border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono px-1.5 py-0"
+              >
+                English & Iran Sync
+              </Badge>
+            </div>
           </div>
         </div>
 
         {/* Header Right Actions */}
         <div className="flex items-center gap-2">
+          {/* Dual Calendar Toggle */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDualCalendar(!showDualCalendar)}
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium shadow-2xs hover:bg-muted"
+            title="Toggle English & Jalali dual date badges"
+          >
+            <Globe className="size-3.5 text-primary" />
+            <span className="hidden md:inline">
+              {showDualCalendar ? "Dual: English + Jalali" : "English Only"}
+            </span>
+          </Button>
+
+          {/* Instant Google Meet Launcher */}
           <Button
             type="button"
             size="sm"
@@ -219,528 +348,365 @@ export function CalendarMeetingsView() {
           >
             <Plus className="size-3.5" />
             <span className="hidden sm:inline">Instant Meet</span>
-            <ExternalLink className="size-3 opacity-75" />
+            <ExternalLink className="size-3 opacity-80" />
           </Button>
 
+          {/* New Event Button */}
           <Button
             type="button"
-            variant="outline"
             size="sm"
-            onClick={openCreateDialog}
-            className="h-8 gap-1.5 text-xs font-medium cursor-pointer"
+            onClick={() => {
+              setEditingEvent(null)
+              setCreateInitialDate(activeDateKey)
+              setCreateInitialTime("10:30")
+              setIsCreateOpen(true)
+            }}
+            className="h-8 gap-1.5 text-xs font-semibold cursor-pointer shadow-xs bg-primary text-primary-foreground"
           >
-            <Calendar className="size-3.5 text-primary" />
-            <span>Schedule Meeting</span>
+            <Calendar className="size-3.5" />
+            <span className="hidden sm:inline">Schedule Event</span>
           </Button>
 
+          <Separator orientation="vertical" className="h-4" />
           <NotificationCenter />
           <ThemeToggle />
         </div>
       </header>
 
-      {/* Main Content: Split Grid with Iranian Clock/Calendar and Advanced Meetings Hub */}
-      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Top Hero: CS2 5:10 PM Squad Match Active Banner */}
-        <Cs2WritebarBanner />
+      {/* Main Full-Screen Layout */}
+      <main className="w-full max-w-[1920px] mx-auto flex-1 flex flex-col p-3 sm:p-5 lg:p-6 space-y-4 pb-16">
+        {/* Calendar Controls & Navigation Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-xs">
+          {/* Left: Month Navigation & Today */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToday}
+              className="h-8 text-xs font-semibold px-3 cursor-pointer shadow-2xs"
+            >
+              Today
+            </Button>
 
-        {/* 2-Column Responsive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column (7 cols): Advanced Meeting Hub */}
-          <div className="lg:col-span-7 space-y-5">
-            {/* Spotlight Card: Next / Active Meeting */}
-            {selectedMeeting && (
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all",
-                  isLiveNow
-                    ? "border-emerald-500/50 bg-gradient-to-br from-emerald-500/15 via-card to-background ring-1 ring-emerald-500/30"
-                    : "border-border/80 bg-gradient-to-br from-primary/5 via-card to-background"
-                )}
+            <div className="flex items-center border border-border rounded-lg bg-muted/20">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrev}
+                className="size-8 cursor-pointer rounded-r-none hover:bg-muted"
+                title="Previous month"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                      <Video className="size-4" />
-                    </span>
-                    <div>
-                      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {isLiveNow ? "🟢 Meeting In Progress" : "⏱️ Upcoming Scheduled Meeting"}
-                      </span>
-                      <h2 className="text-base font-bold text-foreground">
-                        {selectedMeeting.title}
-                      </h2>
-                    </div>
-                  </div>
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="size-8 cursor-pointer rounded-l-none hover:bg-muted"
+                title="Next month"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
 
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "font-mono text-xs font-bold px-2 py-0.5 shadow-2xs",
-                      isLiveNow
-                        ? "border-emerald-500 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 animate-pulse"
-                        : "border-primary/30 text-primary bg-primary/10"
-                    )}
-                  >
-                    {isLiveNow ? "LIVE NOW" : countdownText || `At ${selectedMeeting.tehranTime}`}
+            <div className="flex items-baseline gap-2 pl-2">
+              <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                {GREGORIAN_MONTH_NAMES[currentMonth - 1]} {currentYear}
+              </h2>
+              {showDualCalendar && (
+                <span className="text-xs font-mono font-medium text-muted-foreground hidden sm:inline">
+                  • {currentJalali.monthNameFa} {currentJalali.jy} ({currentJalali.monthNameEn})
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: View Switcher (Month, Week, Agenda) & Search */}
+          <div className="flex items-center gap-2">
+            {/* View Switcher Tabs */}
+            <div className="flex items-center rounded-xl border border-border/80 bg-muted/30 p-1 text-xs">
+              {[
+                { id: "month", label: "Month" },
+                { id: "week", label: "Week" },
+                { id: "agenda", label: "Agenda" },
+              ].map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setActiveView(v.id as any)}
+                  className={cn(
+                    "cursor-pointer rounded-lg px-3 py-1 text-xs font-semibold transition-colors",
+                    activeView === v.id
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Event Search */}
+            <div className="relative min-w-[180px] sm:min-w-[220px]">
+              <Search className="absolute top-2 left-2.5 size-3.5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search meetings & events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 text-xs rounded-xl"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute top-2 right-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Panel Workspace: Left Sidebar + Central Full-Screen Calendar Grid */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[640px]">
+          {/* Left Sidebar (3 Cols) */}
+          <div className="lg:col-span-3 space-y-4 flex flex-col">
+            {/* Next Up Spotlight Card */}
+            {upcomingNextEvent && (
+              <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-card to-background p-4 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Radio className="size-3.5 text-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      Next Scheduled Event
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="font-mono text-[10px] text-primary bg-primary/10 border-primary/30">
+                    {upcomingNextEvent.startTime} IRST
                   </Badge>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5">
-                    <span className="text-[10px] text-muted-foreground block mb-0.5">Tehran Time</span>
-                    <span className="font-mono font-bold text-foreground text-sm">
-                      {selectedMeeting.tehranTime} IRST
-                    </span>
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5">
-                    <span className="text-[10px] text-muted-foreground block mb-0.5">Duration</span>
-                    <span className="font-bold text-foreground text-sm">
-                      {selectedMeeting.durationMins} minutes
-                    </span>
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5">
-                    <span className="text-[10px] text-muted-foreground block mb-0.5">Platform</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                      {selectedMeeting.platform}
-                    </span>
-                  </div>
+                <div>
+                  <h3 className="font-bold text-xs sm:text-sm text-foreground line-clamp-1">
+                    {upcomingNextEvent.title}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                    {upcomingNextEvent.agenda || "Regular team synchronization and sprint tracking."}
+                  </p>
                 </div>
 
-                {selectedMeeting.agenda && (
-                  <div className="mt-3 rounded-xl border border-border/50 bg-muted/20 p-3 text-xs">
-                    <span className="text-[10.5px] font-semibold text-muted-foreground block mb-1">Agenda:</span>
-                    <p className="text-foreground/90 font-medium leading-relaxed">
-                      {selectedMeeting.agenda}
-                    </p>
-                  </div>
-                )}
-
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Users className="size-3.5 text-primary" />
-                    <span>{selectedMeeting.attendees}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyInvite(selectedMeeting)}
-                      className="h-8 gap-1.5 text-xs cursor-pointer"
-                    >
-                      {copiedInviteId === selectedMeeting.id ? (
-                        <>
-                          <Check className="size-3.5 text-emerald-500" />
-                          <span>Copied Invite!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Share2 className="size-3.5" />
-                          <span>Copy Invitation</span>
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        if (typeof window !== "undefined") {
-                          window.open(selectedMeeting.meetUrl, "_blank", "noopener,noreferrer")
-                        }
-                      }}
-                      className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs cursor-pointer"
-                    >
-                      <Video className="size-3.5" />
-                      <span>Join Meeting Link</span>
-                      <ExternalLink className="size-3" />
-                    </Button>
-                  </div>
+                <div className="pt-1 flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono text-muted-foreground">
+                    {upcomingNextEvent.durationMins}m • {upcomingNextEvent.platform}
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.open(upcomingNextEvent.meetUrl, "_blank", "noopener,noreferrer")
+                      }
+                    }}
+                    className="h-7 px-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs gap-1"
+                  >
+                    <Video className="size-3" />
+                    Join
+                  </Button>
                 </div>
               </div>
             )}
 
-            {/* Meetings Management Header & Filter */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-foreground">
-                  Scheduled Meetings ({filteredMeetings.length})
-                </h3>
-                <Badge variant="outline" className="text-[10px] font-mono">
-                  Daily & Recurring
-                </Badge>
-              </div>
+            {/* Event Category Filter Toggles */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-2.5">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="size-3.5 text-primary" />
+                <span>Event Types & Calendars</span>
+              </span>
 
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 sm:w-48">
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search meetings..."
-                    className="h-8 text-xs bg-muted/40 pl-7"
-                  />
-                  <Search className="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+              <div className="space-y-1.5 pt-1">
+                {(
+                  [
+                    { id: "meeting", label: "Team Meetings" },
+                    { id: "deployment", label: "Releases & Deploys" },
+                    { id: "sprint", label: "Sprint Milestones" },
+                    { id: "oncall", label: "On-Call & Infra Ops" },
+                    { id: "gaming", label: "CS2 Squad Match" },
+                  ] as const
+                ).map((cat) => {
+                  const cfg = EVENT_TYPE_CONFIG[cat.id]
+                  const isChecked = selectedTypes.has(cat.id)
+                  const count = events.filter((e) => e.type === cat.id).length
 
-                {/* Notifications & Sound Toggles */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className="size-8 cursor-pointer text-muted-foreground hover:text-foreground"
-                  title={soundEnabled ? "Mute audio alarms" : "Enable audio alarms"}
-                >
-                  {soundEnabled ? <Volume2 className="size-3.5 text-amber-500" /> : <VolumeX className="size-3.5" />}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={requestPermission}
-                  className="size-8 cursor-pointer text-muted-foreground hover:text-foreground"
-                  title="Enable Web Push notifications"
-                >
-                  {permission === "granted" ? <BellRing className="size-3.5 text-emerald-500" /> : <Bell className="size-3.5" />}
-                </Button>
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => toggleTypeFilter(cat.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-xs font-medium cursor-pointer transition-colors",
+                        isChecked
+                          ? "border-border bg-muted/40 text-foreground"
+                          : "border-transparent bg-transparent text-muted-foreground/60 hover:bg-muted/20"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="size-2 rounded-full"
+                          style={{ backgroundColor: isChecked ? cfg.dotColor : "#6b7280" }}
+                        />
+                        <span>{cat.label}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 border-border/60">
+                        {count}
+                      </Badge>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
-            {/* List of Meetings */}
-            <div className="space-y-3">
-              {filteredMeetings.map((m) => {
-                const isSelected = m.id === activeMeetingId
-                return (
-                  <div
-                    key={m.id}
-                    onClick={() => setActiveMeetingId(m.id)}
-                    className={cn(
-                      "group relative rounded-xl border p-4 transition-all cursor-pointer shadow-2xs hover:shadow-xs",
-                      isSelected
-                        ? "border-emerald-500/60 bg-emerald-500/5 shadow-xs"
-                        : "border-border/70 bg-card hover:border-border hover:bg-muted/30",
-                      !m.isActive && "opacity-60"
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={cn(
-                            "flex size-8 shrink-0 items-center justify-center rounded-lg shadow-2xs",
-                            m.platform === "Google Meet"
-                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                              : "bg-primary/15 text-primary"
-                          )}
-                        >
-                          <Video className="size-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-xs text-foreground truncate">
-                            {m.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                            <span className="font-mono font-bold text-foreground/80">
-                              {m.tehranTime} IRST
-                            </span>
-                            <span>•</span>
-                            <span>{m.durationMins}m</span>
-                            <span>•</span>
-                            <span>{m.platform}</span>
-                          </div>
-                        </div>
-                      </div>
+            {/* World Clocks & Timezone Sync Card */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-2.5">
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="size-3.5 text-primary" />
+                <span>Global Team Timezones</span>
+              </span>
 
-                      {/* Right Action Buttons */}
-                      <div className="flex items-center gap-1.5 ml-auto">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleCopyMeetLink(m.id, m.meetUrl)
-                          }}
-                          className="size-7 rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
-                          title="Copy meeting URL"
-                        >
-                          {copiedId === m.id ? (
-                            <Check className="size-3 text-emerald-500" />
-                          ) : (
-                            <Copy className="size-3" />
-                          )}
-                        </Button>
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-2">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Tehran (IRST)</span>
+                  <span className="font-mono font-bold text-foreground text-sm">
+                    {worldTimes.tehran}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-2">
+                  <span className="text-[10px] text-muted-foreground block font-medium">UTC / London</span>
+                  <span className="font-mono font-bold text-foreground text-sm">
+                    {worldTimes.utc}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-2">
+                  <span className="text-[10px] text-muted-foreground block font-medium">New York (EDT)</span>
+                  <span className="font-mono font-bold text-foreground text-sm">
+                    {worldTimes.newYork}
+                  </span>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-muted/20 p-2">
+                  <span className="text-[10px] text-muted-foreground block font-medium">Tokyo (JST)</span>
+                  <span className="font-mono font-bold text-foreground text-sm">
+                    {worldTimes.tokyo}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            openEditDialog(m)
-                          }}
-                          className="size-7 rounded-md cursor-pointer text-muted-foreground hover:text-foreground"
-                          title="Edit meeting"
-                        >
-                          <Edit2 className="size-3" />
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteMeeting(m.id)
-                          }}
-                          className="size-7 rounded-md cursor-pointer text-muted-foreground hover:text-destructive"
-                          title="Delete meeting"
-                        >
-                          <Trash2 className="size-3" />
-                        </Button>
-
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (typeof window !== "undefined") {
-                              window.open(m.meetUrl, "_blank", "noopener,noreferrer")
-                            }
-                          }}
-                          className="h-7 px-2.5 text-xs font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 cursor-pointer ml-1"
-                        >
-                          Join
-                          <ExternalLink className="size-2.5 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {m.agenda && (
-                      <div className="mt-2 text-[11px] text-muted-foreground line-clamp-1 border-t border-border/40 pt-1.5">
-                        {m.agenda}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+            {/* CS2 Squad Match Reminder Banner */}
+            <div className="rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-500/10 via-card to-background p-3.5 shadow-xs flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono font-bold uppercase text-rose-500 flex items-center gap-1">
+                  <Flame className="size-3" />
+                  Daily CS2 Squad Match
+                </span>
+                <span className="text-xs font-bold text-foreground block">
+                  17:10 IRST Match Launch
+                </span>
+              </div>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => {
+                  if (navigator?.clipboard) {
+                    navigator.clipboard.writeText("connect 185.143.234.12:27015; password squad2026")
+                  }
+                }}
+                className="text-[10px] font-mono cursor-pointer border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/15"
+                title="Copy CS2 private server console connect command"
+              >
+                Copy IP
+              </Button>
             </div>
           </div>
 
-          {/* Right Column (5 cols): Iran Live Clock, Jalali Calendar & CS2 Card */}
-          <div className="lg:col-span-5 space-y-5">
-            <IranClockCalendar />
+          {/* Central Main Calendar Canvas (9 Cols) */}
+          <div className="lg:col-span-9 flex flex-col min-h-[580px]">
+            {activeView === "month" && (
+              <MonthView
+                gridCells={monthGrid}
+                events={filteredEvents}
+                showDualCalendar={showDualCalendar}
+                onSelectEvent={(ev) => {
+                  setSelectedEvent(ev)
+                  setIsDetailOpen(true)
+                }}
+                onCreateOnDate={(dateKey) => {
+                  setEditingEvent(null)
+                  setCreateInitialDate(dateKey)
+                  setCreateInitialTime("10:30")
+                  setIsCreateOpen(true)
+                }}
+              />
+            )}
+
+            {activeView === "week" && (
+              <WeekView
+                weekDays={weekDays}
+                events={filteredEvents}
+                showDualCalendar={showDualCalendar}
+                onSelectEvent={(ev) => {
+                  setSelectedEvent(ev)
+                  setIsDetailOpen(true)
+                }}
+                onCreateAtTime={(dateKey, time) => {
+                  setEditingEvent(null)
+                  setCreateInitialDate(dateKey)
+                  setCreateInitialTime(time)
+                  setIsCreateOpen(true)
+                }}
+              />
+            )}
+
+            {activeView === "agenda" && (
+              <AgendaView
+                events={filteredEvents}
+                onSelectEvent={(ev) => {
+                  setSelectedEvent(ev)
+                  setIsDetailOpen(true)
+                }}
+                onCreateEvent={() => {
+                  setEditingEvent(null)
+                  setCreateInitialDate(activeDateKey)
+                  setCreateInitialTime("10:30")
+                  setIsCreateOpen(true)
+                }}
+              />
+            )}
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Create Meeting Modal */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Calendar className="size-4 text-emerald-500" />
-              Schedule New Frontend Meeting
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Add a daily or recurring team meeting with automatic Tehran time sync and desktop push alarms.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Dialogs */}
+      <CreateEditEventDialog
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSave={handleSaveEvent}
+        initialDate={createInitialDate}
+        initialTime={createInitialTime}
+        editingEvent={editingEvent}
+      />
 
-          <form onSubmit={handleCreateSubmit} className="space-y-3.5 py-1 text-xs">
-            <div className="space-y-1">
-              <label className="font-semibold text-foreground">Meeting Title</label>
-              <Input
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="e.g. Daily Frontend Standup & Alignment"
-                className="text-xs bg-muted/40"
-                required
-              />
-            </div>
+      <EventDetailDialog
+        event={selectedEvent}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onEdit={(ev) => {
+          setEditingEvent(ev)
+          setIsCreateOpen(true)
+        }}
+        onDelete={handleDeleteEvent}
+      />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Time (Tehran Time)</label>
-                <Input
-                  type="time"
-                  value={formTime}
-                  onChange={(e) => setFormTime(e.target.value)}
-                  className="font-mono text-xs bg-muted/40"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Duration (Minutes)</label>
-                <Input
-                  type="number"
-                  min={5}
-                  max={240}
-                  value={formDuration}
-                  onChange={(e) => setFormDuration(Number(e.target.value))}
-                  className="text-xs bg-muted/40"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Platform</label>
-                <select
-                  value={formPlatform}
-                  onChange={(e) => setFormPlatform(e.target.value as "Google Meet")}
-                  className="w-full h-9 rounded-md border border-input bg-muted/40 px-3 text-xs"
-                >
-                  <option value="Google Meet">Google Meet</option>
-                  <option value="Zoom">Zoom</option>
-                  <option value="Teams">Microsoft Teams</option>
-                  <option value="Custom">Custom Link</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Remind Before (Mins)</label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={formNotifyBeforeMins}
-                  onChange={(e) => setFormNotifyBeforeMins(Number(e.target.value))}
-                  className="text-xs bg-muted/40"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-semibold text-foreground">Meeting URL</label>
-              <Input
-                value={formMeetUrl}
-                onChange={(e) => setFormMeetUrl(e.target.value)}
-                placeholder="https://meet.google.com/..."
-                className="font-mono text-xs bg-muted/40"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-semibold text-foreground">Attendees</label>
-              <Input
-                value={formAttendees}
-                onChange={(e) => setFormAttendees(e.target.value)}
-                placeholder="Frontend Squad, QA, Platform Lead"
-                className="text-xs bg-muted/40"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-semibold text-foreground">Agenda / Topics</label>
-              <Input
-                value={formAgenda}
-                onChange={(e) => setFormAgenda(e.target.value)}
-                placeholder="Blockers, release milestones, code reviews..."
-                className="text-xs bg-muted/40"
-              />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
-                Create Meeting
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Meeting Modal */}
-      {editingMeeting && (
-        <Dialog open={!!editingMeeting} onOpenChange={() => setEditingMeeting(null)}>
-          <DialogContent className="max-w-md border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold flex items-center gap-2">
-                <Edit2 className="size-4 text-emerald-500" />
-                Edit Meeting Details
-              </DialogTitle>
-            </DialogHeader>
-
-            <form onSubmit={handleEditSubmit} className="space-y-3.5 py-1 text-xs">
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Meeting Title</label>
-                <Input
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  className="text-xs bg-muted/40"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-semibold text-foreground">Time (Tehran Time)</label>
-                  <Input
-                    type="time"
-                    value={formTime}
-                    onChange={(e) => setFormTime(e.target.value)}
-                    className="font-mono text-xs bg-muted/40"
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-semibold text-foreground">Duration (Minutes)</label>
-                  <Input
-                    type="number"
-                    min={5}
-                    max={240}
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="text-xs bg-muted/40"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Meeting URL</label>
-                <Input
-                  value={formMeetUrl}
-                  onChange={(e) => setFormMeetUrl(e.target.value)}
-                  className="font-mono text-xs bg-muted/40"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Attendees</label>
-                <Input
-                  value={formAttendees}
-                  onChange={(e) => setFormAttendees(e.target.value)}
-                  className="text-xs bg-muted/40"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-semibold text-foreground">Agenda</label>
-                <Input
-                  value={formAgenda}
-                  onChange={(e) => setFormAgenda(e.target.value)}
-                  className="text-xs bg-muted/40"
-                />
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setEditingMeeting(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Bottom Telemetry & Quick Dock Bar */}
+      <DashboardBottomBar branchName="master" />
     </div>
   )
 }
