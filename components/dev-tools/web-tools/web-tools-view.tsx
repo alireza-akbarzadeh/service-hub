@@ -87,7 +87,7 @@ export function WebToolsView({ initialTab = "launchpad" }: WebToolsViewProps) {
               <Globe className="size-3.5" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold tracking-tight">Internet Dev Tools & Launchpad</span>
+              <span className="text-sm font-semibold tracking-tight">Internet Dev Tools & Launchpad</span>
               <Badge
                 variant="outline"
                 className="hidden sm:inline-flex border-sky-500/30 text-sky-600 dark:text-sky-400 text-[10px] font-mono px-1.5 py-0"
@@ -133,7 +133,7 @@ export function WebToolsView({ initialTab = "launchpad" }: WebToolsViewProps) {
           {/* Live Tehran Time Pill */}
           <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground font-mono">
             <Clock className="size-3.5 text-amber-500" />
-            <span className="font-semibold text-foreground">{tehranTime}</span>
+            <span className="font-medium text-foreground">{tehranTime}</span>
             <span className="text-[10px] opacity-75">IRST</span>
             <Radio className="size-2 text-emerald-500 animate-pulse" />
           </div>
@@ -147,7 +147,7 @@ export function WebToolsView({ initialTab = "launchpad" }: WebToolsViewProps) {
         {/* Top Header Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-sm sm:text-base font-bold tracking-tight">
+            <h1 className="text-sm sm:text-base font-semibold tracking-tight">
               Web Developer Utilities & External Tools Launchpad
             </h1>
             <Badge
@@ -218,10 +218,10 @@ export function WebToolsView({ initialTab = "launchpad" }: WebToolsViewProps) {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all",
+                  "flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-xs transition-all",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-card/70 text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "bg-card/70 text-muted-foreground hover:bg-muted hover:text-foreground font-medium border border-border"
                 )}
               >
                 <Icon className={cn("size-4", isActive ? "text-primary-foreground" : "text-muted-foreground")} />

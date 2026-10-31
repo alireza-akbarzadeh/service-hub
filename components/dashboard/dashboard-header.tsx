@@ -22,6 +22,7 @@ import {
   PanelRightClose,
   Radio,
   Settings,
+  Search,
 } from "lucide-react"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
@@ -41,6 +42,7 @@ export function DashboardHeader({
   selectedEnv,
   selectedCategory,
   onResetFilters,
+  onOpenCommandPalette,
   isRightPanelOpen,
   onToggleRightPanel,
   onOpenSettings,
@@ -105,8 +107,24 @@ export function DashboardHeader({
         </Breadcrumb>
       </div>
 
-      {/* Right: Market Rates, Dev Tools, Search, Tehran Time & Meeting Toggle, Theme */}
+      {/* Right: Search, Market Rates, Dev Tools, Tehran Time & Meeting Toggle, Theme */}
       <div className="flex items-center gap-2">
+        {/* Quick Search Button (Ctrl+K or /) */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onOpenCommandPalette}
+          className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted"
+          title="Quick Search & Command Palette (Ctrl+K or /)"
+        >
+          <Search className="size-3.5 text-primary" />
+          <span className="hidden md:inline font-medium">Search</span>
+          <kbd className="hidden lg:inline-flex rounded border border-border bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground">
+            ⌘K
+          </kbd>
+        </Button>
+
         {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
         <HeaderMarketSection />
 

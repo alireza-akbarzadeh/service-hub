@@ -602,12 +602,28 @@ export function CommandPalette({
     [openUrl]
   )
 
-  // Keyboard Navigation: Up, Down, Enter, Escape
+  // Keyboard Navigation: Up, Down, Enter, Escape, Ctrl+K / Cmd+K / Slash
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      const isKeyK = e.key?.toLowerCase() === "k" || e.code === "KeyK"
+      if ((e.metaKey || e.ctrlKey) && isKeyK) {
         e.preventDefault()
+        e.stopPropagation()
         onOpenChange(!open)
+        return
+      }
+
+      // Allow pressing '/' when not in an input/textarea to open search
+      const target = e.target as HTMLElement | null
+      const isInputActive =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+
+      if (!open && e.key === "/" && !isInputActive) {
+        e.preventDefault()
+        onOpenChange(true)
         return
       }
 

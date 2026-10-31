@@ -114,14 +114,19 @@
   - Full URL vs Component decode/encode.
   - Interactive Query String table (view, edit, add, delete parameters and regenerate live URL).
   - UTM tag builder for marketing and internal links.
-- [ ] **UUID, NanoID & Token Generator**:
+- [x] **UUID, NanoID & Token Generator**:
   - UUID v4 generator with bulk output (1 to 100).
   - NanoID, CUID, and secure random hex/alphanumeric tokens with custom length.
-- [ ] **Markdown Live Editor & GFM Previewer**:
+- [x] **Markdown Live Editor & GFM Previewer**:
   - Live split-pane Markdown editor with GitHub-flavored table, task list, and syntax highlighting.
   - One-click copy as raw Markdown or rendered HTML.
-- [ ] **HTTP Status Codes & Common Headers Reference**:
+- [x] **HTTP Status Codes & Common Headers Reference**:
   - Searchable cheatsheet of 1xx to 5xx HTTP status codes with RFC definitions and debugging guides.
+- [x] **Typography & High-Density SaaS Polish**:
+  - Next.js self-hosted **Geist Sans** (`--font-geist-sans`) & **Geist Mono** (`--font-geist-mono`) with zero runtime external Google CDN dependence.
+  - Resolved circular CSS variable bug in Tailwind v4 `@theme inline`.
+  - Replaced aggressive `font-bold` (700) and `font-extrabold` (800) with refined `font-semibold` (600) and `font-medium` (500).
+  - Tightened base body font size to 14px (`0.875rem`) with negative tracking (`-0.011em`) and anti-aliasing.
 
 ---
 

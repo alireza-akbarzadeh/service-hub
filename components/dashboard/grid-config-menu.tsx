@@ -1,26 +1,18 @@
 "use client"
 
+import * as React from "react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import {
   AlignJustify,
+  Check,
   FileJson,
   LayoutGrid,
   RotateCcw,
   Rows3,
   SlidersHorizontal,
+  X,
+  Eye,
 } from "lucide-react"
 import { DEFAULT_GRID_CONFIG, GridConfig, ViewShape } from "./grid-view-config"
 
@@ -35,7 +27,35 @@ export function GridConfigMenu({
   onChangeConfig,
   onOpenSettings,
 }: GridConfigMenuProps) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+
   const currentShape = config.viewShape || "table"
+
+  // Close when clicking outside or pressing Escape
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+      document.addEventListener("keydown", handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isOpen])
 
   const handleShapeChange = (shape: ViewShape) => {
     onChangeConfig({
@@ -80,7 +100,7 @@ export function GridConfigMenu({
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div ref={menuRef} className="relative flex items-center gap-1.5">
       {/* 3-Shape Segmented Switcher: Table | Row Cards | Squared Cards */}
       <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shadow-2xs">
         {/* 1. Table */}
@@ -132,190 +152,207 @@ export function GridConfigMenu({
         </button>
       </div>
 
-      {/* Quick Layout Dropdown & Settings Modal Trigger */}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground",
-                currentShape !== "table" && "border-primary/40 text-foreground"
-              )}
-              title="Quick view style & display configuration"
-            />
-          }
-        >
-          <SlidersHorizontal className="size-3.5 text-primary" />
-          <span className="hidden sm:inline">Config</span>
-        </DropdownMenuTrigger>
+      {/* Quick Layout Dropdown Trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        className={cn(
+          "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-muted-foreground shadow-2xs transition-colors hover:bg-muted hover:text-foreground",
+          (isOpen || currentShape !== "table") && "border-primary/40 text-foreground ring-1 ring-primary/20"
+        )}
+        title="Quick view style & display configuration"
+      >
+        <SlidersHorizontal className="size-3.5 text-primary" />
+        <span className="hidden sm:inline">Config</span>
+      </button>
 
-        <DropdownMenuContent align="end" className="w-58 text-xs">
-          <DropdownMenuLabel className="font-bold text-foreground">
-            Display Shape & Layout
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-
-          {/* 3 Shapes Radio */}
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
-              Display Shape
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={currentShape}
-              onValueChange={(v) => handleShapeChange(v as ViewShape)}
+      {/* Crash-Free Floating Dropdown Popover */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl border border-border bg-popover/95 p-3 text-xs text-popover-foreground shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 duration-100">
+          <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <span className="font-bold text-xs text-foreground">
+              Display & Layout Config
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
             >
-              <DropdownMenuRadioItem
-                value="table"
-                className="cursor-pointer text-xs"
-              >
-                <Rows3 className="mr-2 size-3.5 opacity-70" />
-                <span>Table List</span>
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem
-                value="row-card"
-                className="cursor-pointer text-xs"
-              >
-                <AlignJustify className="mr-2 size-3.5 opacity-70" />
-                <span>Row Cards</span>
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem
-                value="square-card"
-                className="cursor-pointer text-xs"
-              >
-                <LayoutGrid className="mr-2 size-3.5 opacity-70" />
-                <span>Squared Cards</span>
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
+              <X className="size-3.5" />
+            </button>
+          </div>
 
-          {/* Column options when in Squared Cards mode */}
-          {currentShape === "square-card" && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
+          <div className="space-y-3 pt-2 max-h-[420px] overflow-y-auto">
+            {/* Display Shape */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                Display Shape
+              </span>
+              <div className="space-y-0.5">
+                {[
+                  { id: "table" as const, label: "Table List", icon: Rows3 },
+                  { id: "row-card" as const, label: "Row Cards", icon: AlignJustify },
+                  { id: "square-card" as const, label: "Squared Cards", icon: LayoutGrid },
+                ].map((item) => {
+                  const isSelected = currentShape === item.id
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleShapeChange(item.id)}
+                      className={cn(
+                        "flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-xs transition-colors",
+                        isSelected
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon className="size-3.5 opacity-70" />
+                        <span>{item.label}</span>
+                      </div>
+                      {isSelected && <Check className="size-3.5 text-primary" />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Column Options (When in Squared Cards Mode) */}
+            {currentShape === "square-card" && (
+              <div className="space-y-1 pt-1 border-t border-border/50">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
                   Grid Columns
-                </DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={config.cardColumns}
-                  onValueChange={(v) => handleColumnsChange(v as any)}
+                </span>
+                <div className="grid grid-cols-2 gap-1">
+                  {[
+                    { id: "auto" as const, label: "Auto (1-4)" },
+                    { id: "2" as const, label: "2 Columns" },
+                    { id: "3" as const, label: "3 Columns" },
+                    { id: "4" as const, label: "4 Columns" },
+                  ].map((col) => {
+                    const isSelected = config.cardColumns === col.id
+                    return (
+                      <button
+                        key={col.id}
+                        type="button"
+                        onClick={() => handleColumnsChange(col.id)}
+                        className={cn(
+                          "cursor-pointer rounded-md px-2 py-1 text-xs text-center border transition-colors",
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {col.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Visibility Toggles */}
+            <div className="space-y-1 pt-1 border-t border-border/50">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                Visibility Toggles
+              </span>
+              <div className="space-y-1">
+                {[
+                  { key: "showTelemetry" as const, label: "Telemetry & Latency" },
+                  { key: "showTags" as const, label: "Service Tags" },
+                  { key: "showHops" as const, label: "Environment Hops" },
+                  { key: "showOwner" as const, label: "Service Owner" },
+                ].map((item) => {
+                  const isChecked = config[item.key]
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => handleToggle(item.key)}
+                      className="flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted transition-colors"
+                    >
+                      <span>{item.label}</span>
+                      <div
+                        className={cn(
+                          "size-4 rounded flex items-center justify-center border transition-colors",
+                          isChecked
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-border bg-background"
+                        )}
+                      >
+                        {isChecked && <Check className="size-3" />}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Card Density */}
+            <div className="space-y-1 pt-1 border-t border-border/50">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                Card Density
+              </span>
+              <div className="grid grid-cols-2 gap-1">
+                {[
+                  { id: "comfortable" as const, label: "Comfortable" },
+                  { id: "compact" as const, label: "Compact" },
+                ].map((d) => {
+                  const isSelected = config.cardDensity === d.id
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => handleDensityChange(d.id)}
+                      className={cn(
+                        "cursor-pointer rounded-md px-2 py-1 text-xs text-center border transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {d.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-2 border-t border-border/50 space-y-1">
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false)
+                    onOpenSettings()
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
                 >
-                  <DropdownMenuRadioItem
-                    value="auto"
-                    className="cursor-pointer text-xs"
-                  >
-                    Auto Responsive (1 - 4)
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem
-                    value="2"
-                    className="cursor-pointer text-xs"
-                  >
-                    2 Columns
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem
-                    value="3"
-                    className="cursor-pointer text-xs"
-                  >
-                    3 Columns
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem
-                    value="4"
-                    className="cursor-pointer text-xs"
-                  >
-                    4 Columns
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuGroup>
-            </>
-          )}
+                  <FileJson className="size-3.5 text-primary" />
+                  <span>Full Settings & JSON Config...</span>
+                </button>
+              )}
 
-          {/* Elements visibility */}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
-              Visibility Toggles
-            </DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={config.showTelemetry}
-              onCheckedChange={() => handleToggle("showTelemetry")}
-              className="cursor-pointer text-xs"
-            >
-              Telemetry & Latency
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={config.showTags}
-              onCheckedChange={() => handleToggle("showTags")}
-              className="cursor-pointer text-xs"
-            >
-              Service Tags
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={config.showHops}
-              onCheckedChange={() => handleToggle("showHops")}
-              className="cursor-pointer text-xs"
-            >
-              Environment Hops
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={config.showOwner}
-              onCheckedChange={() => handleToggle("showOwner")}
-              className="cursor-pointer text-xs"
-            >
-              Service Owner
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuGroup>
-
-          {/* Density */}
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
-              Card Density
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={config.cardDensity}
-              onValueChange={(v) => handleDensityChange(v as any)}
-            >
-              <DropdownMenuRadioItem
-                value="comfortable"
-                className="cursor-pointer text-xs"
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetDefaults()
+                  setIsOpen(false)
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                Comfortable
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem
-                value="compact"
-                className="cursor-pointer text-xs"
-              >
-                Compact
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuGroup>
-
-          {/* Full Settings & JSON Config Modal */}
-          {onOpenSettings && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onOpenSettings}
-                className="cursor-pointer text-xs font-semibold text-primary"
-              >
-                <FileJson className="mr-2 size-3.5 text-primary" />
-                <span>Full Settings & JSON Config...</span>
-              </DropdownMenuItem>
-            </>
-          )}
-
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={handleResetDefaults}
-            className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
-          >
-            <RotateCcw className="mr-2 size-3.5 opacity-70" />
-            <span>Reset Defaults</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                <RotateCcw className="size-3.5 opacity-70" />
+                <span>Reset Defaults</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

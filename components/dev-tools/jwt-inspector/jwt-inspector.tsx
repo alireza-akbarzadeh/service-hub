@@ -109,7 +109,7 @@ export function JwtInspector() {
       {/* Input Area */}
       <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-foreground flex items-center gap-2">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-2">
             <Sparkles className="size-4 text-primary" />
             <span>Encoded JWT Token</span>
           </label>
@@ -153,8 +153,8 @@ export function JwtInspector() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Header Card */}
           <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
-            <div className="flex items-center justify-between border-b border-border bg-rose-500/10 dark:bg-rose-500/20 px-4 py-2.5">
-              <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
+            <div className="flex items-center justify-between border-b border-border bg-rose-500/10 dark:bg-rose-500/20 px-4 py-2">
+              <span className="text-xs font-semibold tracking-wide text-rose-600 dark:text-rose-400">
                 HEADER: Algorithm & Token Type
               </span>
               <Button
@@ -170,15 +170,15 @@ export function JwtInspector() {
                 )}
               </Button>
             </div>
-            <pre className="p-4 font-mono text-xs text-foreground bg-background overflow-x-auto">
+            <pre className="p-4 font-mono text-xs leading-relaxed text-foreground/90 bg-background overflow-x-auto">
               {JSON.stringify(header, null, 2)}
             </pre>
           </div>
 
           {/* Expiration & Timing Status */}
           <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
-            <div className="flex items-center justify-between border-b border-border bg-sky-500/10 dark:bg-sky-500/20 px-4 py-2.5">
-              <span className="text-xs font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
+            <div className="flex items-center justify-between border-b border-border bg-sky-500/10 dark:bg-sky-500/20 px-4 py-2">
+              <span className="text-xs font-semibold tracking-wide text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
                 <Clock className="size-3.5" />
                 <span>Expiration Status</span>
               </span>
@@ -238,8 +238,8 @@ export function JwtInspector() {
 
           {/* Payload Card */}
           <div className="md:col-span-2 rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
-            <div className="flex items-center justify-between border-b border-border bg-purple-500/10 dark:bg-purple-500/20 px-4 py-2.5">
-              <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+            <div className="flex items-center justify-between border-b border-border bg-purple-500/10 dark:bg-purple-500/20 px-4 py-2">
+              <span className="text-xs font-semibold tracking-wide text-purple-600 dark:text-purple-400">
                 PAYLOAD: Claims & Data
               </span>
               <Button
@@ -255,7 +255,7 @@ export function JwtInspector() {
                 )}
               </Button>
             </div>
-            <pre className="p-4 font-mono text-xs text-foreground bg-background overflow-x-auto max-h-[300px]">
+            <pre className="p-4 font-mono text-xs leading-relaxed text-foreground/90 bg-background overflow-x-auto max-h-[300px]">
               {JSON.stringify(payload, null, 2)}
             </pre>
           </div>

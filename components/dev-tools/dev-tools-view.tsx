@@ -89,7 +89,7 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
               <Wrench className="size-3.5" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold tracking-tight">Developer Tools</span>
+              <span className="text-sm font-semibold tracking-tight">Developer Tools</span>
               <Badge
                 variant="outline"
                 className="hidden sm:inline-flex border-primary/30 text-primary text-[10px] font-mono px-1.5 py-0"
@@ -108,7 +108,7 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
           {/* Live Tehran Time Pill */}
           <div className="hidden md:flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground font-mono">
             <Clock className="size-3.5 text-amber-500" />
-            <span className="font-semibold text-foreground">{tehranTime}</span>
+            <span className="font-medium text-foreground">{tehranTime}</span>
             <span className="text-[10px] opacity-75">IRST</span>
             <Radio className="size-2 text-emerald-500 animate-pulse" />
           </div>
@@ -122,7 +122,7 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
         {/* Compact Top Header Strip */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-2.5 shadow-2xs backdrop-blur-xs">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-sm sm:text-base font-bold tracking-tight">
+            <h1 className="text-sm sm:text-base font-semibold tracking-tight">
               Developer Utilities Suite
             </h1>
             <Badge
@@ -137,14 +137,14 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Link
               href="/tools/web"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 transition-colors shadow-2xs"
             >
               <Globe className="size-3.5" />
               <span>Web Tools & Launchpad</span>
             </Link>
             <Link
               href="/tools/advanced"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-2xs"
             >
               <FileImage className="size-3.5" />
               <span>Advanced Tools (Image, RegEx, Diff, Cron)</span>
@@ -200,10 +200,10 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
                 type="button"
                 onClick={() => setActiveTool(tool.id)}
                 className={cn(
-                  "flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all",
+                  "flex shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-xs transition-all",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/20"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground font-medium"
                 )}
               >
                 <Icon className="size-4" />

@@ -136,6 +136,19 @@ export function useServicesDashboard(initialServices: Service[]) {
   const [inspectingService, setInspectingService] = React.useState<Service | null>(null)
   const [editingService, setEditingService] = React.useState<Service | null>(null)
 
+  // Global Ctrl+K / Cmd+K listener ensuring search opens reliably across all keyboard layouts
+  React.useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      const isKeyK = e.key?.toLowerCase() === "k" || e.code === "KeyK"
+      if ((e.metaKey || e.ctrlKey) && isKeyK) {
+        e.preventDefault()
+        setIsCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeyDown)
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown)
+  }, [])
+
   // Health check & Neon telemetry states
   const [healthMap, setHealthMap] = React.useState<Record<number, HealthCheckResult>>({})
   const [isCheckingAllHealth, setIsCheckingAllHealth] = React.useState(false)

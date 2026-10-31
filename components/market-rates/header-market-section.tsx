@@ -158,14 +158,14 @@ export function HeaderMarketSection() {
           }}
           className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-all hover:bg-background/80 hover:shadow-2xs select-none"
         >
-          <span className="flex size-4.5 items-center justify-center rounded-md bg-emerald-500/15 font-mono text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
+          <span className="flex size-4.5 items-center justify-center rounded-md bg-emerald-500/15 font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
             $
           </span>
           <div className="flex items-center gap-1">
-            <span className={cn("font-semibold text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
+            <span className={cn("font-medium text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
               {isPersian ? "دلار:" : "USD:"}
             </span>
-            <span className="font-mono text-xs font-bold text-foreground tabular-nums">
+            <span className="font-mono text-xs font-semibold text-foreground tabular-nums">
               {formatMarketPrice(usdAsset.currentPrice, usdAsset.currency, isPersian, {
                 compact: true,
               })}
@@ -173,7 +173,7 @@ export function HeaderMarketSection() {
           </div>
           <span
             className={cn(
-              "hidden items-center font-mono text-[10px] font-semibold xl:inline-flex",
+              "hidden items-center font-mono text-[10px] font-medium xl:inline-flex",
               isUsdUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
@@ -209,10 +209,10 @@ export function HeaderMarketSection() {
             🥇
           </span>
           <div className="flex items-center gap-1">
-            <span className={cn("font-semibold text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
+            <span className={cn("font-medium text-muted-foreground text-[11px]", isPersian && "font-vazirmatn")}>
               {isPersian ? "طلا ۱۸:" : "Gold:"}
             </span>
-            <span className="font-mono text-xs font-bold text-foreground tabular-nums">
+            <span className="font-mono text-xs font-semibold text-foreground tabular-nums">
               {formatMarketPrice(goldAsset.currentPrice, goldAsset.currency, isPersian, {
                 compact: true,
               })}
@@ -220,7 +220,7 @@ export function HeaderMarketSection() {
           </div>
           <span
             className={cn(
-              "hidden items-center font-mono text-[10px] font-semibold xl:inline-flex",
+              "hidden items-center font-mono text-[10px] font-medium xl:inline-flex",
               isGoldUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             )}
           >
