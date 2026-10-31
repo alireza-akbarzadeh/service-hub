@@ -16,6 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
+  Activity,
   CalendarDays,
   Clock,
   Network,
@@ -137,6 +138,20 @@ export function DashboardHeader({
 
         {/* Meet Quick Action Popover */}
         <MeetQuickAction variant="pill" />
+
+        {/* System Status Fast Link */}
+        <Link href="/status">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted hidden 2xl:inline-flex"
+            title="Live System Status, 30-Day SLA & Incident Logs (/status)"
+          >
+            <Activity className="size-3.5 text-emerald-500" />
+            <span className="font-medium">Status</span>
+          </Button>
+        </Link>
 
         {/* Topology Fast Link */}
         <Link href="/topology">

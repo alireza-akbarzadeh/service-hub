@@ -223,6 +223,25 @@ export function DashboardSidebar({
                 </Link>
               </SidebarMenuItem>
 
+              {/* Live System Status & SLA (/status) */}
+              <SidebarMenuItem>
+                <Link href="/status" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Live System Status, 30-Day SLA & Incident Logs (/status)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Activity className="size-4 text-emerald-500" />
+                    <span>System Status</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      99.9%
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
               {/* Meet Quick Action Popover */}
               <SidebarMenuItem className="pt-1 group-data-[collapsible=icon]:hidden">
                 <MeetQuickAction variant="sidebar-item" />

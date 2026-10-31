@@ -21,6 +21,7 @@
 | **11. Lightweight Knowledge Base & Docs** | P2 | **100% Complete** | `lib/service-docs.ts`, `ServiceDetailSheet` Markdown runbook tab, `/ai` engineering prompts guide |
 | **12. Microservice Topology & Graph** | P1 | **100% Complete** | `/topology`, `components/topology/topology-graph-view.tsx`, `lib/topology-data.ts` (Call graph, node focus, SVG export, Mermaid.js exporter) |
 | **13. Export & Developer Sync Suite** | P1 | **100% Complete** | `lib/export-utils.ts`, `components/dashboard/export-services-dialog.tsx`, Postman v2.1 collection generator, OpenAPI 3.0.3 specification, RFC 4180 CSV, JSON Catalog backup |
+| **14. System Status Page & SLA Observability** | P0 | **100% Complete** | `/status`, `components/status/system-status-view.tsx`, `lib/status-data.ts` (30-day SLA heatmaps, batch health ping probe, incident triage & maintenance windows) |
 
 ---
 
@@ -188,3 +189,23 @@
 - [x] **Export Dialog UI & Shortcuts**:
   - Multi-tab export dialog with live preview, syntax formatting, download button, and clipboard copy.
   - Triggered via header filter bar "Export API" button and Command Palette (`Ctrl+K` → *"Export API Catalog"*).
+
+---
+
+### Feature 14 — System Status Page & SLA Observability Hub (P0)
+- [x] **Global System Health Hero Banner**:
+  - Dynamic status calculation across all microservice tiers (*All Systems Operational*, *Partial System Degradation*, *Major Outage*).
+  - Last telemetry check timestamp and 30-day average SLA percentage (99.98%).
+- [x] **Microservices 30-Day SLA Heatmap Strips**:
+  - 30 discrete interactive daily status blocks per service with hover tooltips detailing date, uptime %, incident counts, and average latency (ms).
+  - Categorized by 4 tiers: *Gateways*, *Core APIs*, *Databases & Messaging*, and *DevOps & Tooling*.
+  - Tier isolation tabs and instant text search across services.
+- [x] **One-Click Batch Health Ping Probe**:
+  - Concurrently ping all catalog microservices with live animated progress bar (0% to 100%), real-time latency gauge updates, and response code verification.
+- [x] **Incident & Outage History Timeline**:
+  - Chronological incident tracking with severity tags (*critical*, *major*, *minor*, *maintenance*) and lifecycle status (*investigating*, *identified*, *monitoring*, *resolved*).
+  - Expandable investigation updates, affected services list, and root cause post-mortem analysis.
+- [x] **Scheduled Maintenance Windows**:
+  - Upcoming database patch cycles, kernel updates, and storage volume migration schedules with lead team details and target node lists.
+- [x] **Navigation & Universal Shortcuts**:
+  - Integrated in `DashboardSidebar` ("System Status"), `DashboardHeader` quick status link, and `CommandPalette` (`Ctrl+K` → *"Live System Status & SLA Observability"*).

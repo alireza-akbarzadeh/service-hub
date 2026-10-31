@@ -9,6 +9,7 @@ import type { Service } from "@/lib/db/schema"
 import type { FrontendMeeting } from "@/lib/meetings-data"
 import { cn } from "@/lib/utils"
 import {
+  Activity,
   AlignJustify,
   ArrowRight,
   BookOpen,
@@ -255,6 +256,20 @@ export function CommandPalette({
           if (services.length > 0 && onInspectService) {
             onInspectService(services[0], "docs")
           }
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-system-status",
+        title: "Live System Status & SLA Observability",
+        subtitle:
+          "Check 30-day uptime SLA, batch health ping, active incidents, and scheduled maintenance",
+        badge: "Status & SLA",
+        icon: Activity,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/status"
           onOpenChange(false)
         },
       },
