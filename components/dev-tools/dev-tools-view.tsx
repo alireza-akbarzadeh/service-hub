@@ -17,6 +17,8 @@ import {
   Wrench,
   Compass,
   Terminal,
+  FileImage,
+  Globe,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -132,10 +134,21 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="hidden lg:inline text-[11px]">
-              Fast AST tree inspection, auto-repair, token decoding, and cURL analysis.
-            </span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Link
+              href="/tools/web"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 transition-colors shadow-2xs"
+            >
+              <Globe className="size-3.5" />
+              <span>Web Tools & Launchpad</span>
+            </Link>
+            <Link
+              href="/tools/advanced"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-2xs"
+            >
+              <FileImage className="size-3.5" />
+              <span>Advanced Tools (Image, RegEx, Diff, Cron)</span>
+            </Link>
           </div>
         </div>
 

@@ -60,6 +60,8 @@ export function ServicesDashboard({
     paginatedServices,
     favoriteServices,
     favorites,
+    recentServices,
+    markServiceOpened,
     showOnlyFavorites,
     setShowOnlyFavorites,
     toggleFavorite,
@@ -246,9 +248,11 @@ export function ServicesDashboard({
               {/* Team Announcement & Maintenance Banner */}
               <AnnouncementBanner teamName={teamName} />
 
-              {/* Pinned Quick Launch Strip */}
+              {/* Pinned Quick Launch & Recently Used Strip */}
               <PinnedServices
                 favoriteServices={favoriteServices}
+                recentServices={recentServices}
+                onOpenService={markServiceOpened}
                 showOnlyFavorites={showOnlyFavorites}
                 onToggleShowOnlyFavorites={() => {
                   setShowOnlyFavorites(!showOnlyFavorites)

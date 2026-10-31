@@ -4,7 +4,15 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { ChevronDown, Filter, Plus, Search, Settings, Star, Tag } from "lucide-react"
+import {
+  ChevronDown,
+  Filter,
+  Plus,
+  Search,
+  Settings,
+  Star,
+  Tag,
+} from "lucide-react"
 import { CATEGORIES, AVAILABLE_TAGS } from "@/hooks/use-services-dashboard"
 import { GridConfig, DEFAULT_GRID_CONFIG } from "./grid-view-config"
 import { GridConfigMenu } from "./grid-config-menu"
@@ -43,7 +51,7 @@ export function ServicesFilterBar({
   onOpenSettings,
 }: ServicesFilterBarProps) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3 shadow-xs space-y-3">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-xs">
       <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center">
           {/* Pinned Filter Toggle Button */}
@@ -116,7 +124,7 @@ export function ServicesFilterBar({
         </div>
 
         {/* View Mode Configuration & Add Service Button */}
-        <div className="flex shrink-0 items-center justify-between sm:justify-end gap-2">
+        <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
           {onChangeGridConfig && (
             <GridConfigMenu
               config={gridConfig}
@@ -131,7 +139,7 @@ export function ServicesFilterBar({
               variant="outline"
               size="icon"
               onClick={onOpenSettings}
-              className="size-9 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground shadow-2xs"
+              className="size-9 shrink-0 cursor-pointer text-muted-foreground shadow-2xs hover:text-foreground"
               title="Dashboard Settings & JSON Config Editor"
             >
               <Settings className="size-4" />
@@ -151,7 +159,7 @@ export function ServicesFilterBar({
 
       {/* Quick Tag Filter Strip */}
       <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2.5">
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground mr-1">
+        <div className="mr-1 flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
           <Tag className="size-3 text-primary" />
           <span>Tags:</span>
         </div>
@@ -161,9 +169,9 @@ export function ServicesFilterBar({
             type="button"
             onClick={() => onSelectTag(tag.id)}
             className={cn(
-              "flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-all cursor-pointer",
+              "flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-all",
               selectedTag === tag.id
-                ? "border-primary bg-primary text-primary-foreground shadow-2xs font-semibold"
+                ? "border-primary bg-primary font-semibold text-primary-foreground shadow-2xs"
                 : "border-border bg-muted/30 text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -186,7 +194,7 @@ export function ServicesFilterBar({
           <button
             type="button"
             onClick={() => onSelectTag("#all")}
-            className="text-[11px] text-primary hover:underline cursor-pointer ml-1 font-medium"
+            className="ml-1 cursor-pointer text-[11px] font-medium text-primary hover:underline"
           >
             Reset Tag
           </button>

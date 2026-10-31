@@ -1,52 +1,49 @@
 "use client"
 
-import * as React from "react"
+import { getServiceTags } from "@/components/services-dashboard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { Service } from "@/lib/db/schema"
 import { useMeetings } from "@/hooks/use-meetings"
+import type { Service } from "@/lib/db/schema"
 import type { FrontendMeeting } from "@/lib/meetings-data"
-import {
-  Search,
-  ExternalLink,
-  Bot,
-  CalendarDays,
-  Copy,
-  Check,
-  Star,
-  CornerDownLeft,
-  FileJson,
-  Terminal,
-  X,
-  Layers,
-  Code2,
-  MonitorCheck,
-  Cpu,
-  Network,
-  Building2,
-  Bug,
-  Globe,
-  GitPullRequest,
-  Hash,
-  ArrowRight,
-  Video,
-  Calendar,
-  Clock,
-  Plus,
-  Radio,
-  Sparkles,
-  Gamepad2,
-  Lightbulb,
-  AlignJustify,
-  LayoutGrid,
-  Rows3,
-  ShieldCheck,
-  SlidersHorizontal,
-  Users,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getServiceTags } from "@/components/services-dashboard"
+import {
+  AlignJustify,
+  ArrowRight,
+  Bot,
+  Bug,
+  Building2,
+  CalendarDays,
+  Check,
+  Clock,
+  Code2,
+  Copy,
+  CornerDownLeft,
+  Cpu,
+  ExternalLink,
+  FileJson,
+  Fingerprint,
+  Gamepad2,
+  GitPullRequest,
+  Globe,
+  Layers,
+  LayoutGrid,
+  Lightbulb,
+  MonitorCheck,
+  Network,
+  Plus,
+  Rows3,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  Terminal,
+  Users,
+  Video,
+  X,
+} from "lucide-react"
+import * as React from "react"
 
 interface CommandPaletteProps {
   open: boolean
@@ -235,6 +232,48 @@ export function CommandPalette({
         iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
         onSelect: () => {
           window.location.href = "/tools"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-web-tools",
+        title: "Internet Dev Tools Launchpad & Web Utilities",
+        subtitle:
+          "Launch curated external dev tools (Transform.tools, Ray.so, CyberChef) + Epoch, URL & UUID tools",
+        badge: "Launchpad",
+        icon: Globe,
+        iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
+        onSelect: () => {
+          window.location.href = "/tools/web"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-epoch-converter",
+        title: "Unix Timestamp & Epoch Converter",
+        subtitle:
+          "Live epoch time, seconds/ms converter, UTC & Asia/Tehran local time calculator",
+        badge: "Epoch Clock",
+        icon: Clock,
+        iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
+        onSelect: () => {
+          window.location.href = "/tools/web"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-uuid-generator",
+        title: "UUID & Cryptographic Token Generator",
+        subtitle:
+          "Generate cryptographically secure UUID v4, NanoID, hex tokens, and API secret keys",
+        badge: "UUID / Token",
+        icon: Fingerprint,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/tools/web"
           onOpenChange(false)
         },
       },
@@ -450,7 +489,9 @@ export function CommandPalette({
         return (
           act.title.toLowerCase().includes(q) ||
           act.subtitle.toLowerCase().includes(q) ||
-          "meeting meet call video schedule google feature request bug fix pr pull issue code triage".includes(q)
+          "meeting meet call video schedule google feature request bug fix pr pull issue code triage".includes(
+            q
+          )
         )
       })
       items.push(...matchingActions)

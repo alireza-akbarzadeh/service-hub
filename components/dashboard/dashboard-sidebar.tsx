@@ -46,6 +46,7 @@ import {
   Sparkles,
   Users,
   FileImage,
+  Globe,
 } from "lucide-react"
 
 const ENVIRONMENTS = [
@@ -270,6 +271,25 @@ export function DashboardSidebar({
                       className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
                     >
                       Image/RegEx
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Web Tools & Internet Launchpad */}
+              <SidebarMenuItem>
+                <Link href="/tools/web" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Internet Dev Tools Launchpad & Web Utilities (Timestamp, URL, UUID, Markdown)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Globe className="size-4 text-sky-500" />
+                    <span>Web Tools Hub</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-sky-500/30 bg-sky-500/10 px-1 py-0 font-mono text-[9px] text-sky-600 dark:text-sky-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Launchpad
                     </Badge>
                   </SidebarMenuButton>
                 </Link>

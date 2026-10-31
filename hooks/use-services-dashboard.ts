@@ -192,6 +192,35 @@ export function useServicesDashboard(initialServices: Service[]) {
     return services.filter((svc) => favorites.includes(svc.id))
   }, [services, favorites])
 
+  // Recently Opened / Used Services
+  const [recentServiceIds, setRecentServiceIds] = React.useState<number[]>(() => {
+    if (typeof window === "undefined") return []
+    try {
+      const saved = localStorage.getItem("service_hub_recent_services")
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return []
+  })
+
+  const markServiceOpened = React.useCallback((id: number) => {
+    setRecentServiceIds((prev) => {
+      const filtered = prev.filter((item) => item !== id)
+      const updated = [id, ...filtered].slice(0, 8)
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("service_hub_recent_services", JSON.stringify(updated))
+        } catch {}
+      }
+      return updated
+    })
+  }, [])
+
+  const recentServices = React.useMemo(() => {
+    return recentServiceIds
+      .map((id) => services.find((s) => s.id === id))
+      .filter((s): s is Service => s !== undefined)
+  }, [recentServiceIds, services])
+
   // Form states for Add/Edit
   const [formName, setFormName] = React.useState("")
   const [formDescription, setFormDescription] = React.useState("")
@@ -457,6 +486,8 @@ export function useServicesDashboard(initialServices: Service[]) {
     paginatedServices,
     favoriteServices,
     favorites,
+    recentServices,
+    markServiceOpened,
     showOnlyFavorites,
     setShowOnlyFavorites,
     toggleFavorite,

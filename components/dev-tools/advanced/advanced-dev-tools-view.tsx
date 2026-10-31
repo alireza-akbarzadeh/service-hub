@@ -17,6 +17,7 @@ import {
   Radio,
   FileJson,
   Bot,
+  Globe,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -108,7 +109,16 @@ export function AdvancedDevToolsView({ initialTab = "image" }: AdvancedDevToolsV
             className="hidden lg:flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <FileJson className="size-3 text-violet-500" />
-            <span>Standard JSON/JWT Tools</span>
+            <span>Standard JSON/JWT</span>
+          </Link>
+
+          {/* Quick link to Web Tools Hub */}
+          <Link
+            href="/tools/web"
+            className="hidden lg:flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-xs text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 transition-colors"
+          >
+            <Globe className="size-3 text-sky-500" />
+            <span>Web Tools & Launchpad</span>
           </Link>
 
           {/* Quick link to AI Catalog */}

@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,24 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  GridConfig,
-  ViewShape,
-  DEFAULT_GRID_CONFIG,
-} from "./grid-view-config"
 import { cn } from "@/lib/utils"
 import {
   AlignJustify,
-  Columns2,
-  Columns3,
-  Columns4,
   FileJson,
   LayoutGrid,
   RotateCcw,
   Rows3,
   SlidersHorizontal,
-  Table as TableIcon,
 } from "lucide-react"
+import { DEFAULT_GRID_CONFIG, GridConfig, ViewShape } from "./grid-view-config"
 
 interface GridConfigMenuProps {
   config: GridConfig
@@ -71,7 +62,11 @@ export function GridConfigMenu({
   const handleToggle = (
     key: keyof Pick<
       GridConfig,
-      "showTags" | "showTelemetry" | "showHops" | "showOwner" | "showDescription"
+      | "showTags"
+      | "showTelemetry"
+      | "showHops"
+      | "showOwner"
+      | "showDescription"
     >
   ) => {
     onChangeConfig({
@@ -95,7 +90,7 @@ export function GridConfigMenu({
           className={cn(
             "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
             currentShape === "table"
-              ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
+              ? "bg-background font-semibold text-foreground shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
           )}
           title="Table view (data-dense tabular rows)"
@@ -111,7 +106,7 @@ export function GridConfigMenu({
           className={cn(
             "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
             currentShape === "row-card"
-              ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
+              ? "bg-background font-semibold text-foreground shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
           )}
           title="Row Cards view (full-width horizontal cards)"
@@ -127,7 +122,7 @@ export function GridConfigMenu({
           className={cn(
             "flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all select-none",
             currentShape === "square-card"
-              ? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border"
+              ? "bg-background font-semibold text-foreground shadow-xs ring-1 ring-border"
               : "text-muted-foreground hover:text-foreground"
           )}
           title="Squared Cards view (multi-column grid)"
@@ -145,7 +140,7 @@ export function GridConfigMenu({
               variant="outline"
               size="sm"
               className={cn(
-                "h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground shadow-2xs",
+                "h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground",
                 currentShape !== "table" && "border-primary/40 text-foreground"
               )}
               title="Quick view style & display configuration"
@@ -164,23 +159,32 @@ export function GridConfigMenu({
 
           {/* 3 Shapes Radio */}
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
               Display Shape
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={currentShape}
               onValueChange={(v) => handleShapeChange(v as ViewShape)}
             >
-              <DropdownMenuRadioItem value="table" className="cursor-pointer text-xs">
-                <Rows3 className="size-3.5 mr-2 opacity-70" />
+              <DropdownMenuRadioItem
+                value="table"
+                className="cursor-pointer text-xs"
+              >
+                <Rows3 className="mr-2 size-3.5 opacity-70" />
                 <span>Table List</span>
               </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="row-card" className="cursor-pointer text-xs">
-                <AlignJustify className="size-3.5 mr-2 opacity-70" />
+              <DropdownMenuRadioItem
+                value="row-card"
+                className="cursor-pointer text-xs"
+              >
+                <AlignJustify className="mr-2 size-3.5 opacity-70" />
                 <span>Row Cards</span>
               </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="square-card" className="cursor-pointer text-xs">
-                <LayoutGrid className="size-3.5 mr-2 opacity-70" />
+              <DropdownMenuRadioItem
+                value="square-card"
+                className="cursor-pointer text-xs"
+              >
+                <LayoutGrid className="mr-2 size-3.5 opacity-70" />
                 <span>Squared Cards</span>
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
@@ -191,23 +195,35 @@ export function GridConfigMenu({
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
                   Grid Columns
                 </DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={config.cardColumns}
                   onValueChange={(v) => handleColumnsChange(v as any)}
                 >
-                  <DropdownMenuRadioItem value="auto" className="cursor-pointer text-xs">
+                  <DropdownMenuRadioItem
+                    value="auto"
+                    className="cursor-pointer text-xs"
+                  >
                     Auto Responsive (1 - 4)
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="2" className="cursor-pointer text-xs">
+                  <DropdownMenuRadioItem
+                    value="2"
+                    className="cursor-pointer text-xs"
+                  >
                     2 Columns
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="3" className="cursor-pointer text-xs">
+                  <DropdownMenuRadioItem
+                    value="3"
+                    className="cursor-pointer text-xs"
+                  >
                     3 Columns
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="4" className="cursor-pointer text-xs">
+                  <DropdownMenuRadioItem
+                    value="4"
+                    className="cursor-pointer text-xs"
+                  >
                     4 Columns
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
@@ -218,7 +234,7 @@ export function GridConfigMenu({
           {/* Elements visibility */}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
               Visibility Toggles
             </DropdownMenuLabel>
             <DropdownMenuCheckboxItem
@@ -254,17 +270,23 @@ export function GridConfigMenu({
           {/* Density */}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            <DropdownMenuLabel className="text-[10px] tracking-wider text-muted-foreground uppercase">
               Card Density
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={config.cardDensity}
               onValueChange={(v) => handleDensityChange(v as any)}
             >
-              <DropdownMenuRadioItem value="comfortable" className="cursor-pointer text-xs">
+              <DropdownMenuRadioItem
+                value="comfortable"
+                className="cursor-pointer text-xs"
+              >
                 Comfortable
               </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="compact" className="cursor-pointer text-xs">
+              <DropdownMenuRadioItem
+                value="compact"
+                className="cursor-pointer text-xs"
+              >
                 Compact
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
@@ -278,7 +300,7 @@ export function GridConfigMenu({
                 onClick={onOpenSettings}
                 className="cursor-pointer text-xs font-semibold text-primary"
               >
-                <FileJson className="size-3.5 mr-2 text-primary" />
+                <FileJson className="mr-2 size-3.5 text-primary" />
                 <span>Full Settings & JSON Config...</span>
               </DropdownMenuItem>
             </>
@@ -289,7 +311,7 @@ export function GridConfigMenu({
             onClick={handleResetDefaults}
             className="cursor-pointer text-xs text-muted-foreground hover:text-foreground"
           >
-            <RotateCcw className="size-3.5 mr-2 opacity-70" />
+            <RotateCcw className="mr-2 size-3.5 opacity-70" />
             <span>Reset Defaults</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
