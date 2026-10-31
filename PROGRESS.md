@@ -25,6 +25,7 @@
 | **15. In-Browser API Playground & Sandbox** | P0 | **100% Complete** | `/playground`, `components/playground/api-playground-view.tsx`, `app/api/playground/proxy/route.ts`, `lib/api-playground-utils.ts` (REST client, CORS proxy, code exporter, history) |
 | **16. Activity Feed & Enterprise Audit Trail** | P1 | **100% Complete** | `/activity`, `components/activity/activity-feed-view.tsx`, `lib/activity-data.ts` (Real-time audit log, team filtration, CSV export, event timeline) |
 | **17. Environment Variables & Secrets Studio** | P0 | **100% Complete** | `/env`, `components/env/env-config-view.tsx`, `lib/env-utils.ts` (.env workbench, multi-env diff matrix, K8s ConfigMap/Secret generator) |
+| **18. Full-Screen Calendar & Team Planner** | P0 | **100% Complete** | `/calendar`, `components/calendar/calendar-meetings-view.tsx`, `components/calendar/month-view.tsx`, `components/calendar/week-view.tsx`, `components/calendar/agenda-view.tsx`, `lib/calendar-events-data.ts` (English Gregorian & Dual Jalali, Month/Week/Agenda views, multi-timezone sync, instant Meet) |
 
 ---
 
@@ -275,3 +276,26 @@
   - 100% client-side memory execution; sensitive secrets are never sent over the network or logged to external backends.
 - [x] **Navigation & Universal Shortcuts**:
   - Integrated in `DashboardSidebar` ("Env Studio" under Developer Tools) and `CommandPalette` (`Ctrl+K` → *"Environment Variables & Secrets Studio"*).
+
+---
+
+### Feature 18 — Full-Screen Calendar & Team Planner (P0)
+- [x] **Full-Screen Workspace Calendar**:
+  - Spans full screen width and viewport height with high-density SaaS styling.
+  - Sticky top header and fixed bottom telemetry dock (`DashboardBottomBar`).
+- [x] **English (Gregorian) Calendar Core with Dual Jalali Mode**:
+  - Full English months (January–December), weekdays (Mon–Sun), and dates (1–31).
+  - One-click toggle between **English Only** and **Dual View** (English dates with subtle Jalali day/month badge for Iran team sync).
+- [x] **Multi-View Modes**:
+  - **Month View**: 7-column calendar grid with hover "+" action, colored event chips, and overflow counters.
+  - **Week View**: 7-day hourly schedule grid (08:00 to 22:00) with a live red horizontal indicator line at the current time and click-to-schedule hour slots.
+  - **Agenda View**: Chronological list of upcoming events grouped by date with quick join buttons.
+- [x] **Event Categories & Lifecycle**:
+  - Color-coded badges for *Team Meetings* (Emerald), *Releases & Deploys* (Violet), *Sprint Milestones* (Sky), *On-Call & Infra* (Amber), and *CS2 Squad Match* (Rose).
+  - Category filter toggles with live count badges.
+  - Create, edit, and delete events with `localStorage` persistence.
+- [x] **Team Telemetry & World Clock**:
+  - Cross-timezone clocks for Tehran (IRST), UTC/London, New York (EDT), and Tokyo (JST).
+  - "Next Scheduled Event" spotlight card with live countdown and one-click Google Meet launch.
+  - Daily CS2 5:10 PM Squad Match countdown with instant console IP copy.
+
