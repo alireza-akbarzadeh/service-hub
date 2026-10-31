@@ -1,9 +1,9 @@
 "use client"
 
-import * as React from "react"
-import Link from "next/link"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
+import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
+import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
+import { NotificationCenter } from "@/components/notifications/notification-center"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,24 +12,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-  Activity,
-  CalendarDays,
-  Clock,
-  Network,
-  PanelRight,
-  PanelRightClose,
-  Radio,
-  Settings,
-  Search,
-} from "lucide-react"
-import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
-import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
-import { NotificationCenter } from "@/components/notifications/notification-center"
+import { Separator } from "@/components/ui/separator"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { Service } from "@/lib/db/schema"
+import { Activity, Clock, Network, Radio, Search, Settings, Zap } from "lucide-react"
+import Link from "next/link"
+import * as React from "react"
 
 interface DashboardHeaderProps {
   selectedEnv: string
@@ -123,12 +112,12 @@ export function DashboardHeader({
           variant="outline"
           size="sm"
           onClick={onOpenCommandPalette}
-          className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted"
+          className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground"
           title="Quick Search & Command Palette (Ctrl+K or /)"
         >
           <Search className="size-3.5 text-primary" />
-          <span className="hidden md:inline font-medium">Search</span>
-          <kbd className="hidden lg:inline-flex rounded border border-border bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground">
+          <span className="hidden font-medium md:inline">Search</span>
+          <kbd className="hidden rounded border border-border bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground lg:inline-flex">
             ⌘K
           </kbd>
         </Button>
@@ -145,11 +134,25 @@ export function DashboardHeader({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted hidden 2xl:inline-flex"
+            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
             title="Live System Status, 30-Day SLA & Incident Logs (/status)"
           >
             <Activity className="size-3.5 text-emerald-500" />
             <span className="font-medium">Status</span>
+          </Button>
+        </Link>
+
+        {/* Playground Fast Link */}
+        <Link href="/playground">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
+            title="In-Browser API Playground & REST Sandbox (/playground)"
+          >
+            <Zap className="size-3.5 text-amber-500" />
+            <span className="font-medium">Playground</span>
           </Button>
         </Link>
 
@@ -159,7 +162,7 @@ export function DashboardHeader({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted hidden 2xl:inline-flex"
+            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
             title="Microservice Topology & Dependency Graph (/topology)"
           >
             <Network className="size-3.5 text-cyan-500" />

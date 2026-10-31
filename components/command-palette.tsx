@@ -41,6 +41,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
+  Zap,
   Terminal,
   Users,
   Video,
@@ -256,6 +257,20 @@ export function CommandPalette({
           if (services.length > 0 && onInspectService) {
             onInspectService(services[0], "docs")
           }
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-api-playground",
+        title: "API Playground & HTTP Sandbox",
+        subtitle:
+          "In-browser REST tester, header & auth builder, code exporter (cURL, Fetch, Axios, Python, Go)",
+        badge: "Sandbox",
+        icon: Zap,
+        iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
+        onSelect: () => {
+          window.location.href = "/playground"
           onOpenChange(false)
         },
       },

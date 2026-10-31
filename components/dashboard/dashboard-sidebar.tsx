@@ -47,6 +47,7 @@ import {
   Users,
   FileImage,
   Globe,
+  Zap,
 } from "lucide-react"
 
 const ENVIRONMENTS = [
@@ -328,6 +329,25 @@ export function DashboardSidebar({
                       className="ml-auto border-cyan-500/30 bg-cyan-500/10 px-1 py-0 font-mono text-[9px] text-cyan-600 dark:text-cyan-400 group-data-[collapsible=icon]:hidden"
                     >
                       Graph
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* API Playground & HTTP Sandbox */}
+              <SidebarMenuItem>
+                <Link href="/playground" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="In-Browser API Playground & REST Sandbox (/playground)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Zap className="size-4 text-amber-500" />
+                    <span>API Playground</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-amber-500/30 bg-amber-500/10 px-1 py-0 font-mono text-[9px] text-amber-600 dark:text-amber-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      REST
                     </Badge>
                   </SidebarMenuButton>
                 </Link>

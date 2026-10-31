@@ -22,6 +22,7 @@
 | **12. Microservice Topology & Graph** | P1 | **100% Complete** | `/topology`, `components/topology/topology-graph-view.tsx`, `lib/topology-data.ts` (Call graph, node focus, SVG export, Mermaid.js exporter) |
 | **13. Export & Developer Sync Suite** | P1 | **100% Complete** | `lib/export-utils.ts`, `components/dashboard/export-services-dialog.tsx`, Postman v2.1 collection generator, OpenAPI 3.0.3 specification, RFC 4180 CSV, JSON Catalog backup |
 | **14. System Status Page & SLA Observability** | P0 | **100% Complete** | `/status`, `components/status/system-status-view.tsx`, `lib/status-data.ts` (30-day SLA heatmaps, batch health ping probe, incident triage & maintenance windows) |
+| **15. In-Browser API Playground & Sandbox** | P0 | **100% Complete** | `/playground`, `components/playground/api-playground-view.tsx`, `app/api/playground/proxy/route.ts`, `lib/api-playground-utils.ts` (REST client, CORS proxy, code exporter, history) |
 
 ---
 
@@ -209,3 +210,26 @@
   - Upcoming database patch cycles, kernel updates, and storage volume migration schedules with lead team details and target node lists.
 - [x] **Navigation & Universal Shortcuts**:
   - Integrated in `DashboardSidebar` ("System Status"), `DashboardHeader` quick status link, and `CommandPalette` (`Ctrl+K` → *"Live System Status & SLA Observability"*).
+
+---
+
+### Feature 15 — In-Browser API Playground & REST Sandbox (P0)
+- [x] **Full-Featured HTTP Client & REST Workbench**:
+  - Method selector (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`) with color-coded badges.
+  - Endpoint input bar with catalog service pre-fill selector (instantly populates any catalog microservice URL).
+  - Key-Value editors for Query Parameters and Request Headers with quick toggle checkboxes and delete actions.
+  - Authentication presets (`None`, `Bearer Token`, `Basic Auth`, `API Key` in header or query).
+  - JSON Request Body editor with payload templates (*User Authentication*, *Order / Entity Create*, *Health Ping*).
+- [x] **Secure Server-Side HTTP Proxy (`/api/playground/proxy`)**:
+  - Bypasses browser CORS restrictions when testing internal or external microservice endpoints.
+  - Enforces session authentication (`verifySession`), 12-second timeout protection, and header sanitization.
+  - Accurately captures high-precision response latency (ms) and payload size (KB).
+- [x] **Multi-Language Code Generator**:
+  - Instant code snippets in **cURL**, **Fetch (JavaScript / TypeScript)**, **Axios**, **Python (`requests`)**, and **Go (`net/http`)** with one-click clipboard copy.
+- [x] **Response Inspector & History Tracker**:
+  - Status code badge (`200 OK`, `401 Unauthorized`, `500 Server Error`), latency, and payload size.
+  - Formatted JSON response viewer with syntax highlighting and raw body copy.
+  - Full response headers key-value table.
+  - Persistent request execution history (`localStorage`) storing the last 15 requests with 1-click re-run.
+- [x] **Navigation & Universal Shortcuts**:
+  - Integrated in `DashboardSidebar` ("API Playground"), `CommandPalette` (`Ctrl+K` → *"API Playground & HTTP Sandbox"*), and global navigation.
