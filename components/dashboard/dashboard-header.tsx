@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import {
   CalendarDays,
   Clock,
+  Network,
   PanelRight,
   PanelRightClose,
   Radio,
@@ -136,6 +137,20 @@ export function DashboardHeader({
 
         {/* Meet Quick Action Popover */}
         <MeetQuickAction variant="pill" />
+
+        {/* Topology Fast Link */}
+        <Link href="/topology">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground hover:bg-muted hidden 2xl:inline-flex"
+            title="Microservice Topology & Dependency Graph (/topology)"
+          >
+            <Network className="size-3.5 text-cyan-500" />
+            <span className="font-medium">Topology</span>
+          </Button>
+        </Link>
 
         {/* Dedicated Calendar & Iran Sync Page Link */}
         <Link href="/calendar">
