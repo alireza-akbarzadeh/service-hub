@@ -230,7 +230,7 @@ export function ServicesDashboard({
         />
 
         {/* Main Layout Area */}
-        <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+        <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-x-clip">
           {/* Top Decluttered Header */}
           <DashboardHeader
             selectedEnv={selectedEnv}

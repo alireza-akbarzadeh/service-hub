@@ -44,7 +44,7 @@ export function DashboardHeader({
   onInspectServiceByName,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-6 overflow-x-hidden select-none">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-md sm:px-6 select-none">
       {/* Left: Sidebar trigger & Navigation Breadcrumb */}
       <div className="flex items-center gap-3 min-w-0">
         <SidebarTrigger className="shrink-0 cursor-pointer" />
