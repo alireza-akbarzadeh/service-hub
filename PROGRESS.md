@@ -63,11 +63,22 @@
 ---
 
 ### Feature 4 — Access Requests & Approval Workflows (P1)
-- [x] **Requests Kanban Board**: Dedicated `/requests` board with columns (`open`, `under_review`, `in_progress`, `merged`, `closed`).
-- [x] **Request Submission Modal**: Coworkers can submit Feature Requests, Bug Reports, and PR reviews.
-- [x] **Priority & Severity Badges**: Low, Medium, High, Critical prioritization.
-- [x] **Diff Viewer**: In-browser side-by-side and unified diff preview for PR requests.
-- [x] **Request Detail Sheet**: Comments, reviewer assignment, status transitions, and audit timestamps.
+- [x] **Interactive Drag-and-Drop (DnD) Kanban Board**:
+  - Smooth HTML5 Drag & Drop between all 5 lifecycle columns (`open`, `under_review`, `in_progress`, `merged`, `closed`).
+  - Active drop-target column highlighting (`border-primary/60 bg-primary/10 ring-2`) and ghost drag state.
+  - Optimistic local state transitions synced with background Neon Postgres server action (`updateFeedbackRequest`).
+  - One-click quick status dropdown on card for accessibility & touch devices.
+- [x] **Triage Bar & Advanced Filtering**:
+  - Triage summary metrics with "Needs Attention" instant filter (P0/P1 blockers + pending PRs).
+  - Microservice tag filtration, priority dropdown, sort by upvotes/newest/priority, and full text search.
+  - CSV Backlog Export (`service-hub-requests-{date}.csv`).
+  - Switchable Kanban Board and Table View modes.
+- [x] **Rich Ticket Cards & PR Diff Integration**:
+  - Pull Request, Bug Report, and Feature Request categorization with severity badges (`P0 Blocker`, `P1`, `P2`, `P3`).
+  - Direct upvoting button with optimistic count increment.
+  - Inline Git patch indicators with deep diff preview (`DiffViewer`).
+- [x] **Universal Fixed Chrome Integration**:
+  - Sticky top header (`sticky top-0 z-40`) and fixed bottom telemetry dock (`DashboardBottomBar`).
 
 ---
 
