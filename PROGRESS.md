@@ -167,15 +167,20 @@
 ### Feature 12 — Microservice Topology & Architecture Dependency Graph (P1)
 - [x] **Interactive Dependency & Call Graph Canvas**:
   - Four-tier architectural hierarchy: *Client Gateways*, *API & Edge Proxies*, *Core Business Microservices*, *Data Stores & Telemetry Agents*.
-  - Curvature Bezier connection arcs with animated directional pulses, protocol badges (HTTPS, gRPC, WebSocket, TCP), and latency ratings (ms).
+  - Curvature Bézier connection arcs with animated directional pulses, protocol badges (HTTPS, gRPC, WebSocket, TCP), and latency ratings (ms).
   - Multi-environment filtering (*All*, *Production*, *Staging*, *Internal*), tier isolation, and instant node text search.
+  - Interactive mouse Click-and-Drag Pan and floating Zoom toolbar (+, -, Reset 100%).
+  - Live traffic packet simulation mode (`<animateMotion>`) traveling along connection curves with pause/resume toggle.
 - [x] **Node Focus & Caller Deep Inspection**:
   - Focus mode dimming non-connected nodes to isolate dependency chains.
   - Interactive right inspector panel displaying upstream callers (who calls this service) and downstream dependencies (services called by this node).
-  - Quick health status indicators (Operational, Degraded, Critical Outage, Maintenance) and direct links to live service endpoints.
+  - Quick health status indicators (Operational, Degraded, Critical Outage, Maintenance) and live endpoint ping diagnostic tool with latency meter.
+  - Direct integration actions: "Test in API Playground" (`/playground`), "Open Endpoint URL", and "Find in Main Catalog".
 - [x] **Architecture Export Suite**:
   - One-click copy as **Mermaid.js** flowchart diagram ready for documentation, GitHub READMEs, and Notion runbooks.
   - Export diagram canvas as high-resolution vector **SVG** file.
+- [x] **Universal Fixed Chrome Integration**:
+  - Consistent sticky top header (`sticky top-0 z-40`) and fixed bottom telemetry & dock bar (`fixed bottom-0`).
 
 ---
 
