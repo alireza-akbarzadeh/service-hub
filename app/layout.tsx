@@ -1,22 +1,23 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import localFont from "next/font/local"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-
 import { PwaInstaller } from "@/components/pwa-installer"
 
-const geistSans = Geist({
-  subsets: ["latin"],
+const geistSans = localFont({
+  src: "../public/fonts/geist.woff2",
   variable: "--font-geist-sans",
+  weight: "100 900",
   display: "swap",
 })
 
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
+const geistMono = localFont({
+  src: "../public/fonts/geist-mono.woff2",
   variable: "--font-geist-mono",
+  weight: "100 900",
   display: "swap",
 })
 
@@ -86,14 +87,14 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "antialiased",
+        "antialiased font-sans",
         geistSans.variable,
         geistMono.variable
       )}
     >
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20"
+        className="min-h-screen bg-background text-foreground antialiased font-sans selection:bg-primary/20"
       >
         <ThemeProvider>
           <TooltipProvider>

@@ -135,7 +135,7 @@ export function ServicesTable({
             services.map((svc) => (
               <TableRow key={svc.id} className="group transition-colors">
                 <TableCell>
-                  <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 text-foreground">
                     <button
                       type="button"
                       onClick={() => onToggleFavorite(svc.id)}
@@ -154,13 +154,13 @@ export function ServicesTable({
                     <button
                       type="button"
                       onClick={() => onInspectService(svc)}
-                      className="cursor-pointer truncate text-left font-semibold text-foreground transition-colors hover:text-primary"
+                      className="cursor-pointer truncate text-left text-[13px] font-medium text-foreground transition-colors hover:text-primary tracking-tight"
                       title="Click to inspect details & snippets"
                     >
                       {svc.name}
                     </button>
                   </div>
-                  <div className="mt-0.5 line-clamp-1 max-w-[340px] pl-6 text-xs text-muted-foreground">
+                  <div className="mt-0.5 line-clamp-1 max-w-[340px] pl-6 text-[11px] text-muted-foreground/80 font-normal leading-normal">
                     {svc.description}
                   </div>
                   {/* Service Tags */}
@@ -211,7 +211,7 @@ export function ServicesTable({
                               target="_blank"
                               rel="noopener noreferrer"
                               title={`Jump to ${m.environment}: ${m.name}`}
-                              className="inline-flex cursor-pointer items-center gap-0.5 rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide shadow-2xs transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                              className="inline-flex cursor-pointer items-center gap-0.5 rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium tracking-wide shadow-2xs transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
                             >
                               <span>{shortEnv}</span>
                               <ExternalLink className="size-2.5 opacity-60" />
@@ -223,7 +223,7 @@ export function ServicesTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-normal">
                     {svc.category}
                   </span>
                 </TableCell>
@@ -306,7 +306,7 @@ export function ServicesTable({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">
+                <TableCell className="text-xs text-muted-foreground font-normal">
                   {svc.owner || "Platform"}
                 </TableCell>
                 <TableCell>
@@ -326,7 +326,7 @@ export function ServicesTable({
                         svc.url.includes("tapsi.shop") ||
                         svc.url.includes("172.")) && (
                         <span
-                          className="cursor-help font-mono text-[10px] font-semibold text-amber-600 dark:text-amber-400"
+                          className="cursor-help text-[10px] font-medium text-amber-600 dark:text-amber-400"
                           title="This endpoint is firewalled to Iran IP or Agency VPN. It may fail to open while connected to a foreign VPN."
                         >
                           ⚠️ Iran Net
