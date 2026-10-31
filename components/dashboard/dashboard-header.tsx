@@ -1,6 +1,6 @@
 "use client"
 
-import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
+import * as React from "react"
 import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
 import { NotificationCenter } from "@/components/notifications/notification-center"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -16,9 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { Service } from "@/lib/db/schema"
-import { Activity, Clock, Network, Radio, Search, Settings, Zap } from "lucide-react"
-import Link from "next/link"
-import * as React from "react"
+import { Search, Settings } from "lucide-react"
 
 interface DashboardHeaderProps {
   selectedEnv: string
@@ -45,33 +43,14 @@ export function DashboardHeader({
   services,
   onInspectServiceByName,
 }: DashboardHeaderProps) {
-  // Live mini clock for Tehran time in the header toggle button
-  const [tehranTimeMini, setTehranTimeMini] = React.useState<string>("")
-
-  React.useEffect(() => {
-    function tick() {
-      const date = new Date()
-      const str = date.toLocaleTimeString("en-US", {
-        timeZone: "Asia/Tehran",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-      setTehranTimeMini(str)
-    }
-    tick()
-    const timer = setInterval(tick, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
-      {/* Left: Sidebar trigger & Breadcrumbs */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-6 overflow-x-hidden select-none">
+      {/* Left: Sidebar trigger & Navigation Breadcrumb */}
+      <div className="flex items-center gap-3 min-w-0">
         <SidebarTrigger className="shrink-0 cursor-pointer" />
         <Separator orientation="vertical" className="h-5 shrink-0" />
-        <Breadcrumb>
-          <BreadcrumbList>
+        <Breadcrumb className="truncate">
+          <BreadcrumbList className="flex-nowrap">
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="#"
@@ -79,14 +58,14 @@ export function DashboardHeader({
                   e.preventDefault()
                   onResetFilters()
                 }}
-                className="cursor-pointer text-xs"
+                className="cursor-pointer text-xs font-medium hover:text-foreground"
               >
                 Service Hub
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-xs font-semibold">
+              <BreadcrumbPage className="text-xs font-semibold text-foreground">
                 {selectedEnv}
               </BreadcrumbPage>
             </BreadcrumbItem>
@@ -94,7 +73,7 @@ export function DashboardHeader({
               <>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-xs font-medium text-muted-foreground">
+                  <BreadcrumbPage className="text-xs font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
                     {selectedCategory}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -104,9 +83,9 @@ export function DashboardHeader({
         </Breadcrumb>
       </div>
 
-      {/* Right: Search, Market Rates, Dev Tools, Tehran Time & Meeting Toggle, Theme */}
-      <div className="flex items-center gap-2">
-        {/* Quick Search Button (Ctrl+K or /) */}
+      {/* Right: Core Quick Actions (Search, Meet, Alerts, Settings, Theme) */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Universal Search (Ctrl+K) */}
         <Button
           type="button"
           variant="outline"
@@ -117,92 +96,28 @@ export function DashboardHeader({
         >
           <Search className="size-3.5 text-primary" />
           <span className="hidden font-medium md:inline">Search</span>
-          <kbd className="hidden rounded border border-border bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground lg:inline-flex">
+          <kbd className="hidden rounded border border-border bg-muted/60 px-1 py-0 font-mono text-[9px] text-muted-foreground sm:inline-flex">
             ⌘K
           </kbd>
         </Button>
 
-        {/* Dollar & Gold Market Rates (Click: Convert to Persian / Double-Click: Dialog Chart & Info) */}
-        <HeaderMarketSection />
-
-        {/* Meet Quick Action Popover */}
+        {/* Instant Google Meet Launcher */}
         <MeetQuickAction variant="pill" />
 
-        {/* System Status Fast Link */}
-        <Link href="/status">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
-            title="Live System Status, 30-Day SLA & Incident Logs (/status)"
-          >
-            <Activity className="size-3.5 text-emerald-500" />
-            <span className="font-medium">Status</span>
-          </Button>
-        </Link>
-
-        {/* Playground Fast Link */}
-        <Link href="/playground">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
-            title="In-Browser API Playground & REST Sandbox (/playground)"
-          >
-            <Zap className="size-3.5 text-amber-500" />
-            <span className="font-medium">Playground</span>
-          </Button>
-        </Link>
-
-        {/* Topology Fast Link */}
-        <Link href="/topology">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground 2xl:inline-flex"
-            title="Microservice Topology & Dependency Graph (/topology)"
-          >
-            <Network className="size-3.5 text-cyan-500" />
-            <span className="font-medium">Topology</span>
-          </Button>
-        </Link>
-
-        {/* Dedicated Calendar & Iran Sync Page Link */}
-        <Link href="/calendar">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-muted"
-            title="Open Dedicated Calendar, Meetings & Iran Sync (/calendar)"
-          >
-            <Clock className="size-3.5 text-amber-500" />
-            <span className="font-mono font-semibold">
-              {tehranTimeMini || "Tehran"}
-            </span>
-            <span className="hidden items-center gap-1 opacity-90 sm:inline-flex">
-              <span>• IRST</span>
-              <Radio className="size-2.5 animate-pulse text-sky-400" />
-            </span>
-          </Button>
-        </Link>
-
-        {/* Notifications & Announcements Popover Center */}
+        {/* Notification Center (Alerts, Outages & PRs) */}
         <NotificationCenter
           services={services}
           onInspectServiceByName={onInspectServiceByName}
         />
 
+        {/* Dashboard Settings */}
         {onOpenSettings && (
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onOpenSettings}
-            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:text-foreground"
+            className="h-8 cursor-pointer gap-1.5 px-2.5 text-xs text-muted-foreground shadow-2xs hover:bg-muted hover:text-foreground"
             title="Dashboard Settings & JSON Config Editor"
           >
             <Settings className="size-3.5 text-primary" />
@@ -211,6 +126,8 @@ export function DashboardHeader({
         )}
 
         <Separator orientation="vertical" className="h-5" />
+
+        {/* Theme Toggle */}
         <ThemeToggle />
       </div>
     </header>

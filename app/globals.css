@@ -139,6 +139,11 @@
     @apply border-border outline-ring/50;
   }
 
+  
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
   html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -191,4 +196,12 @@
 [dir="auto"] {
   unicode-bidi: plaintext;
   text-align: start;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -23,6 +23,7 @@ import {
 export { getServiceTags }
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { DashboardBottomBar } from "@/components/dashboard/dashboard-bottom-bar"
 import { DashboardSettingsDialog } from "@/components/dashboard/dashboard-settings-dialog"
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import {
@@ -229,7 +230,7 @@ export function ServicesDashboard({
         />
 
         {/* Main Layout Area */}
-        <SidebarInset className="flex min-w-0 flex-1 flex-col">
+        <SidebarInset className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
           {/* Top Decluttered Header */}
           <DashboardHeader
             selectedEnv={selectedEnv}
@@ -259,7 +260,7 @@ export function ServicesDashboard({
           {/* Body: Split View with Right-Side Iran Calendar & Meetings Panel */}
           <div className="flex min-w-0 flex-1">
             {/* Center/Left Content Area */}
-            <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6">
+            <main className="min-w-0 flex-1 space-y-6 p-4 sm:p-6 pb-16">
               {/* Foreign Network / VPN Notice */}
               <ForeignVpnWarningBanner locationInfo={networkInfo} />
 
@@ -390,6 +391,9 @@ export function ServicesDashboard({
               />
             </main>
           </div>
+        
+          {/* Fixed Bottom Developer Status & Telemetry Bar */}
+          <DashboardBottomBar branchName={branchName} services={services} />
         </SidebarInset>
 
         {/* Add & Edit Service Form Modals */}

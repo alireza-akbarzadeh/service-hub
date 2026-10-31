@@ -32,7 +32,7 @@ export function ThemeToggle() {
         aria-label="Light theme"
       >
         <Sun className="size-3.5 text-amber-500" />
-        <span className="hidden sm:inline">Light</span>
+        <span className="hidden 2xl:inline">Light</span>
       </Button>
       <Button
         variant={theme === "dark" ? "secondary" : "ghost"}
@@ -43,7 +43,7 @@ export function ThemeToggle() {
         aria-label="Dark theme"
       >
         <Moon className="size-3.5 text-sky-400" />
-        <span className="hidden sm:inline">Dark</span>
+        <span className="hidden 2xl:inline">Dark</span>
       </Button>
       <Button
         variant={theme === "system" ? "secondary" : "ghost"}
@@ -54,7 +54,7 @@ export function ThemeToggle() {
         aria-label="System theme"
       >
         <Monitor className="size-3.5 text-muted-foreground" />
-        <span className="hidden sm:inline">System</span>
+        <span className="hidden 2xl:inline">System</span>
       </Button>
     </div>
   )

@@ -94,7 +94,7 @@ export default function RootLayout({
     >
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-background text-foreground antialiased font-sans selection:bg-primary/20"
+        className="min-h-screen bg-background text-foreground antialiased font-sans selection:bg-primary/20 overflow-x-hidden"
       >
         <ThemeProvider>
           <TooltipProvider>
