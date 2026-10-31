@@ -19,6 +19,8 @@
 | **9. Notifications & Announcements Center** | P1 | **100% Complete** | `components/notifications/notification-center.tsx`, `components/announcement-banner.tsx`, header bell dropdown with persistent storage |
 | **10. Service Health & Observability** | P1 | **100% Complete** | Live ping diagnostics, `serviceHealthLogs` in Neon Postgres, SSL/latency badges |
 | **11. Lightweight Knowledge Base & Docs** | P2 | **100% Complete** | `lib/service-docs.ts`, `ServiceDetailSheet` Markdown runbook tab, `/ai` engineering prompts guide |
+| **12. Microservice Topology & Graph** | P1 | **100% Complete** | `/topology`, `components/topology/topology-graph-view.tsx`, `lib/topology-data.ts` (Call graph, node focus, SVG export, Mermaid.js exporter) |
+| **13. Export & Developer Sync Suite** | P1 | **100% Complete** | `lib/export-utils.ts`, `components/dashboard/export-services-dialog.tsx`, Postman v2.1 collection generator, OpenAPI 3.0.3 specification, RFC 4180 CSV, JSON Catalog backup |
 
 ---
 
@@ -155,3 +157,34 @@
 - [x] Per-service Markdown Documentation tab in `ServiceDetailSheet` (Getting Started, Architecture, Standard Headers, Docker Quickstart, Incident Runbooks).
 - [x] Custom Runbook editor with client-side localStorage persistence and reset capabilities.
 - [x] Global search indexing documentation content and runbook keywords in `CommandPalette` (`Ctrl+K`).
+
+---
+
+### Feature 12 — Microservice Topology & Architecture Dependency Graph (P1)
+- [x] **Interactive Dependency & Call Graph Canvas**:
+  - Four-tier architectural hierarchy: *Client Gateways*, *API & Edge Proxies*, *Core Business Microservices*, *Data Stores & Telemetry Agents*.
+  - Curvature Bezier connection arcs with animated directional pulses, protocol badges (HTTPS, gRPC, WebSocket, TCP), and latency ratings (ms).
+  - Multi-environment filtering (*All*, *Production*, *Staging*, *Internal*), tier isolation, and instant node text search.
+- [x] **Node Focus & Caller Deep Inspection**:
+  - Focus mode dimming non-connected nodes to isolate dependency chains.
+  - Interactive right inspector panel displaying upstream callers (who calls this service) and downstream dependencies (services called by this node).
+  - Quick health status indicators (Operational, Degraded, Critical Outage, Maintenance) and direct links to live service endpoints.
+- [x] **Architecture Export Suite**:
+  - One-click copy as **Mermaid.js** flowchart diagram ready for documentation, GitHub READMEs, and Notion runbooks.
+  - Export diagram canvas as high-resolution vector **SVG** file.
+
+---
+
+### Feature 13 — Export & Developer Sync Suite (Postman, OpenAPI, CSV, JSON) (P1)
+- [x] **Postman Collection v2.1.0 Exporter**:
+  - Compliant Postman schema grouping services into environment and category folders.
+  - Pre-configured headers (`Accept`, `Content-Type`, `User-Agent`), parameterized host variables (`{{baseUrl}}`), and health test assertion scripts.
+- [x] **OpenAPI 3.0.3 Specification Generator**:
+  - Fully valid YAML/JSON OpenAPI 3.0.3 document with info metadata, server URL listings, paths, standard response schemas (200, 401, 500), and tag categorization.
+- [x] **RFC 4180 Compliant CSV Export**:
+  - Formatted spreadsheet export with proper quote escaping, column headers (ID, Name, Description, URL, Health Endpoint, Environment, Category, Owner, Port, SLA).
+- [x] **JSON Backup & Direct Sync**:
+  - Single-click full catalog JSON backup for automated deployment pipelines and local staging synchronization.
+- [x] **Export Dialog UI & Shortcuts**:
+  - Multi-tab export dialog with live preview, syntax formatting, download button, and clipboard copy.
+  - Triggered via header filter bar "Export API" button and Command Palette (`Ctrl+K` → *"Export API Catalog"*).
