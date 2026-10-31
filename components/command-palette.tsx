@@ -30,6 +30,7 @@ import {
   Gamepad2,
   GitPullRequest,
   Globe,
+  History,
   Layers,
   LayoutGrid,
   Lightbulb,
@@ -257,6 +258,20 @@ export function CommandPalette({
           if (services.length > 0 && onInspectService) {
             onInspectService(services[0], "docs")
           }
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-activity-feed",
+        title: "Activity Feed & Enterprise Audit Trail",
+        subtitle:
+          "Live team activity stream, microservice deployments, PR review merges, and security audit logs",
+        badge: "Audit Trail",
+        icon: History,
+        iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
+        onSelect: () => {
+          window.location.href = "/activity"
           onOpenChange(false)
         },
       },

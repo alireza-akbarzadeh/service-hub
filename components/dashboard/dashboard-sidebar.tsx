@@ -34,6 +34,7 @@ import {
   FileJson,
   Gamepad2,
   GitPullRequest,
+  History,
   Terminal,
   Video,
   Wrench,
@@ -238,6 +239,25 @@ export function DashboardSidebar({
                       className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
                     >
                       99.9%
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Activity Feed & Audit Trail (/activity) */}
+              <SidebarMenuItem>
+                <Link href="/activity" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Team Activity Stream & Enterprise Audit Trail (/activity)"
+                    className="w-full cursor-pointer"
+                  >
+                    <History className="size-4 text-sky-500" />
+                    <span>Activity Feed</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-sky-500/30 bg-sky-500/10 px-1 py-0 font-mono text-[9px] text-sky-600 dark:text-sky-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Audit
                     </Badge>
                   </SidebarMenuButton>
                 </Link>
