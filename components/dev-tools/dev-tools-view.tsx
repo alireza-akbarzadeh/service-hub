@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import { cn } from "@/lib/utils"
 import { JsonFormatterViewer } from "./json-formatter/json-formatter-viewer"
 import { CurlInspector } from "./curl-inspector/curl-inspector"
@@ -113,6 +114,7 @@ export function DevToolsView({ initialTab = "ai" }: DevToolsViewProps) {
             <Radio className="size-2 text-emerald-500 animate-pulse" />
           </div>
 
+          <NotificationCenter />
           <ThemeToggle />
         </div>
       </header>

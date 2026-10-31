@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import { RequestSubmitModal } from "./request-submit-modal"
 import { RequestDetailSheet } from "./request-detail-sheet"
 import { DiffViewer } from "./diff-viewer"
@@ -232,6 +233,7 @@ export function RequestsBoardView({
             <span>New Request</span>
           </Button>
 
+          <NotificationCenter />
           <ThemeToggle />
         </div>
       </header>

@@ -13,6 +13,8 @@ import type { SessionUser } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import {
   Dialog,
   DialogContent,
@@ -255,6 +257,9 @@ export function UsersManagementView({ currentUser, initialUsers }: UsersManageme
             <Plus className="size-3.5" />
             <span>Add User</span>
           </Button>
+
+          <NotificationCenter />
+          <ThemeToggle />
         </div>
       </header>
 

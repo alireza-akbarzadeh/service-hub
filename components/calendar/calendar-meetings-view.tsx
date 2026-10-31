@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog"
 import { IranClockCalendar } from "@/components/iran-calendar/iran-clock-calendar"
 import { Cs2WritebarBanner } from "@/components/cs2/cs2-writebar-banner"
+import { NotificationCenter } from "@/components/notifications/notification-center"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   ArrowLeft,
   Bell,
@@ -230,6 +232,9 @@ export function CalendarMeetingsView() {
             <Calendar className="size-3.5 text-primary" />
             <span>Schedule Meeting</span>
           </Button>
+
+          <NotificationCenter />
+          <ThemeToggle />
         </div>
       </header>
 

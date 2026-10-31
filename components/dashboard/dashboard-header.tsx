@@ -26,6 +26,8 @@ import {
 } from "lucide-react"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
+import { NotificationCenter } from "@/components/notifications/notification-center"
+import type { Service } from "@/lib/db/schema"
 
 interface DashboardHeaderProps {
   selectedEnv: string
@@ -36,6 +38,8 @@ interface DashboardHeaderProps {
   onToggleRightPanel: () => void
   onOpenSettings?: () => void
   onOpenSubmitRequest?: (type?: "feature" | "bug" | "pull_request") => void
+  services?: Service[]
+  onInspectServiceByName?: (name: string) => void
 }
 
 export function DashboardHeader({
@@ -47,6 +51,8 @@ export function DashboardHeader({
   onToggleRightPanel,
   onOpenSettings,
   onOpenSubmitRequest,
+  services,
+  onInspectServiceByName,
 }: DashboardHeaderProps) {
   // Live mini clock for Tehran time in the header toggle button
   const [tehranTimeMini, setTehranTimeMini] = React.useState<string>("")
@@ -150,6 +156,12 @@ export function DashboardHeader({
             </span>
           </Button>
         </Link>
+
+        {/* Notifications & Announcements Popover Center */}
+        <NotificationCenter
+          services={services}
+          onInspectServiceByName={onInspectServiceByName}
+        />
 
         {onOpenSettings && (
           <Button

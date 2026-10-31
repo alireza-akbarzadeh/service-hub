@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import {
   AlignJustify,
   ArrowRight,
+  BookOpen,
   Bot,
   Bug,
   Building2,
@@ -55,6 +56,7 @@ interface CommandPaletteProps {
   onOpenSettings?: () => void
   onSelectViewShape?: (shape: "table" | "row-card" | "square-card") => void
   onOpenSubmitRequest?: (type?: "feature" | "bug" | "pull_request") => void
+  onInspectService?: (service: Service, tab?: "overview" | "tester" | "docs") => void
 }
 
 const ENV_ICONS: Record<string, React.ElementType> = {
@@ -100,6 +102,7 @@ export function CommandPalette({
   onOpenSettings,
   onSelectViewShape,
   onOpenSubmitRequest,
+  onInspectService,
 }: CommandPaletteProps) {
   const { meetings, addMeeting } = useMeetings()
 
@@ -232,6 +235,23 @@ export function CommandPalette({
         iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
         onSelect: () => {
           window.location.href = "/tools"
+          onOpenChange(false)
+        },
+      },
+      
+      {
+        type: "action",
+        id: "act-service-docs",
+        title: "Microservice Runbooks & Architecture Documentation",
+        subtitle:
+          "Browse technical runbooks, Docker setups, standard headers, and incident troubleshooting guides",
+        badge: "Runbooks",
+        icon: BookOpen,
+        iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
+        onSelect: () => {
+          if (services.length > 0 && onInspectService) {
+            onInspectService(services[0], "docs")
+          }
           onOpenChange(false)
         },
       },
@@ -532,6 +552,15 @@ export function CommandPalette({
         if (!matchesEnv) return false
         if (!q) return true
 
+        const isDocQuery =
+          q.includes("doc") ||
+          q.includes("runbook") ||
+          q.includes("architecture") ||
+          q.includes("readme") ||
+          q.includes("docker") ||
+          q.includes("header") ||
+          q.includes("auth")
+
         const tags = getServiceTags(svc)
         const matchesTag = tags.some((t: string) => t.toLowerCase().includes(q))
 
@@ -542,7 +571,11 @@ export function CommandPalette({
           svc.environment.toLowerCase().includes(q) ||
           (svc.owner && svc.owner.toLowerCase().includes(q)) ||
           svc.url.toLowerCase().includes(q) ||
-          matchesTag
+          matchesTag ||
+          (isDocQuery &&
+            (svc.category.toLowerCase().includes("api") ||
+              svc.name.toLowerCase().includes("gateway") ||
+              svc.description.toLowerCase().includes("api")))
         )
       })
       items.push(
@@ -1205,6 +1238,21 @@ export function CommandPalette({
                       </div>
 
                       <div className="flex shrink-0 items-center gap-1">
+                        {onInspectService && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onInspectService(svc, "docs")
+                              onOpenChange(false)
+                            }}
+                            className="flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[10px] text-muted-foreground hover:bg-muted hover:text-violet-500 transition-colors"
+                            title="Inspect Runbook & Architecture Documentation"
+                          >
+                            <BookOpen className="size-3" />
+                            <span className="hidden sm:inline">Docs</span>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {

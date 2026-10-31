@@ -39,6 +39,7 @@ import { ServicesFilterBar } from "@/components/dashboard/services-filter-bar"
 import { ServicesPagination } from "@/components/dashboard/services-pagination"
 import { ServicesTable } from "@/components/dashboard/services-table"
 import { StatsOverview } from "@/components/dashboard/stats-overview"
+import { PendingRequestsWidget } from "@/components/dashboard/pending-requests-widget"
 import { IranCalendarPanel } from "@/components/iran-calendar/iran-calendar-panel"
 
 interface ServicesDashboardProps {
@@ -128,6 +129,11 @@ export function ServicesDashboard({
 
   // Mobile drawer state for Iran Calendar & Sync panel
   const [isMobilePanelOpen, setIsMobilePanelOpen] = React.useState(false)
+
+  // Service Detail Sheet Tab State (overview, tester, docs)
+  const [detailSheetTab, setDetailSheetTab] = React.useState<
+    "overview" | "tester" | "docs"
+  >("overview")
 
   // Dashboard Settings & JSON Config Modal State
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false)
@@ -236,6 +242,14 @@ export function ServicesDashboard({
             onToggleRightPanel={handleTogglePanel}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onOpenSubmitRequest={handleOpenSubmitRequest}
+            services={services}
+            onInspectServiceByName={(name) => {
+              const target = services.find((s) => s.name === name)
+              if (target) {
+                setDetailSheetTab("overview")
+                setInspectingService(target)
+              }
+            }}
           />
 
           {/* Body: Split View with Right-Side Iran Calendar & Meetings Panel */}
@@ -247,6 +261,12 @@ export function ServicesDashboard({
 
               {/* Team Announcement & Maintenance Banner */}
               <AnnouncementBanner teamName={teamName} />
+
+              {/* High-Level Microservice & Request Stats */}
+              <StatsOverview stats={stats} pendingRequestsCount={3} />
+
+              {/* Pending Requests & PRs Action Strip */}
+              <PendingRequestsWidget onOpenSubmitRequest={handleOpenSubmitRequest} />
 
               {/* Pinned Quick Launch & Recently Used Strip */}
               <PinnedServices
@@ -409,6 +429,10 @@ export function ServicesDashboard({
             })
           }
           onOpenSubmitRequest={handleOpenSubmitRequest}
+          onInspectService={(svc, tab) => {
+            setDetailSheetTab(tab || "overview")
+            setInspectingService(svc)
+          }}
         />
 
         {/* Dashboard Layout & LocalStorage JSON Settings Dialog */}
@@ -423,11 +447,17 @@ export function ServicesDashboard({
         <ServiceDetailSheet
           service={inspectingService}
           open={!!inspectingService}
-          onOpenChange={(open) => !open && setInspectingService(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setInspectingService(null)
+              setDetailSheetTab("overview")
+            }
+          }}
           mirrors={
             inspectingService ? mirrorMap.get(inspectingService.id) || [] : []
           }
           onOpenSubmitRequest={handleOpenSubmitRequest}
+          defaultTab={detailSheetTab}
         />
 
         {/* Coworker Feature Request & Bug Fix PR Submission Modal */}

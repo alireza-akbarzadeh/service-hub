@@ -21,6 +21,7 @@ import type { Service } from "@/lib/db/schema"
 import { cn } from "@/lib/utils"
 import {
   Activity,
+  BookOpen,
   Bug,
   Check,
   ChevronDown,
@@ -28,16 +29,25 @@ import {
   Clock,
   Compass,
   Copy,
+  Download,
   ExternalLink,
+  FileEdit,
   GitPullRequest,
   Globe,
   Play,
   RefreshCw,
+  RotateCcw,
   Send,
   Sparkles,
   Terminal,
   Zap,
 } from "lucide-react"
+import { MarkdownView } from "@/components/ui/markdown-view"
+import {
+  getEffectiveServiceDoc,
+  saveCustomServiceDoc,
+  resetCustomServiceDoc,
+} from "@/lib/service-docs"
 import * as React from "react"
 
 interface ServiceDetailSheetProps {
@@ -46,6 +56,7 @@ interface ServiceDetailSheetProps {
   onOpenChange: (open: boolean) => void
   mirrors: Service[]
   onOpenSubmitRequest?: (type: "feature" | "bug" | "pull_request", serviceName: string) => void
+  defaultTab?: "overview" | "tester" | "docs"
 }
 
 interface PingRecord {
@@ -60,14 +71,21 @@ export function ServiceDetailSheet({
   onOpenChange,
   mirrors,
   onOpenSubmitRequest,
+  defaultTab = "overview",
 }: ServiceDetailSheetProps) {
-  const [activeTab, setActiveTab] = React.useState<"overview" | "tester">(
-    "overview"
+  const [activeTab, setActiveTab] = React.useState<"overview" | "tester" | "docs">(
+    defaultTab
   )
   const [copiedSnippet, setCopiedSnippet] = React.useState<string | null>(null)
   const [health, setHealth] = React.useState<HealthCheckResult | null>(null)
   const [isPinging, setIsPinging] = React.useState(false)
   const [pingHistory, setPingHistory] = React.useState<PingRecord[]>([])
+
+  // Markdown Documentation & Runbook States
+  const [isEditingDoc, setIsEditingDoc] = React.useState(false)
+  const [docContent, setDocContent] = React.useState("")
+  const [isCustomDoc, setIsCustomDoc] = React.useState(false)
+  const [copiedDoc, setCopiedDoc] = React.useState(false)
 
   // API Tester States
   const [testerPath, setTesterPath] = React.useState("/health")
@@ -88,6 +106,15 @@ export function ServiceDetailSheet({
     setIsPinging(false)
     setTestResult(null)
     setShowHeaders(false)
+
+    // Load documentation runbook
+    const docData = getEffectiveServiceDoc(service)
+    setDocContent(docData.content)
+    setIsCustomDoc(docData.isCustom)
+    setIsEditingDoc(false)
+    if (defaultTab) {
+      setActiveTab(defaultTab)
+    }
 
     // Pre-populate tester path based on service category / name
     if (
@@ -385,12 +412,30 @@ export function ServiceDetailSheet({
                 <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("docs")}
+              className={cn(
+                "flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md py-1.5 font-medium transition-all",
+                activeTab === "docs"
+                  ? "bg-background font-semibold text-foreground shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <BookOpen className="size-3.5 text-violet-500" />
+              <span>Docs & Runbook</span>
+              {isCustomDoc && (
+                <span className="rounded-full bg-violet-500/20 px-1 py-0 text-[9px] font-mono font-bold text-violet-500">
+                  Custom
+                </span>
+              )}
+            </button>
           </div>
         </SheetHeader>
 
         {/* Content Body */}
         <div className="space-y-5 p-5">
-          {activeTab === "overview" ? (
+          {activeTab === "overview" && (
             <>
               {/* Endpoint URL Card with Live Ping */}
               <div className="space-y-3 rounded-xl border border-border bg-background p-4 shadow-2xs">
@@ -826,8 +871,10 @@ export function ServiceDetailSheet({
                 </div>
               </div>
             </>
-          ) : (
-            /* TAB 2: INTERACTIVE API ROUTE TESTER & OPENAPI EXPLORER */
+          )}
+
+          {/* TAB 2: INTERACTIVE API ROUTE TESTER & OPENAPI EXPLORER */}
+          {activeTab === "tester" && (
             <div className="space-y-4">
               <div className="space-y-3 rounded-xl border border-border bg-background p-4 shadow-2xs">
                 <div className="flex items-center justify-between">
@@ -1097,6 +1144,157 @@ export function ServiceDetailSheet({
                       )}
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: TECHNICAL DOCUMENTATION & RUNBOOK */}
+          {activeTab === "docs" && (
+            <div className="space-y-4">
+              {/* Documentation Action Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background p-3 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-violet-600/10 text-violet-600 dark:text-violet-400">
+                    <BookOpen className="size-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold">Technical Runbook</span>
+                      {isCustomDoc ? (
+                        <Badge
+                          variant="outline"
+                          className="border-violet-500/40 bg-violet-500/10 text-[10px] text-violet-600 dark:text-violet-400 px-1.5 py-0"
+                        >
+                          Customized Notes
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-border text-[10px] text-muted-foreground px-1.5 py-0"
+                        >
+                          Auto-Generated
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Architecture, headers, quickstart, and incident recovery guide
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (navigator?.clipboard) {
+                        navigator.clipboard.writeText(docContent)
+                        setCopiedDoc(true)
+                        setTimeout(() => setCopiedDoc(false), 2000)
+                      }
+                    }}
+                    className="h-7 cursor-pointer gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    title="Copy full markdown to clipboard"
+                  >
+                    {copiedDoc ? (
+                      <Check className="size-3 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-3" />
+                    )}
+                    <span>{copiedDoc ? "Copied" : "Copy MD"}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingDoc(!isEditingDoc)}
+                    className={cn(
+                      "h-7 cursor-pointer gap-1 px-2 text-xs",
+                      isEditingDoc
+                        ? "bg-violet-600 text-white hover:bg-violet-700"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <FileEdit className="size-3" />
+                    <span>{isEditingDoc ? "Preview" : "Edit Runbook"}</span>
+                  </Button>
+
+                  {isCustomDoc && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (service) {
+                          resetCustomServiceDoc(service.id)
+                          const fresh = getEffectiveServiceDoc(service)
+                          setDocContent(fresh.content)
+                          setIsCustomDoc(false)
+                          setIsEditingDoc(false)
+                        }
+                      }}
+                      className="h-7 cursor-pointer gap-1 px-2 text-xs text-muted-foreground hover:text-destructive"
+                      title="Reset to generated default runbook"
+                    >
+                      <RotateCcw className="size-3" />
+                      <span className="hidden sm:inline">Reset</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Editor or Markdown View */}
+              {isEditingDoc ? (
+                <div className="space-y-3 rounded-xl border border-border bg-background p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                    <span>Edit Markdown Runbook & Notes:</span>
+                    <span className="text-[10px] font-mono">GFM Markdown supported</span>
+                  </div>
+                  <textarea
+                    value={docContent}
+                    onChange={(e) => setDocContent(e.target.value)}
+                    rows={18}
+                    className="w-full rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+                    placeholder="Write technical runbook in Markdown..."
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (service) {
+                          const fresh = getEffectiveServiceDoc(service)
+                          setDocContent(fresh.content)
+                          setIsEditingDoc(false)
+                        }
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (service) {
+                          saveCustomServiceDoc(service.id, docContent)
+                          setIsCustomDoc(true)
+                          setIsEditingDoc(false)
+                        }
+                      }}
+                      className="h-7 bg-violet-600 text-xs font-medium text-white hover:bg-violet-700"
+                    >
+                      Save Runbook Notes
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-border bg-background p-5 shadow-2xs">
+                  <MarkdownView content={docContent} />
                 </div>
               )}
             </div>

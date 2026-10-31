@@ -8,17 +8,17 @@
 
 | Epic / Feature Area | Priority | Status | Implemented Components & Routes |
 | :--- | :---: | :---: | :--- |
-| **1. Personalized Dashboard** | P0 | **95% Complete** | `components/services-dashboard.tsx`, `components/dashboard/pinned-services.tsx`, `components/announcement-banner.tsx` |
+| **1. Personalized Dashboard** | P0 | **100% Complete** | `components/services-dashboard.tsx`, `components/dashboard/pinned-services.tsx`, `components/dashboard/pending-requests-widget.tsx`, `components/announcement-banner.tsx` |
 | **2. Searchable Service Catalog** | P0 | **100% Complete** | `components/dashboard/services-filter-bar.tsx`, `components/dashboard/services-table.tsx`, `components/dashboard/services-cards-grid.tsx` |
-| **3. Service Details Pages & Launchpad** | P0 | **95% Complete** | `components/service-detail-sheet.tsx`, `components/dashboard/service-form-dialogs.tsx` |
+| **3. Service Details Pages & Launchpad** | P0 | **100% Complete** | `components/service-detail-sheet.tsx`, `components/dashboard/service-form-dialogs.tsx`, `lib/service-docs.ts` |
 | **4. Access Requests & PR Workflows** | P1 | **100% Complete** | `app/requests/page.tsx`, `components/requests/requests-board-view.tsx`, `components/requests/request-submit-modal.tsx` |
 | **5. Admin & User Management** | P1 | **100% Complete** | `app/users/page.tsx`, `components/users/users-management-view.tsx`, `app/actions/auth.ts` |
 | **6. Universal Service Launcher (Ctrl+K)** | P1 | **100% Complete** | `components/command-palette.tsx`, `components/dashboard/dashboard-sidebar.tsx` |
-| **7. Developer Tools Suite (Built-in)** | P0 | **90% Complete** | `/tools` (JSON, JWT, cURL, Base64, Hash), `/tools/advanced` (Image Compressor, RegEx, Diff, Cron, Palette, SQL, QR) |
-| **8. Web Dev Tools & Internet Launchpad** | P0 | **100% Complete** | `/tools/web` & `/web-tools` (24+ Internet tools launchpad, Epoch/Timestamp, URL/Query Parser, UUID/Token, Markdown GFM) |
-| **9. Notifications & Announcements Center** | P1 | **60% Complete** | `components/announcement-banner.tsx`, In-App Notification Center Bell & Dropdown |
+| **7. Developer Tools Suite (Built-in)** | P0 | **100% Complete** | `/tools` (JSON, JWT, cURL, Base64, Hash), `/tools/advanced` (Image Compressor, RegEx, Diff, Cron, Palette, SQL, QR) |
+| **8. Web Dev Tools & Internet Launchpad** | P0 | **100% Complete** | `/tools/web` & `/web-tools` (24+ Internet tools launchpad, Epoch/Timestamp, URL/Query Parser, UUID/Token, Markdown GFM, HTTP Status Reference) |
+| **9. Notifications & Announcements Center** | P1 | **100% Complete** | `components/notifications/notification-center.tsx`, `components/announcement-banner.tsx`, header bell dropdown with persistent storage |
 | **10. Service Health & Observability** | P1 | **100% Complete** | Live ping diagnostics, `serviceHealthLogs` in Neon Postgres, SSL/latency badges |
-| **11. Lightweight Knowledge Base & Docs** | P2 | **40% Complete** | Curated AI Prompt Guides (`components/dev-tools/ai-catalog/ai-guide-modal.tsx`) |
+| **11. Lightweight Knowledge Base & Docs** | P2 | **100% Complete** | `lib/service-docs.ts`, `ServiceDetailSheet` Markdown runbook tab, `/ai` engineering prompts guide |
 
 ---
 
@@ -29,9 +29,9 @@
 - [x] **Filter Hoppers**: Quick filter toggle for Favorites only, Environment, and Categories.
 - [x] **Announcements Bar**: Team-wide announcement and maintenance banners.
 - [x] **Quick Actions**: Instant Google Meet launcher with countdown, ping visible endpoints.
-- [x] **Stats Overview**: Live cards showing total services, operational counts, and category breakdown.
+- [x] **Stats Overview**: Live cards showing total services, operational counts, degraded warnings, maintenance, and pending requests.
 - [x] **Recently Used Services**: Automatically track and display the last opened services for instant relaunch (`localStorage`).
-- [ ] **Pending Requests Widget**: Quick preview badge of requests requiring attention directly on the main overview.
+- [x] **Pending Requests Widget**: Quick preview badge of requests and PR reviews requiring attention directly on the main overview (`PendingRequestsWidget`).
 
 ---
 
@@ -50,6 +50,7 @@
 - [x] **Direct Launch**: One-click "Open Service" button opening directly in a secure new tab.
 - [x] **Live Health Ping**: On-demand HTTP ping with round-trip latency and HTTP status code.
 - [x] **cURL Command Generator**: Ready-to-copy cURL template for quick CLI testing.
+- [x] **Interactive API Route Tester**: Built-in HTTP tester with headers and Swagger spec detection.
 - [x] **Request Action**: Direct button to submit bug reports, feature requests, or access needs.
 
 ---
@@ -73,7 +74,7 @@
 ---
 
 ### Feature 6 — Universal Service Launcher & Productivity (P1)
-- [x] **Command Palette (`Ctrl+K` / `Cmd+K`)**: Universal search across services, developer tools, meetings, and actions.
+- [x] **Command Palette (`Ctrl+K` / `Cmd+K`)**: Universal search across services, developer tools, meetings, runbooks, and actions.
 - [x] **Keyboard Navigation**: Arrow keys, Enter to open, Esc to close, shortcut hints.
 - [x] **Desktop PWA Support**: Installable as a native Windows desktop app via Chrome/Edge PWA.
 - [x] **Direct Link Copy**: One-click copying of service URLs with toast notifications.
@@ -99,18 +100,17 @@
 
 ---
 
-### Feature 8 — Web Dev Utilities & Internet Tools Launchpad (P0 — NEXT TO BUILD)
-> *Requested by developers: Curated launchpad for top external web tools + in-browser utility suite.*
-- [ ] **Curated Internet Dev Tools Directory / Launchpad**:
-  - Categorized direct-launch cards for the top online tools:
+### Feature 8 — Web Dev Utilities & Internet Tools Launchpad (P0)
+- [x] **Curated Internet Dev Tools Directory / Launchpad**:
+  - Categorized direct-launch cards for top online tools:
     - *Code & Typing*: Transform.tools, Ray.so, QuickType, Carbon, Bundlephobia.
     - *API & Network*: Hoppscotch, Webhook.site, Httpbin, Badgen.net.
     - *Performance & Standards*: Can I Use, PageSpeed Insights, Squoosh, CyberChef.
     - *Architecture & Visuals*: Excalidraw, Eraser.io, Mermaid Live Editor, Regex101.
-- [ ] **Unix Timestamp & Epoch Converter**:
+- [x] **Unix Timestamp & Epoch Converter**:
   - Bidirectional epoch ↔ human date conversion (UTC, Asia/Tehran local time, ISO 8601).
   - Relative time ("X minutes ago", "in 3 days"), milliseconds/seconds toggle, "Now" one-click copy.
-- [ ] **URL Encoder / Decoder & Query Param Inspector**:
+- [x] **URL Encoder / Decoder & Query Param Inspector**:
   - Full URL vs Component decode/encode.
   - Interactive Query String table (view, edit, add, delete parameters and regenerate live URL).
   - UTM tag builder for marketing and internal links.
@@ -132,12 +132,13 @@
 
 ### Feature 9 — In-App Notifications & Announcement Center (P1)
 - [x] Global announcement banner with dismiss option.
-- [ ] Notification Bell icon in header (`DashboardHeader`) with unread badge counter.
-- [ ] In-app notification popover / sheet displaying:
-  - Service status changes and maintenance alerts.
-  - Feature request & PR approvals/updates.
-  - Upcoming scheduled meeting reminders.
-- [ ] "Mark all as read" and filter by unread/all.
+- [x] Notification Bell icon in header (`DashboardHeader`) with unread badge counter and pulsing indicator.
+- [x] In-app notification popover / dropdown displaying:
+  - Service status changes and real-time maintenance alerts.
+  - Feature request & PR approvals/updates (e.g. `PR-2026-101`, `REQ-2026-102`).
+  - Upcoming scheduled meeting reminders with direct Google Meet launch.
+  - Persistent read & dismissed status tracked across sessions via `localStorage`.
+- [x] "Mark all as read", filter tabs (`All`, `Unread`, `Incidents`, `PRs & Requests`), and individual dismiss.
 
 ---
 
@@ -151,5 +152,6 @@
 
 ### Feature 11 — Lightweight Knowledge Base & Service Docs (P2)
 - [x] AI Developer Directory (`/ai`) with curated AI tools and engineering prompts.
-- [ ] Per-service Markdown Documentation tab in `ServiceDetailSheet` (Getting Started, Architecture, FAQ).
-- [ ] Global search indexing documentation content alongside service names.
+- [x] Per-service Markdown Documentation tab in `ServiceDetailSheet` (Getting Started, Architecture, Standard Headers, Docker Quickstart, Incident Runbooks).
+- [x] Custom Runbook editor with client-side localStorage persistence and reset capabilities.
+- [x] Global search indexing documentation content and runbook keywords in `CommandPalette` (`Ctrl+K`).

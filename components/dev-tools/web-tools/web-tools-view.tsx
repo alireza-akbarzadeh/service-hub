@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { NotificationCenter } from "@/components/notifications/notification-center"
 import { HeaderMarketSection } from "@/components/market-rates/header-market-section"
 import { cn } from "@/lib/utils"
 
@@ -138,6 +139,7 @@ export function WebToolsView({ initialTab = "launchpad" }: WebToolsViewProps) {
             <Radio className="size-2 text-emerald-500 animate-pulse" />
           </div>
 
+          <NotificationCenter />
           <ThemeToggle />
         </div>
       </header>
