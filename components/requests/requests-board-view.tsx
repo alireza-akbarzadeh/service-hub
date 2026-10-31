@@ -9,6 +9,7 @@ import {
   Bug,
   CheckCircle2,
   Clock,
+  Download,
   ExternalLink,
   Filter,
   Flame,
@@ -28,17 +29,20 @@ import {
   Tag,
   ThumbsUp,
   User,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationCenter } from "@/components/notifications/notification-center"
+import { DashboardBottomBar } from "@/components/dashboard/dashboard-bottom-bar"
 import { RequestSubmitModal } from "./request-submit-modal"
 import { RequestDetailSheet } from "./request-detail-sheet"
-import { DiffViewer } from "./diff-viewer"
+import { KanbanCard } from "./kanban-card"
 import type { FeedbackRequest } from "@/lib/db/schema"
-import { toggleRequestUpvote } from "@/app/actions/requests"
+import { toggleRequestUpvote, updateFeedbackRequest } from "@/app/actions/requests"
+import { cn } from "@/lib/utils"
 
 interface RequestsBoardViewProps {
   initialRequests: FeedbackRequest[]
@@ -46,12 +50,56 @@ interface RequestsBoardViewProps {
   teamName?: string
 }
 
-const STATUS_COLUMNS = [
-  { id: "open", label: "Open (New)", icon: Clock, color: "text-sky-500", border: "border-sky-500/20" },
-  { id: "under_review", label: "Under Review", icon: Search, color: "text-amber-500", border: "border-amber-500/20" },
-  { id: "in_progress", label: "In Progress", icon: Sparkles, color: "text-blue-500", border: "border-blue-500/20" },
-  { id: "merged", label: "Merged / Resolved", icon: CheckCircle2, color: "text-purple-500", border: "border-purple-500/20" },
-  { id: "closed", label: "Closed", icon: CheckCircle2, color: "text-zinc-500", border: "border-zinc-500/20" },
+type RequestStatus = "open" | "under_review" | "in_progress" | "merged" | "closed"
+
+const STATUS_COLUMNS: {
+  id: RequestStatus
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  activeBorder: string
+  bg: string
+}[] = [
+  {
+    id: "open",
+    label: "Open (New)",
+    icon: Clock,
+    color: "text-sky-500",
+    activeBorder: "border-sky-500/60 ring-2 ring-sky-500/20",
+    bg: "bg-sky-500/5",
+  },
+  {
+    id: "under_review",
+    label: "Under Review",
+    icon: Search,
+    color: "text-amber-500",
+    activeBorder: "border-amber-500/60 ring-2 ring-amber-500/20",
+    bg: "bg-amber-500/5",
+  },
+  {
+    id: "in_progress",
+    label: "In Progress",
+    icon: Sparkles,
+    color: "text-blue-500",
+    activeBorder: "border-blue-500/60 ring-2 ring-blue-500/20",
+    bg: "bg-blue-500/5",
+  },
+  {
+    id: "merged",
+    label: "Merged / Done",
+    icon: CheckCircle2,
+    color: "text-purple-500",
+    activeBorder: "border-purple-500/60 ring-2 ring-purple-500/20",
+    bg: "bg-purple-500/5",
+  },
+  {
+    id: "closed",
+    label: "Closed",
+    icon: CheckCircle2,
+    color: "text-zinc-500",
+    activeBorder: "border-zinc-500/60 ring-2 ring-zinc-500/20",
+    bg: "bg-zinc-500/5",
+  },
 ]
 
 export function RequestsBoardView({
@@ -63,8 +111,16 @@ export function RequestsBoardView({
   const [selectedType, setSelectedType] = React.useState<string>("all")
   const [selectedStatus, setSelectedStatus] = React.useState<string>("all")
   const [selectedPriority, setSelectedPriority] = React.useState<string>("all")
+  const [selectedService, setSelectedService] = React.useState<string>("all")
   const [searchQuery, setSearchQuery] = React.useState<string>("")
+  const [sortBy, setSortBy] = React.useState<"newest" | "upvotes" | "priority">("newest")
   const [viewMode, setViewMode] = React.useState<"kanban" | "table">("kanban")
+  const [needsAttentionOnly, setNeedsAttentionOnly] = React.useState<boolean>(false)
+
+  // Drag and drop state
+  const [draggedItemId, setDraggedItemId] = React.useState<string | null>(null)
+  const [dragOverColId, setDragOverColId] = React.useState<string | null>(null)
+  const [moveToast, setMoveToast] = React.useState<{ text: string } | null>(null)
 
   // Modal & Drawer State
   const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState(false)
@@ -72,7 +128,16 @@ export function RequestsBoardView({
   const [activeDetailRequest, setActiveDetailRequest] = React.useState<FeedbackRequest | null>(null)
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
 
-  // Compute stats
+  // Unique target services for filter dropdown
+  const uniqueServices = React.useMemo(() => {
+    const set = new Set<string>()
+    requests.forEach((r) => {
+      if (r.targetService) set.add(r.targetService)
+    })
+    return Array.from(set).sort()
+  }, [requests])
+
+  // Compute triage stats
   const stats = React.useMemo(() => {
     const total = requests.length
     const features = requests.filter((r) => r.type === "feature").length
@@ -94,38 +159,109 @@ export function RequestsBoardView({
 
   // Filter requests
   const filteredRequests = React.useMemo(() => {
-    return requests.filter((r) => {
-      // Type filter
-      if (selectedType !== "all" && r.type !== selectedType) return false
-      // Status filter
-      if (selectedStatus !== "all" && r.status !== selectedStatus) return false
-      // Priority filter
-      if (selectedPriority !== "all" && r.priority !== selectedPriority) return false
-
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase()
-        const matchTitle = r.title.toLowerCase().includes(q)
-        const matchDesc = r.description.toLowerCase().includes(q)
-        const matchAuthor = r.authorName.toLowerCase().includes(q)
-        const matchService = r.targetService.toLowerCase().includes(q)
-        const matchBranch = r.branchName?.toLowerCase().includes(q) || false
-        const matchTags = r.tags.toLowerCase().includes(q)
-        if (!matchTitle && !matchDesc && !matchAuthor && !matchService && !matchBranch && !matchTags) {
-          return false
+    return requests
+      .filter((r) => {
+        if (needsAttentionOnly) {
+          const isCriticalBug =
+            r.type === "bug" && (r.severity === "P0" || r.severity === "P1") && r.status !== "closed"
+          const isPendingPr =
+            r.type === "pull_request" && (r.status === "open" || r.status === "under_review")
+          if (!isCriticalBug && !isPendingPr) return false
         }
-      }
-      return true
-    })
-  }, [requests, selectedType, selectedStatus, selectedPriority, searchQuery])
 
-  // Upvote item directly from board
+        if (selectedType !== "all" && r.type !== selectedType) return false
+        if (selectedStatus !== "all" && r.status !== selectedStatus) return false
+        if (selectedPriority !== "all" && r.priority !== selectedPriority) return false
+        if (selectedService !== "all" && r.targetService !== selectedService) return false
+
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase()
+          const matchTitle = r.title.toLowerCase().includes(q)
+          const matchDesc = r.description.toLowerCase().includes(q)
+          const matchAuthor = r.authorName.toLowerCase().includes(q)
+          const matchService = r.targetService.toLowerCase().includes(q)
+          const matchBranch = r.branchName?.toLowerCase().includes(q) || false
+          const matchTags = r.tags.toLowerCase().includes(q)
+          if (!matchTitle && !matchDesc && !matchAuthor && !matchService && !matchBranch && !matchTags) {
+            return false
+          }
+        }
+        return true
+      })
+      .sort((a, b) => {
+        if (sortBy === "upvotes") return b.upvotes - a.upvotes
+        if (sortBy === "priority") {
+          const pRank = { critical: 4, high: 3, medium: 2, low: 1 }
+          const diff = (pRank[b.priority as keyof typeof pRank] || 0) - (pRank[a.priority as keyof typeof pRank] || 0)
+          if (diff !== 0) return diff
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+  }, [requests, needsAttentionOnly, selectedType, selectedStatus, selectedPriority, selectedService, searchQuery, sortBy])
+
+  // Handle Drag & Drop move
+  const handleMoveStatus = async (itemId: string, newStatus: RequestStatus) => {
+    const item = requests.find((r) => r.id === itemId)
+    if (!item || item.status === newStatus) return
+
+    // Optimistic UI update
+    setRequests((prev) =>
+      prev.map((r) => (r.id === itemId ? { ...r, status: newStatus, updatedAt: new Date() } : r))
+    )
+
+    setMoveToast({ text: `Moved ${item.id} to ${newStatus.replace("_", " ")}` })
+    setTimeout(() => setMoveToast(null), 3000)
+
+    // Background server action
+    try {
+      await updateFeedbackRequest(itemId, { status: newStatus })
+    } catch (err) {
+      console.warn("Failed to persist request status:", err)
+    }
+  }
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("text/plain", id)
+    e.dataTransfer.effectAllowed = "move"
+    setDraggedItemId(id)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedItemId(null)
+    setDragOverColId(null)
+  }
+
+  const handleDragOverColumn = (e: React.DragEvent, colId: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    if (dragOverColId !== colId) {
+      setDragOverColId(colId)
+    }
+  }
+
+  const handleDropToColumn = (e: React.DragEvent, colId: RequestStatus) => {
+    e.preventDefault()
+    const id = e.dataTransfer.getData("text/plain") || draggedItemId
+    if (id) {
+      handleMoveStatus(id, colId)
+    }
+    setDraggedItemId(null)
+    setDragOverColId(null)
+  }
+
+  // Quick upvote action
   const handleQuickUpvote = async (e: React.MouseEvent, item: FeedbackRequest) => {
     e.stopPropagation()
     const currentUser =
       typeof window !== "undefined"
         ? localStorage.getItem("service_catalog_coworker_name") || "Coworker"
         : "Coworker"
+
+    // Optimistic local update
+    setRequests((prev) =>
+      prev.map((r) => (r.id === item.id ? { ...r, upvotes: r.upvotes + 1 } : r))
+    )
 
     const res = await toggleRequestUpvote(item.id, currentUser)
     if (res.success && res.upvotes !== undefined) {
@@ -157,46 +293,71 @@ export function RequestsBoardView({
     setIsSubmitModalOpen(true)
   }
 
+  // Export Backlog to CSV
+  const handleExportCsv = () => {
+    const headers = ["Ticket ID", "Type", "Title", "Target Service", "Priority", "Status", "Author", "Upvotes", "Created At"]
+    const rows = filteredRequests.map((r) => [
+      r.id,
+      r.type,
+      `"${r.title.replace(/"/g, '""')}"`,
+      `"${r.targetService}"`,
+      r.priority,
+      r.status,
+      `"${r.authorName}"`,
+      r.upvotes,
+      new Date(r.createdAt).toISOString(),
+    ])
+
+    const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", `service-hub-requests-${new Date().toISOString().split("T")[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Top Header */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
+    <div className="min-h-screen bg-background text-foreground flex flex-col select-none selection:bg-primary/20 overflow-x-clip">
+      {/* Sticky Top Application Header */}
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-3">
-          <Link href="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 gap-1.5 px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-3.5" />
-              <span>Back to Catalog</span>
-            </Button>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="hidden sm:inline">Back to Hub</span>
           </Link>
 
           <span className="h-4 w-px bg-border" />
 
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <GitPullRequest className="size-4" />
+            <div className="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary border border-primary/30 shadow-xs">
+              <GitPullRequest className="size-3.5" />
             </div>
-            <div>
-              <h1 className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
-                <span>Requests & Coworker PRs</span>
-                <Badge
-                  variant="outline"
-                  className={
-                    isLiveNeon
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono"
-                      : "border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-600 font-mono"
-                  }
-                >
-                  {isLiveNeon ? "Neon PostgreSQL Live" : "Local Sync"}
-                </Badge>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-sm font-bold tracking-tight text-foreground">
+                Requests & Coworker PRs
               </h1>
+              <Badge
+                variant="outline"
+                className={
+                  isLiveNeon
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-[10px] text-emerald-600 dark:text-emerald-400 font-mono hidden sm:inline-flex"
+                    : "border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-600 font-mono hidden sm:inline-flex"
+                }
+              >
+                {isLiveNeon ? "Neon Live" : "Local Sync"}
+              </Badge>
             </div>
           </div>
         </div>
 
+        {/* Header Right Actions */}
         <div className="flex items-center gap-2">
           {/* Quick Submit Buttons */}
           <div className="hidden sm:flex items-center gap-1.5">
@@ -205,7 +366,7 @@ export function RequestsBoardView({
               variant="outline"
               size="sm"
               onClick={() => openSubmitModal("pull_request")}
-              className="h-8 cursor-pointer gap-1.5 border-purple-500/30 bg-purple-500/5 px-2.5 text-xs font-semibold text-purple-600 hover:bg-purple-500/10 dark:text-purple-400"
+              className="h-8 cursor-pointer gap-1.5 border-purple-500/30 bg-purple-500/5 px-2.5 text-xs font-semibold text-purple-600 hover:bg-purple-500/10 dark:text-purple-400 shadow-2xs"
             >
               <GitPullRequest className="size-3.5" />
               <span>Propose Bug Fix / PR</span>
@@ -216,7 +377,7 @@ export function RequestsBoardView({
               variant="outline"
               size="sm"
               onClick={() => openSubmitModal("bug")}
-              className="h-8 cursor-pointer gap-1.5 border-rose-500/30 bg-rose-500/5 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+              className="h-8 cursor-pointer gap-1.5 border-rose-500/30 bg-rose-500/5 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 shadow-2xs"
             >
               <Bug className="size-3.5" />
               <span>Report Bug</span>
@@ -233,17 +394,30 @@ export function RequestsBoardView({
             <span>New Request</span>
           </Button>
 
+          {/* Export CSV */}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleExportCsv}
+            className="size-8 cursor-pointer text-muted-foreground hover:text-foreground hidden sm:flex"
+            title="Export filtered backlog to CSV"
+          >
+            <Download className="size-3.5" />
+          </Button>
+
+          <span className="h-4 w-px bg-border hidden sm:block" />
           <NotificationCenter />
           <ThemeToggle />
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 space-y-6">
-        {/* Stats Row */}
+      {/* Main Workspace */}
+      <main className="w-full max-w-[1920px] mx-auto flex-1 p-3 sm:p-5 lg:p-6 space-y-4 pb-16">
+        {/* Triage Stats Row */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           {/* Total Submissions */}
-          <div className="rounded-xl border border-border bg-card p-3.5 shadow-2xs">
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-2xs">
             <div className="flex items-center justify-between text-muted-foreground">
               <span className="text-xs font-medium">All Submissions</span>
               <Layers className="size-4 text-primary" />
@@ -257,7 +431,7 @@ export function RequestsBoardView({
           </div>
 
           {/* Pending PRs */}
-          <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3.5 shadow-2xs">
+          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-3.5 shadow-2xs">
             <div className="flex items-center justify-between text-purple-600 dark:text-purple-400">
               <span className="text-xs font-medium">Bug Fix PRs</span>
               <GitPullRequest className="size-4" />
@@ -271,7 +445,7 @@ export function RequestsBoardView({
           </div>
 
           {/* Feature Requests */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 shadow-2xs">
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 shadow-2xs">
             <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
               <span className="text-xs font-medium">Feature Requests</span>
               <Lightbulb className="size-4" />
@@ -280,12 +454,12 @@ export function RequestsBoardView({
               {stats.features}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">
-              Community suggestions
+              Suggestions & enhancements
             </div>
           </div>
 
           {/* Active Bugs */}
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5 shadow-2xs">
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3.5 shadow-2xs">
             <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
               <span className="text-xs font-medium">Bug Reports</span>
               <Bug className="size-4" />
@@ -295,7 +469,8 @@ export function RequestsBoardView({
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">
               {stats.criticalBugs > 0 ? (
-                <span className="font-semibold text-rose-600 dark:text-rose-400">
+                <span className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                  <Flame className="size-3 animate-pulse" />
                   {stats.criticalBugs} P0/P1 blockers
                 </span>
               ) : (
@@ -305,7 +480,7 @@ export function RequestsBoardView({
           </div>
 
           {/* Merged / Done */}
-          <div className="hidden lg:block rounded-xl border border-border bg-card p-3.5 shadow-2xs">
+          <div className="hidden lg:block rounded-2xl border border-border bg-card p-3.5 shadow-2xs">
             <div className="flex items-center justify-between text-muted-foreground">
               <span className="text-xs font-medium">Merged & Resolved</span>
               <GitMerge className="size-4 text-emerald-500" />
@@ -320,15 +495,18 @@ export function RequestsBoardView({
         </div>
 
         {/* Filter and Control Bar */}
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-2xs">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Type selector tabs */}
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setSelectedType("all")}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  selectedType === "all"
+                onClick={() => {
+                  setSelectedType("all")
+                  setNeedsAttentionOnly(false)
+                }}
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  selectedType === "all" && !needsAttentionOnly
                     ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
@@ -338,9 +516,12 @@ export function RequestsBoardView({
 
               <button
                 type="button"
-                onClick={() => setSelectedType("pull_request")}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  selectedType === "pull_request"
+                onClick={() => {
+                  setSelectedType("pull_request")
+                  setNeedsAttentionOnly(false)
+                }}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  selectedType === "pull_request" && !needsAttentionOnly
                     ? "bg-purple-600 text-white shadow-2xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
@@ -351,141 +532,229 @@ export function RequestsBoardView({
 
               <button
                 type="button"
-                onClick={() => setSelectedType("feature")}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  selectedType === "feature"
-                    ? "bg-emerald-600 text-white shadow-2xs"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <Lightbulb className="size-3.5" />
-                <span>Features ({stats.features})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedType("bug")}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  selectedType === "bug"
+                onClick={() => {
+                  setSelectedType("bug")
+                  setNeedsAttentionOnly(false)
+                }}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  selectedType === "bug" && !needsAttentionOnly
                     ? "bg-rose-600 text-white shadow-2xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 <Bug className="size-3.5" />
-                <span>Bugs ({stats.bugs})</span>
+                <span>Bug Reports ({stats.bugs})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedType("feature")
+                  setNeedsAttentionOnly(false)
+                }}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  selectedType === "feature" && !needsAttentionOnly
+                    ? "bg-emerald-600 text-white shadow-2xs"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Lightbulb className="size-3.5" />
+                <span>Feature Requests ({stats.features})</span>
+              </button>
+
+              {/* Fast Triage Pill: Needs Attention */}
+              <button
+                type="button"
+                onClick={() => setNeedsAttentionOnly(!needsAttentionOnly)}
+                className={cn(
+                  "flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ml-1",
+                  needsAttentionOnly
+                    ? "bg-amber-500 text-white shadow-2xs ring-2 ring-amber-500/40"
+                    : "border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                )}
+              >
+                <Flame className="size-3.5" />
+                <span>Needs Attention ({stats.criticalBugs + stats.pendingPrs})</span>
               </button>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-0.5">
+            {/* View Mode Switcher: Kanban vs Table */}
+            <div className="flex items-center rounded-xl border border-border/80 bg-muted/30 p-1 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode("kanban")}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 font-semibold transition-all ${
                   viewMode === "kanban"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Kanban className="size-3.5" />
-                <span className="hidden sm:inline">Kanban Board</span>
+                <span>Kanban (DnD)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 font-semibold transition-all ${
                   viewMode === "table"
-                    ? "bg-background text-foreground shadow-2xs font-semibold"
+                    ? "bg-primary text-primary-foreground shadow-2xs"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <TableIcon className="size-3.5" />
-                <span className="hidden sm:inline">Table View</span>
+                <span>Table View</span>
               </button>
             </div>
           </div>
 
-          {/* Search & dropdown filters */}
-          <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-4">
+          {/* Search & Dropdown Filters Grid */}
+          <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-5">
             <div className="relative sm:col-span-2">
               <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, author, branch, service, tag..."
-                className="h-8 pl-8 text-xs"
+                placeholder="Search tickets, author, branch, service, tag..."
+                className="h-8 pl-8 text-xs rounded-xl"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
             </div>
 
+            {/* Target Service Filter */}
             <div>
               <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+                className="h-8 w-full rounded-xl border border-border bg-background px-2 text-xs"
               >
-                <option value="all">All Statuses</option>
-                <option value="open">Open (New)</option>
-                <option value="under_review">Under Review</option>
-                <option value="in_progress">In Progress</option>
-                <option value="merged">Merged / Resolved</option>
-                <option value="closed">Closed</option>
+                <option value="all">All Microservices</option>
+                {uniqueServices.map((svc) => (
+                  <option key={svc} value={svc}>
+                    {svc}
+                  </option>
+                ))}
               </select>
             </div>
 
+            {/* Priority Filter */}
             <div>
               <select
                 value={selectedPriority}
                 onChange={(e) => setSelectedPriority(e.target.value)}
-                className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                className="h-8 w-full rounded-xl border border-border bg-background px-2 text-xs"
               >
                 <option value="all">All Priorities</option>
-                <option value="critical">Critical</option>
+                <option value="critical">Critical (Blocker)</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
             </div>
+
+            {/* Sort Filter */}
+            <div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="h-8 w-full rounded-xl border border-border bg-background px-2 text-xs"
+              >
+                <option value="newest">Sort: Newest First</option>
+                <option value="upvotes">Sort: Most Upvoted</option>
+                <option value="priority">Sort: Highest Priority</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Kanban Board View */}
+        {/* Temporary Drag & Drop Move Toast Notification */}
+        {moveToast && (
+          <div className="fixed bottom-14 right-6 z-50 flex items-center gap-2 rounded-xl border border-primary/40 bg-card/95 px-4 py-2 text-xs font-semibold shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+            <CheckCircle2 className="size-4 text-emerald-500" />
+            <span>{moveToast.text}</span>
+          </div>
+        )}
+
+        {/* Kanban Board View with Full Drag & Drop */}
         {viewMode === "kanban" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5 items-start">
             {STATUS_COLUMNS.map((col) => {
               const itemsInCol = filteredRequests.filter((r) => r.status === col.id)
               const Icon = col.icon
+              const isOver = dragOverColId === col.id
 
               return (
                 <div
                   key={col.id}
-                  className="flex flex-col rounded-xl border border-border bg-muted/20 p-3 min-h-[400px]"
+                  onDragOver={(e) => handleDragOverColumn(e, col.id)}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setDragOverColId(null)
+                    }
+                  }}
+                  onDrop={(e) => handleDropToColumn(e, col.id)}
+                  className={cn(
+                    "flex flex-col rounded-2xl border bg-muted/20 p-3 min-h-[480px] transition-all",
+                    isOver ? col.activeBorder : "border-border/70",
+                    isOver ? col.bg : "bg-muted/15"
+                  )}
                 >
                   {/* Column Header */}
-                  <div className="mb-3 flex items-center justify-between pb-2 border-b border-border">
-                    <div className="flex items-center gap-1.5 font-semibold text-xs text-foreground">
-                      <Icon className={`size-3.5 ${col.color}`} />
+                  <div className="mb-3 flex items-center justify-between pb-2 border-b border-border/60">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-foreground">
+                      <Icon className={cn("size-3.5", col.color)} />
                       <span>{col.label}</span>
                     </div>
-                    <Badge variant="secondary" className="font-mono text-[10px]">
-                      {itemsInCol.length}
-                    </Badge>
+
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="font-mono text-[10px] px-1.5 py-0">
+                        {itemsInCol.length}
+                      </Badge>
+                      <button
+                        type="button"
+                        onClick={() => openSubmitModal("feature")}
+                        className="size-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                        title={`Add ticket to ${col.label}`}
+                      >
+                        <Plus className="size-3" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Cards List */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 flex-1">
                     {itemsInCol.map((item) => (
-                      <RequestCard
+                      <KanbanCard
                         key={item.id}
                         item={item}
+                        isDragging={draggedItemId === item.id}
+                        onDragStart={(e) => handleDragStart(e, item.id)}
+                        onDragEnd={handleDragEnd}
                         onClick={() => handleOpenDetail(item)}
                         onUpvote={(e) => handleQuickUpvote(e, item)}
+                        onQuickStatusChange={(newStatus) => handleMoveStatus(item.id, newStatus)}
                       />
                     ))}
 
+                    {/* Empty Drop Zone */}
                     {itemsInCol.length === 0 && (
-                      <div className="py-8 text-center text-[11px] text-muted-foreground/60 italic">
-                        No items in this column
+                      <div
+                        className={cn(
+                          "py-12 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-3 text-[11px] transition-colors",
+                          isOver
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-border/60 text-muted-foreground/60 italic"
+                        )}
+                      >
+                        <span>{isOver ? "Release to drop ticket here" : "No items in this column"}</span>
+                        <span className="text-[10px] opacity-75 mt-0.5">Drag tickets here to move</span>
                       </div>
                     )}
                   </div>
@@ -497,14 +766,14 @@ export function RequestsBoardView({
 
         {/* Table View */}
         {viewMode === "table" && (
-          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-2xs">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-border bg-muted/40 font-semibold text-muted-foreground">
                   <tr>
                     <th className="py-2.5 px-3">Ticket ID</th>
                     <th className="py-2.5 px-3">Type</th>
-                    <th className="py-2.5 px-3">Title & Target Service</th>
+                    <th className="py-2.5 px-3">Title & Target Microservice</th>
                     <th className="py-2.5 px-3">Priority</th>
                     <th className="py-2.5 px-3">Status</th>
                     <th className="py-2.5 px-3">Author</th>
@@ -562,10 +831,18 @@ export function RequestsBoardView({
                           {item.priority}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3">
-                        <Badge variant="outline" className="capitalize text-[10px]">
-                          {item.status.replace("_", " ")}
-                        </Badge>
+                      <td className="py-2.5 px-3" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={item.status}
+                          onChange={(e) => handleMoveStatus(item.id, e.target.value as RequestStatus)}
+                          className="h-7 rounded-md border border-border bg-background px-2 text-xs font-medium cursor-pointer"
+                        >
+                          <option value="open">Open</option>
+                          <option value="under_review">Under Review</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="merged">Merged</option>
+                          <option value="closed">Closed</option>
+                        </select>
                       </td>
                       <td className="py-2.5 px-3 text-muted-foreground">
                         <div className="text-foreground font-medium">{item.authorName}</div>
@@ -575,7 +852,7 @@ export function RequestsBoardView({
                         <button
                           type="button"
                           onClick={(e) => handleQuickUpvote(e, item)}
-                          className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                          className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                         >
                           <ThumbsUp className="size-3 text-primary" />
                           <span>{item.upvotes}</span>
@@ -587,7 +864,7 @@ export function RequestsBoardView({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenDetail(item)}
-                          className="h-7 text-xs font-medium text-primary hover:underline"
+                          className="h-7 text-xs font-semibold text-primary hover:underline cursor-pointer"
                         >
                           Triage & Review →
                         </Button>
@@ -597,7 +874,7 @@ export function RequestsBoardView({
 
                   {filteredRequests.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="py-12 text-center text-muted-foreground">
                         No requests or pull requests match the current filters.
                       </td>
                     </tr>
@@ -627,130 +904,9 @@ export function RequestsBoardView({
         onUpdate={handleUpdateItem}
         onDelete={handleDeleteItem}
       />
-    </div>
-  )
-}
 
-function RequestCard({
-  item,
-  onClick,
-  onUpvote,
-}: {
-  item: FeedbackRequest
-  onClick: () => void
-  onUpvote: (e: React.MouseEvent) => void
-}) {
-  const typeBorder =
-    item.type === "pull_request"
-      ? "hover:border-purple-500/50"
-      : item.type === "bug"
-        ? "hover:border-rose-500/50"
-        : "hover:border-emerald-500/50"
-
-  let tags: string[] = []
-  try {
-    tags = JSON.parse(item.tags || "[]")
-  } catch {
-    tags = []
-  }
-
-  return (
-    <div
-      onClick={onClick}
-      className={`group relative cursor-pointer rounded-lg border border-border bg-card p-3 shadow-2xs transition-all hover:shadow-md ${typeBorder}`}
-    >
-      {/* Top Type & ID pill */}
-      <div className="mb-2 flex items-center justify-between gap-1 text-[11px]">
-        <div className="flex items-center gap-1.5">
-          {item.type === "pull_request" ? (
-            <Badge
-              variant="outline"
-              className="border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 font-mono text-[10px] font-bold"
-            >
-              <GitPullRequest className="mr-1 size-2.5" />
-              {item.id}
-            </Badge>
-          ) : item.type === "bug" ? (
-            <Badge
-              variant="outline"
-              className="border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-mono text-[10px] font-bold"
-            >
-              <Bug className="mr-1 size-2.5" />
-              {item.id}
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold"
-            >
-              <Lightbulb className="mr-1 size-2.5" />
-              {item.id}
-            </Badge>
-          )}
-
-          {item.severity && (
-            <span
-              className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
-                item.severity === "P0" || item.severity === "P1"
-                  ? "bg-rose-500 text-white"
-                  : "bg-amber-500/20 text-amber-700 dark:text-amber-400"
-              }`}
-            >
-              {item.severity}
-            </span>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={onUpvote}
-          className="flex items-center gap-1 rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-          title="Upvote (+1)"
-        >
-          <ThumbsUp className="size-2.5 text-primary" />
-          <span>{item.upvotes}</span>
-        </button>
-      </div>
-
-      {/* Title */}
-      <h4 className="mb-1.5 text-xs font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
-        {item.title}
-      </h4>
-
-      {/* Target service & branch */}
-      <div className="mb-2 text-[10px] text-muted-foreground flex flex-wrap items-center gap-1">
-        <span className="font-medium text-foreground/80">{item.targetService}</span>
-        {item.branchName && (
-          <span className="inline-flex items-center gap-0.5 rounded bg-muted px-1 font-mono text-[9px] text-amber-600 dark:text-amber-400">
-            <GitBranch className="size-2" />
-            {item.branchName}
-          </span>
-        )}
-      </div>
-
-      {/* Diff snippet preview if PR */}
-      {item.type === "pull_request" && item.diffContent && (
-        <div className="mb-2 rounded bg-slate-950 px-2 py-1 font-mono text-[10px] text-emerald-400 line-clamp-1 border border-slate-800">
-          code patch available ↗
-        </div>
-      )}
-
-      {/* Submitter footer */}
-      <div className="flex items-center justify-between border-t border-border/60 pt-2 text-[10px] text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <div
-            className="flex size-4 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white"
-            style={{ backgroundColor: item.authorAvatar || "#3b82f6" }}
-          >
-            {item.authorName.charAt(0).toUpperCase()}
-          </div>
-          <span className="truncate max-w-[90px]">{item.authorName}</span>
-        </div>
-
-        <span className="capitalize text-[10px] font-medium text-foreground/70">
-          {item.priority} priority
-        </span>
-      </div>
+      {/* Fixed Bottom Telemetry Bar */}
+      <DashboardBottomBar branchName="master" />
     </div>
   )
 }
