@@ -35,6 +35,7 @@ import {
   Gamepad2,
   GitPullRequest,
   History,
+  KeyRound,
   Terminal,
   Video,
   Wrench,
@@ -368,6 +369,25 @@ export function DashboardSidebar({
                       className="ml-auto border-amber-500/30 bg-amber-500/10 px-1 py-0 font-mono text-[9px] text-amber-600 dark:text-amber-400 group-data-[collapsible=icon]:hidden"
                     >
                       REST
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Env & Secrets Studio */}
+              <SidebarMenuItem>
+                <Link href="/env" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Environment Variables, Secrets & Kubernetes Config Studio (/env)"
+                    className="w-full cursor-pointer"
+                  >
+                    <KeyRound className="size-4 text-emerald-500" />
+                    <span>Env Studio</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Config
                     </Badge>
                   </SidebarMenuButton>
                 </Link>

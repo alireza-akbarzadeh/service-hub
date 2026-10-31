@@ -24,6 +24,7 @@
 | **14. System Status Page & SLA Observability** | P0 | **100% Complete** | `/status`, `components/status/system-status-view.tsx`, `lib/status-data.ts` (30-day SLA heatmaps, batch health ping probe, incident triage & maintenance windows) |
 | **15. In-Browser API Playground & Sandbox** | P0 | **100% Complete** | `/playground`, `components/playground/api-playground-view.tsx`, `app/api/playground/proxy/route.ts`, `lib/api-playground-utils.ts` (REST client, CORS proxy, code exporter, history) |
 | **16. Activity Feed & Enterprise Audit Trail** | P1 | **100% Complete** | `/activity`, `components/activity/activity-feed-view.tsx`, `lib/activity-data.ts` (Real-time audit log, team filtration, CSV export, event timeline) |
+| **17. Environment Variables & Secrets Studio** | P0 | **100% Complete** | `/env`, `components/env/env-config-view.tsx`, `lib/env-utils.ts` (.env workbench, multi-env diff matrix, K8s ConfigMap/Secret generator) |
 
 ---
 
@@ -249,3 +250,23 @@
   - One-click RFC 4180 **CSV Export** for external compliance and security reviews.
 - [x] **Navigation & Universal Shortcuts**:
   - Integrated in `DashboardSidebar` ("Activity Feed" with Audit badge) and `CommandPalette` (`Ctrl+K` → *"Activity Feed & Enterprise Audit Trail"*).
+
+---
+
+### Feature 17 — Environment Variables & Secrets Studio (P0)
+- [x] **Split-Pane .env Editor & Structured Table**:
+  - Raw .env text editor on left synchronized with an interactive key-value table on the right.
+  - Secret value masking & unmasking (`••••••••` toggle) for passwords, API tokens, and credentials.
+  - Variable categorization, inline commenting, and dynamic variable insertion.
+- [x] **Multi-Environment Diff & Comparator Matrix**:
+  - Compare two environments side-by-side (`Development`, `Staging`, `Production`).
+  - Automatic detection of missing keys in either environment, mismatched values, and identical synchronized variables.
+- [x] **Format Exporter & Kubernetes Manifest Generator**:
+  - 1-click serialization to **Docker Compose** (`environment:` YAML), **Kubernetes ConfigMap** YAML, **Kubernetes Secret** (Base64 encoded) YAML, JSON, and standard `.env`.
+  - Direct file download and clipboard copy.
+- [x] **Syntax Validator & POSIX Warnings**:
+  - Detects duplicate keys, unquoted spaces in values, missing equals signs, and spaces around separators.
+- [x] **Zero-Leakage In-Memory Architecture**:
+  - 100% client-side memory execution; sensitive secrets are never sent over the network or logged to external backends.
+- [x] **Navigation & Universal Shortcuts**:
+  - Integrated in `DashboardSidebar` ("Env Studio" under Developer Tools) and `CommandPalette` (`Ctrl+K` → *"Environment Variables & Secrets Studio"*).

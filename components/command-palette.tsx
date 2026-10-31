@@ -31,6 +31,7 @@ import {
   GitPullRequest,
   Globe,
   History,
+  KeyRound,
   Layers,
   LayoutGrid,
   Lightbulb,
@@ -272,6 +273,20 @@ export function CommandPalette({
         iconColor: "text-sky-500 bg-sky-500/15 border-sky-500/30",
         onSelect: () => {
           window.location.href = "/activity"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-env-studio",
+        title: "Environment Variables & Secrets Studio",
+        subtitle:
+          "Interactive .env editor, multi-environment diff comparator, and Kubernetes ConfigMap generator",
+        badge: "Config Studio",
+        icon: KeyRound,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/env"
           onOpenChange(false)
         },
       },
