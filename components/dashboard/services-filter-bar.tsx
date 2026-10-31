@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import {
   ChevronDown,
+  Download,
   Filter,
   Plus,
   Search,
@@ -32,6 +33,7 @@ interface ServicesFilterBarProps {
   gridConfig?: GridConfig
   onChangeGridConfig?: (config: GridConfig) => void
   onOpenSettings?: () => void
+  onOpenExport?: () => void
 }
 
 export function ServicesFilterBar({
@@ -49,6 +51,7 @@ export function ServicesFilterBar({
   gridConfig = DEFAULT_GRID_CONFIG,
   onChangeGridConfig,
   onOpenSettings,
+  onOpenExport,
 }: ServicesFilterBarProps) {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-xs">
@@ -143,6 +146,20 @@ export function ServicesFilterBar({
               title="Dashboard Settings & JSON Config Editor"
             >
               <Settings className="size-4" />
+            </Button>
+          )}
+
+          {onOpenExport && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenExport}
+              className="h-9 cursor-pointer gap-1.5 shadow-xs text-xs text-muted-foreground hover:text-foreground"
+              title="Export to Postman, OpenAPI 3.0, or CSV"
+            >
+              <Download className="size-3.5 text-primary" />
+              <span className="hidden lg:inline">Export API</span>
             </Button>
           )}
 

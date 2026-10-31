@@ -22,6 +22,7 @@ import {
   Copy,
   CornerDownLeft,
   Cpu,
+  Download,
   ExternalLink,
   FileJson,
   Fingerprint,
@@ -57,6 +58,7 @@ interface CommandPaletteProps {
   onSelectViewShape?: (shape: "table" | "row-card" | "square-card") => void
   onOpenSubmitRequest?: (type?: "feature" | "bug" | "pull_request") => void
   onInspectService?: (service: Service, tab?: "overview" | "tester" | "docs") => void
+  onOpenExport?: () => void
 }
 
 const ENV_ICONS: Record<string, React.ElementType> = {
@@ -103,6 +105,7 @@ export function CommandPalette({
   onSelectViewShape,
   onOpenSubmitRequest,
   onInspectService,
+  onOpenExport,
 }: CommandPaletteProps) {
   const { meetings, addMeeting } = useMeetings()
 
@@ -252,6 +255,34 @@ export function CommandPalette({
           if (services.length > 0 && onInspectService) {
             onInspectService(services[0], "docs")
           }
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-topology-graph",
+        title: "Microservice Topology & Dependency Graph",
+        subtitle:
+          "Interactive call graph, upstream/downstream callers, edge latency, and Mermaid exporter",
+        badge: "Topology",
+        icon: Network,
+        iconColor: "text-cyan-500 bg-cyan-500/15 border-cyan-500/30",
+        onSelect: () => {
+          window.location.href = "/topology"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-export-sync",
+        title: "Export API Catalog (Postman & OpenAPI 3.0)",
+        subtitle:
+          "Export all services as Postman Collection v2.1, OpenAPI 3.0 spec, or CSV spreadsheet",
+        badge: "Postman / OpenAPI",
+        icon: Download,
+        iconColor: "text-orange-500 bg-orange-500/15 border-orange-500/30",
+        onSelect: () => {
+          if (onOpenExport) onOpenExport()
           onOpenChange(false)
         },
       },

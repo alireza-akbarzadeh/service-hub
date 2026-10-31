@@ -295,6 +295,25 @@ export function DashboardSidebar({
                 </Link>
               </SidebarMenuItem>
 
+              {/* Microservice Topology */}
+              <SidebarMenuItem>
+                <Link href="/topology" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Microservice Dependency Graph & Live Architecture Topology (/topology)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Network className="size-4 text-cyan-500" />
+                    <span>Topology Graph</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-cyan-500/30 bg-cyan-500/10 px-1 py-0 font-mono text-[9px] text-cyan-600 dark:text-cyan-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Graph
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
               {/* cURL Inspector */}
               <SidebarMenuItem>
                 <Link href="/tools" className="w-full">

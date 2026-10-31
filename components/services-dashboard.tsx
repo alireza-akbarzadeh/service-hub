@@ -40,6 +40,7 @@ import { ServicesPagination } from "@/components/dashboard/services-pagination"
 import { ServicesTable } from "@/components/dashboard/services-table"
 import { StatsOverview } from "@/components/dashboard/stats-overview"
 import { PendingRequestsWidget } from "@/components/dashboard/pending-requests-widget"
+import { ExportServicesDialog } from "@/components/dashboard/export-services-dialog"
 import { IranCalendarPanel } from "@/components/iran-calendar/iran-calendar-panel"
 
 interface ServicesDashboardProps {
@@ -137,6 +138,9 @@ export function ServicesDashboard({
 
   // Dashboard Settings & JSON Config Modal State
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false)
+
+  // Export & API Developer Sync Modal State
+  const [isExportOpen, setIsExportOpen] = React.useState(false)
 
   // Coworker Feature Request & Bug Fix PR Modal State
   const [isSubmitRequestOpen, setIsSubmitRequestOpen] = React.useState(false)
@@ -311,6 +315,7 @@ export function ServicesDashboard({
                 gridConfig={gridConfig}
                 onChangeGridConfig={handleUpdateGridConfig}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenExport={() => setIsExportOpen(true)}
               />
 
               {/* Services List: Table View vs Row Cards vs Squared Cards */}
@@ -429,6 +434,7 @@ export function ServicesDashboard({
             })
           }
           onOpenSubmitRequest={handleOpenSubmitRequest}
+          onOpenExport={() => setIsExportOpen(true)}
           onInspectService={(svc, tab) => {
             setDetailSheetTab(tab || "overview")
             setInspectingService(svc)
@@ -441,6 +447,14 @@ export function ServicesDashboard({
           onOpenChange={setIsSettingsOpen}
           config={gridConfig}
           onSaveConfig={handleUpdateGridConfig}
+        />
+
+        {/* Export & Developer Sync Dialog (Postman, OpenAPI, CSV) */}
+        <ExportServicesDialog
+          open={isExportOpen}
+          onOpenChange={setIsExportOpen}
+          allServices={services}
+          filteredServices={paginatedServices}
         />
 
         {/* Service Quick-Inspect Slide-over Drawer */}
