@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils"
 import {
   Activity,
   Award,
+  TrendingUp,
+  Server,
   AlignJustify,
   ArrowRight,
   BookOpen,
@@ -330,6 +332,48 @@ export function CommandPalette({
         iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
         onSelect: () => {
           window.location.href = "/scorecards"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-dora-metrics",
+        title: "Engineering Metrics & DORA Velocity",
+        subtitle:
+          "Track Deployment Frequency, Lead Time, Change Failure Rate, and MTTR across engineering squads",
+        badge: "DORA Velocity",
+        icon: TrendingUp,
+        iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
+        onSelect: () => {
+          window.location.href = "/metrics"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-mock-server",
+        title: "Mock API Server & Contract Simulator",
+        subtitle:
+          "Simulate microservice endpoints with status codes, latency delays, and OpenAPI 3.0 export",
+        badge: "Mock Server",
+        icon: Server,
+        iconColor: "text-cyan-500 bg-cyan-500/15 border-cyan-500/30",
+        onSelect: () => {
+          window.location.href = "/mocks"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-infra-pods",
+        title: "Infrastructure & Kubernetes Pod Telemetry",
+        subtitle:
+          "Monitor live cluster pods, container restarts, memory/CPU utilization, and stdout logs",
+        badge: "Cluster Pods",
+        icon: Cpu,
+        iconColor: "text-violet-500 bg-violet-500/15 border-violet-500/30",
+        onSelect: () => {
+          window.location.href = "/infra"
           onOpenChange(false)
         },
       },

@@ -25,6 +25,8 @@ import { logoutAction } from "@/app/actions/services"
 import {
   Activity,
   Award,
+  TrendingUp,
+  Server,
   Bot,
   Building2,
   CalendarDays,
@@ -284,6 +286,25 @@ export function DashboardSidebar({
                 </Link>
               </SidebarMenuItem>
 
+              {/* DORA Metrics & Engineering Velocity (/metrics) */}
+              <SidebarMenuItem>
+                <Link href="/metrics" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="DORA Engineering Metrics & Production Velocity (/metrics)"
+                    className="w-full cursor-pointer"
+                  >
+                    <TrendingUp className="size-4 text-emerald-500" />
+                    <span>DORA Metrics</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Velocity
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
               {/* Meet Quick Action Popover */}
               <SidebarMenuItem className="pt-1 group-data-[collapsible=icon]:hidden">
                 <MeetQuickAction variant="sidebar-item" />
@@ -408,6 +429,44 @@ export function DashboardSidebar({
                       className="ml-auto border-emerald-500/30 bg-emerald-500/10 px-1 py-0 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 group-data-[collapsible=icon]:hidden"
                     >
                       Config
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Mock API Server & Contract Simulator (/mocks) */}
+              <SidebarMenuItem>
+                <Link href="/mocks" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="In-Browser Mock API Server & Contract Simulator (/mocks)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Server className="size-4 text-cyan-500" />
+                    <span>Mock Server</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-cyan-500/30 bg-cyan-500/10 px-1 py-0 font-mono text-[9px] text-cyan-600 dark:text-cyan-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Mocks
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Infrastructure & Pods Telemetry (/infra) */}
+              <SidebarMenuItem>
+                <Link href="/infra" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Kubernetes Cluster Pods & Container Telemetry (/infra)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Cpu className="size-4 text-violet-500" />
+                    <span>Cluster Pods</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-violet-500/30 bg-violet-500/10 px-1 py-0 font-mono text-[9px] text-violet-600 dark:text-violet-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      K8s
                     </Badge>
                   </SidebarMenuButton>
                 </Link>

@@ -27,6 +27,9 @@
 | **17. Environment Variables & Secrets Studio** | P0 | **100% Complete** | `/env`, `components/env/env-config-view.tsx`, `lib/env-utils.ts` (.env workbench, multi-env diff matrix, K8s ConfigMap/Secret generator) |
 | **18. Full-Screen Calendar & Team Planner** | P0 | **100% Complete** | `/calendar`, `components/calendar/calendar-meetings-view.tsx`, `components/calendar/month-view.tsx`, `components/calendar/week-view.tsx`, `components/calendar/agenda-view.tsx`, `lib/calendar-events-data.ts` (English Gregorian & Dual Jalali, Month/Week/Agenda views, multi-timezone sync, instant Meet) |
 | **19. Service Scorecards & Readiness Hub** | P0 | **100% Complete** | `/scorecards`, `components/scorecards/scorecards-view.tsx`, `components/scorecards/scorecard-detail-sheet.tsx`, `lib/scorecards-data.ts` (15 readiness checks, 5 architectural pillars, Platinum/Gold/Silver/Bronze tiers, RFC 4180 CSV export, path to platinum remediation) |
+| **20. Engineering Metrics & DORA Hub** | P0 | **100% Complete** | `/metrics`, `components/metrics/metrics-view.tsx`, `components/metrics/deployment-detail-sheet.tsx`, `lib/dora-metrics-data.ts` (4 DORA core metrics, live deployment stream, squad velocity benchmarks, pipeline stage inspector, RFC 4180 CSV export) |
+| **21. In-Browser Mock API Server & Sandbox** | P0 | **100% Complete** | `/mocks`, `components/mocks/mock-server-view.tsx`, `components/mocks/mock-create-dialog.tsx`, `lib/mock-server-utils.ts` (Dynamic macro interpolator, latency simulation, status codes, OpenAPI 3.0.3 generator, live response runner) |
+| **22. Infrastructure & Kubernetes Pod Telemetry** | P0 | **100% Complete** | `/infra`, `components/infra/infra-view.tsx`, `components/infra/pod-logs-sheet.tsx`, `lib/infra-data.ts` (Cluster observability, pod replica health, container restart tracking, CPU/RAM utilization gauges, log streams, RFC 4180 CSV export) |
 
 ---
 
@@ -340,4 +343,74 @@
   - One-click export of readiness scorecards, pillar scores, and passed check counts for audit compliance.
 - [x] **Universal Navigation & Shortcuts**:
   - Integrated in `DashboardSidebar` ("Scorecards" with Audit badge) and `CommandPalette` (`Ctrl+K` → *"Service Scorecards & Readiness Standards"*).
+
+---
+
+### Feature 20 — Engineering Metrics & DORA Velocity Hub (P0)
+- [x] **4 Core DORA Engineering Metrics**:
+  - **Deployment Frequency (DF)**: Daily deploy velocity across microservices with Elite rating badge.
+  - **Lead Time for Changes (LTTC)**: Average elapsed duration from commit creation to live production deployment.
+  - **Change Failure Rate (CFR)**: Percentage of deployments causing production degradation or triggering rollback.
+  - **Mean Time to Recovery (MTTR)**: Average time elapsed to resolve an incident or restore healthy service.
+- [x] **Squad Performance Benchmark Matrix**:
+  - Squad-by-squad velocity and stability comparison (*Frontend Squad*, *Platform Engineering*, *Commerce Squad*, *Security Compliance*).
+  - Total releases, lead time hours, failure rate percentage, MTTR, and overall DORA maturity rating.
+- [x] **Live Microservices Deployment Stream**:
+  - Chronological stream of recent deployments with commit hashes, messages, squad attribution, and duration.
+  - Status badges (*Success*, *Rolled Back*, *Failed*) with root cause diagnostic tags.
+  - Full-text search and filtering by deployment status and squad.
+- [x] **CI/CD Pipeline Stages & Verification Inspector**:
+  - Deep inspection drawer displaying step-by-step pipeline stages (*Lint & AST Scan*, *Unit Tests*, *Docker Build*, *Kubernetes Rollout*, *Smoke Ping*).
+  - 1-click "Copy Deployment Audit" plain-text formatter for Slack / Jira.
+- [x] **Simulated Release Engine**:
+  - Live in-browser deployment trigger adding new commits and re-computing platform DORA velocity metrics in real time.
+- [x] **RFC 4180 Compliant CSV Export**:
+  - Direct export of deployment audit records and pipeline metrics.
+- [x] **Universal Fixed Chrome Integration**:
+  - Integrated in `DashboardSidebar` ("DORA Metrics" with Velocity badge) and `CommandPalette` (`Ctrl+K` → *"Engineering Metrics & DORA Velocity"*).
+
+---
+
+### Feature 21 — In-Browser Mock API Server & Contract Simulator (P0)
+- [x] **Full-Featured Mock Endpoint Workbench**:
+  - Method selector (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) with color-coded method badges.
+  - Route path editor (`/api/v1/...`) with microservice categorization.
+  - HTTP response status code selector (200, 201, 204, 400, 401, 403, 404, 422, 500, 502, 503, 504).
+  - Simulated latency delay buffer (0ms to 3000ms) to test UI loading states and client timeouts.
+- [x] **Dynamic Faker-Style Payload Macros**:
+  - Dynamic interpolation for `{{uuid}}`, `{{timestamp}}`, `{{isoDate}}`, `{{randomInt}}`, `{{randomPrice}}`, `{{randomName}}`, and `{{randomEmail}}` on every execution.
+- [x] **Interactive In-Browser Request Runner**:
+  - Executes mock requests with live roundtrip timer, HTTP response code badge, and formatted JSON output viewer.
+  - Generates ready-to-copy cURL CLI templates and 1-click test in `/playground`.
+- [x] **OpenAPI 3.0.3 Contract Export**:
+  - Single-click export of mock routes and simulated schemas as valid OpenAPI 3.0.3 specification document.
+- [x] **LocalStorage Persistence & Presets**:
+  - Pre-seeded with 6 enterprise mocks (*OAuth2 Token Exchange*, *Product Catalog Query*, *Checkout Preview*, *Payment IPG Failure*, *Push SMS Dispatch*, *Gateway Health Probe*).
+  - Client-side persistence and reset-to-defaults capability.
+- [x] **Universal Fixed Chrome Integration**:
+  - Integrated in `DashboardSidebar` ("Mock Server" with Mocks badge) and `CommandPalette` (`Ctrl+K` → *"Mock API Server & Contract Simulator"*).
+
+---
+
+### Feature 22 — Infrastructure & Container Telemetry Inspector (P0)
+- [x] **Kubernetes Cluster Health & Node Telemetry**:
+  - Multi-cluster support (*Production Cluster DC-Tehran-01*, *Staging Replica Cluster DC-Tehran-02*).
+  - Live node pool capacity tracking (total CPU cores, allocatable RAM in GiB, Kubernetes v1.31.2).
+- [x] **Pod Replica States & OOM/Restart Monitoring**:
+  - Live container status indicators (*Running*, *CrashLoopBackOff*, *Pending*, *Terminating*, *ContainerCreating*).
+  - Pod replica health meters (`3/3 Ready`, `0/2 Degraded`).
+  - Container restart tracking alerting on memory limit breaches and OOMKill kernel terminations.
+  - Canary deployment rollout tag indicators (`v2.5.2-canary (10% traffic)`).
+- [x] **CPU & Memory Utilization Gauges**:
+  - Milli-core CPU tracking (`cpuUsageMilli / cpuLimitMilli`) with color-coded safety boundaries.
+  - RAM allocation meters (`memoryUsageMiB / memoryLimitMiB`).
+- [x] **Container stdout / stderr Log Terminal**:
+  - Side inspection drawer displaying live container log output with timestamps, log levels (`INFO`, `WARN`, `ERROR`), and log text filter.
+  - 1-click "Copy stdout Logs" for developer triage.
+- [x] **Interactive Pod Rollout Restart Simulation**:
+  - In-browser simulated pod lifecycle restart: `Terminating` → `ContainerCreating` → `Running` with cleared restart counters.
+- [x] **RFC 4180 Compliant CSV Export**:
+  - Direct export of cluster pod diagnostics, node placements, and resource metrics.
+- [x] **Universal Fixed Chrome Integration**:
+  - Integrated in `DashboardSidebar` ("Cluster Pods" with K8s badge) and `CommandPalette` (`Ctrl+K` → *"Infrastructure & Kubernetes Pod Telemetry"*).
 
