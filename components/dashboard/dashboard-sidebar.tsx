@@ -24,6 +24,7 @@ import { MeetQuickAction } from "@/components/meetings/meet-quick-action"
 import { logoutAction } from "@/app/actions/services"
 import {
   Activity,
+  Award,
   Bot,
   Building2,
   CalendarDays,
@@ -257,6 +258,25 @@ export function DashboardSidebar({
                     <Badge
                       variant="outline"
                       className="ml-auto border-sky-500/30 bg-sky-500/10 px-1 py-0 font-mono text-[9px] text-sky-600 dark:text-sky-400 group-data-[collapsible=icon]:hidden"
+                    >
+                      Audit
+                    </Badge>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Service Scorecards & Production Readiness (/scorecards) */}
+              <SidebarMenuItem>
+                <Link href="/scorecards" className="w-full">
+                  <SidebarMenuButton
+                    tooltip="Service Scorecards & Production Readiness Standards (/scorecards)"
+                    className="w-full cursor-pointer"
+                  >
+                    <Award className="size-4 text-amber-500" />
+                    <span>Scorecards</span>
+                    <Badge
+                      variant="outline"
+                      className="ml-auto border-amber-500/30 bg-amber-500/10 px-1 py-0 font-mono text-[9px] text-amber-600 dark:text-amber-400 group-data-[collapsible=icon]:hidden"
                     >
                       Audit
                     </Badge>

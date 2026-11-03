@@ -181,7 +181,7 @@ export function RequestsBoardView({
           const matchAuthor = r.authorName.toLowerCase().includes(q)
           const matchService = r.targetService.toLowerCase().includes(q)
           const matchBranch = r.branchName?.toLowerCase().includes(q) || false
-          const matchTags = r.tags.toLowerCase().includes(q)
+          const matchTags = (r.tags || "").toLowerCase().includes(q)
           if (!matchTitle && !matchDesc && !matchAuthor && !matchService && !matchBranch && !matchTags) {
             return false
           }

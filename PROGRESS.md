@@ -26,6 +26,7 @@
 | **16. Activity Feed & Enterprise Audit Trail** | P1 | **100% Complete** | `/activity`, `components/activity/activity-feed-view.tsx`, `lib/activity-data.ts` (Real-time audit log, team filtration, CSV export, event timeline) |
 | **17. Environment Variables & Secrets Studio** | P0 | **100% Complete** | `/env`, `components/env/env-config-view.tsx`, `lib/env-utils.ts` (.env workbench, multi-env diff matrix, K8s ConfigMap/Secret generator) |
 | **18. Full-Screen Calendar & Team Planner** | P0 | **100% Complete** | `/calendar`, `components/calendar/calendar-meetings-view.tsx`, `components/calendar/month-view.tsx`, `components/calendar/week-view.tsx`, `components/calendar/agenda-view.tsx`, `lib/calendar-events-data.ts` (English Gregorian & Dual Jalali, Month/Week/Agenda views, multi-timezone sync, instant Meet) |
+| **19. Service Scorecards & Readiness Hub** | P0 | **100% Complete** | `/scorecards`, `components/scorecards/scorecards-view.tsx`, `components/scorecards/scorecard-detail-sheet.tsx`, `lib/scorecards-data.ts` (15 readiness checks, 5 architectural pillars, Platinum/Gold/Silver/Bronze tiers, RFC 4180 CSV export, path to platinum remediation) |
 
 ---
 
@@ -309,4 +310,34 @@
   - Cross-timezone clocks for Tehran (IRST), UTC/London, New York (EDT), and Tokyo (JST).
   - "Next Scheduled Event" spotlight card with live countdown and one-click Google Meet launch.
   - Daily CS2 5:10 PM Squad Match countdown with instant console IP copy.
+
+---
+
+### Feature 19 — Production Readiness Scorecards & Standards Hub (P0)
+- [x] **5 Architectural Pillars & 15 Production Readiness Rules**:
+  - *Reliability & SLA* (≥99.9% uptime target, automated health probe endpoints, current operational telemetry).
+  - *Security & TLS* (Strict HTTPS / TLS 1.3 transport, multi-environment isolation, gateway auth & rate limiting).
+  - *Observability & Latency* (Sub-250ms p95 latency SLA, structured JSON logging/tracing, automated incident alerting webhooks).
+  - *Documentation & Runbooks* (Interactive OpenAPI 3.0 / Swagger spec, markdown triage runbooks, descriptive catalog metadata).
+  - *Operations & Ownership* (Explicit engineering squad owner, designated on-call support escalation, automated CI/CD container build).
+- [x] **Tier Classification Engine (100-Point Scoring)**:
+  - **Platinum Tier** (≥90%): Certified mission-critical enterprise workloads.
+  - **Gold Tier** (75–89%): Production hardened with minor recommendations.
+  - **Silver Tier** (60–74%): Staging / development approved; hardening needed before customer traffic.
+  - **Bronze Tier** (<60%): Remediation needed; missing essential security or health infrastructure.
+- [x] **Platform Executive Summary & Interactive Filter Bar**:
+  - Platform-wide average readiness score with total services evaluated.
+  - Interactive tier breakdown distribution cards with click-to-filter capability.
+  - 5-pillar radar averages breakdown (*Reliability*, *Security*, *Observability*, *Docs*, *Ops*).
+  - Full-text search across service name, description, category, and squad owner.
+  - Multi-environment selector and grid/table view toggle.
+- [x] **Service Audit Detail Sheet & Remediation Planner**:
+  - Deep inspection drawer displaying full 15-rule breakdown with point weights.
+  - "Path to Platinum" prioritized remediation checklist showing available points per failed check.
+  - 1-click "Copy Audit Report" plain-text formatter for Slack / Jira incident tickets.
+  - Direct integration actions: "Test in API Playground" (`/playground`) and "Open Service URL".
+- [x] **RFC 4180 Compliant CSV Export**:
+  - One-click export of readiness scorecards, pillar scores, and passed check counts for audit compliance.
+- [x] **Universal Navigation & Shortcuts**:
+  - Integrated in `DashboardSidebar` ("Scorecards" with Audit badge) and `CommandPalette` (`Ctrl+K` → *"Service Scorecards & Readiness Standards"*).
 

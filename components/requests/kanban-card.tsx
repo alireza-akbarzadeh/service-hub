@@ -213,39 +213,48 @@ export function KanbanCard({
             </button>
 
             {showStatusMenu && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 bottom-6 z-30 w-36 rounded-xl border border-border bg-card p-1 shadow-xl text-xs backdrop-blur-md"
-              >
-                <div className="px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground border-b border-border mb-1">
-                  Move to
+              <>
+                <div
+                  className="fixed inset-0 z-20 cursor-default"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowStatusMenu(false)
+                  }}
+                />
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 bottom-6 z-30 w-36 rounded-xl border border-border bg-card p-1 shadow-xl text-xs backdrop-blur-md"
+                >
+                  <div className="px-2 py-1 text-[10px] font-bold uppercase text-muted-foreground border-b border-border mb-1">
+                    Move to
+                  </div>
+                  {(
+                    [
+                      { id: "open", label: "Open (New)" },
+                      { id: "under_review", label: "Under Review" },
+                      { id: "in_progress", label: "In Progress" },
+                      { id: "merged", label: "Merged / Done" },
+                      { id: "closed", label: "Closed" },
+                    ] as const
+                  ).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        setShowStatusMenu(false)
+                        onQuickStatusChange(s.id)
+                      }}
+                      className={cn(
+                        "w-full text-left px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-muted transition-colors flex items-center justify-between",
+                        item.status === s.id && "font-bold text-primary"
+                      )}
+                    >
+                      <span>{s.label}</span>
+                      {item.status === s.id && <Check className="size-3" />}
+                    </button>
+                  ))}
                 </div>
-                {(
-                  [
-                    { id: "open", label: "Open (New)" },
-                    { id: "under_review", label: "Under Review" },
-                    { id: "in_progress", label: "In Progress" },
-                    { id: "merged", label: "Merged / Done" },
-                    { id: "closed", label: "Closed" },
-                  ] as const
-                ).map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      setShowStatusMenu(false)
-                      onQuickStatusChange(s.id)
-                    }}
-                    className={cn(
-                      "w-full text-left px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-muted transition-colors flex items-center justify-between",
-                      item.status === s.id && "font-bold text-primary"
-                    )}
-                  >
-                    <span>{s.label}</span>
-                    {item.status === s.id && <Check className="size-3" />}
-                  </button>
-                ))}
-              </div>
+              </>
             )}
           </div>
         </div>

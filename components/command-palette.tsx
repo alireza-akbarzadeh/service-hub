@@ -10,6 +10,7 @@ import type { FrontendMeeting } from "@/lib/meetings-data"
 import { cn } from "@/lib/utils"
 import {
   Activity,
+  Award,
   AlignJustify,
   ArrowRight,
   BookOpen,
@@ -315,6 +316,20 @@ export function CommandPalette({
         iconColor: "text-emerald-500 bg-emerald-500/15 border-emerald-500/30",
         onSelect: () => {
           window.location.href = "/status"
+          onOpenChange(false)
+        },
+      },
+      {
+        type: "action",
+        id: "act-service-scorecards",
+        title: "Service Scorecards & Readiness Standards",
+        subtitle:
+          "Automated audit across 15 criteria, 5 architecture pillars, SLA compliance, and remediation plans",
+        badge: "Readiness Audit",
+        icon: Award,
+        iconColor: "text-amber-500 bg-amber-500/15 border-amber-500/30",
+        onSelect: () => {
+          window.location.href = "/scorecards"
           onOpenChange(false)
         },
       },
